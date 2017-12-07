@@ -1,0 +1,103 @@
+---
+title: "HQCD-P Notebook"
+output:
+  html_notebook: default
+  pdf_document: default
+---
+
+# Initialization
+
+In this section we will setup all the definitions we need before running, like the method to use to compute the eigenvalues, the potential of the Schrodinger problem associated to the kernel of the pomeron, the number of Reggeons, etc.
+
+```{r}
+library(BCDQ)
+# use 400 points in the Chebyshev algorithm for finding the eigenvalues
+init(400)
+# get the required definitions from the holographic model in case
+# in this case we are using the results for the IHQCD model of Kiritsis
+# but we can here change easily the values of $A(z)$ and $\Phi(z)$ for the ones
+# of another model and import them from a CSV file,
+# TODO: in such case the ihqcdEnv has to be updated with the right things!
+# notice that A here is the STRING FRAME warp factor
+
+z     <- get('z', envir = ihqcdEnv)
+As    <- get('As', envir = ihqcdEnv)
+l     <- get('lambda', envir = ihqcdEnv)
+
+# using the previous input here we compute the
+# derivatives of each function since they are needed
+# and the Einstein frame warp factor and Phi
+Phi   <- get('Phi', envir = ihqcdEnv)
+Phid1 <- get('Phider1', envir = ihqcdEnv)
+Phid2 <- get('Phider2', envir = ihqcdEnv)
+Ae    <- get('A', envir = ihqcdEnv)
+Aed1  <- get('Ader1', envir = ihqcdEnv)
+Aed2  <- get('Ader2', envir = ihqcdEnv)
+Asd1  <- get('Asder1', envir = ihqcdEnv)
+Asd2  <- get('Asder2', envir = ihqcdEnv)
+ld1   <- get('lambdader1', envir = ihqcdEnv)
+ld2   <- get('lambdader2', envir = ihqcdEnv)
+u2    <- get('u2', envir = ihqcdEnv)
+# some combinations that will appear later
+aF    <- Phid2
+bF    <- Asd2 - Asd1^2
+cF    <- Phid1^2
+l1_2  <- sqrt(l)
+e2As  <- exp(2 * As)
+e2Ae  <- exp(2 * Ae)
+
+# create the potential function for the Schrodinger problem
+# associated with the twist 2 glueballs operator higher spin fields
+# default values are the best fit fount in https://arxiv.org/abs/1704.08280
+UJg <- function(J, invls = 1/0.153, a = -4.35, b = 1.41, c = 0.626, d = -0.117) {
+  # the deformation of the potential of the graviton
+  u2 + (J - 2) * ((2 * e2As * invls^2) * (1 + d / l1_2) + e2Ae * (J + 2)
+    + (a * aF + b * bF + c * cF))
+}
+UJgtest <- function(J, invls2 = 1/0.153, a2 = -4.35, d = -0.117) {
+  # the deformation of the potential of the graviton
+  u2 + (J - 2) * ((2 * e2As * invls2^2) * (1 + d / l1_2) + e2Ae * (J + 2)
+    + (a2 * aF))
+}
+```
+
+Let's just take a look how the potential looks like for some typical values:
+```{r, fig.width = 1.5, fig.height = 1.5}
+#plot(z, UJg(J = 2), ylim = c(-5, 15), xlim = c(0, 8), type = 'l', ylab = expression(U[J](z)))
+plot(z, Ae, xlim = c(0, 6), type = 'l')
+abline(h = 0, lty = 'dashed')
+```
+We are ready to create and train the predictor proposed for $F_2(x,Q^2)$. The predictor receives as model the potential function just created together with the parameters of the potential to optimize and the amount of reggeons desired.
+
+```{r}
+f2model <- F2model(considerNonMinimalCoupling = FALSE)
+# here we add the kernels we want to consider in this run
+f2model$addKernel(potential = UJg,
+                  numReg = 4,
+                  comment = 'Leading twist gluon sector',
+                  prefix = 'gluon', # this has to be unique: is used to name the couplings and the kernel
+                  optimPars = c(invls = 1/0.153, a = -4.35, b = 1.41, c = 0.626, d = -0.117))
+
+#f2model$info()
+f2model$fit()
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file).
+
+
+# The $a$, $b$ and $c$ type terms
+This section is not needed to make a fit. Let's plot here the shape of the terms we are adding to the potential:
+
+```{r, fig.width=3, fig.height=1, fig.cap="a, b and c terms"}
+op <- par(mfrow=c(1,3)) 
+plot(z, aF, ylim = c(-2, 2), xlim = c(0, 6), xlab = 'z', ylab = 'a', type = 'l')
+abline(h = 0, lty = 'dashed')
+plot(z, bF, ylim = c(-1, 2), xlim = c(0, 6), xlab = 'z', ylab = 'b', type = 'l')
+abline(h = 0, lty = 'dashed')
+plot(z, cF, ylim = c(0, 6), xlim = c(0, 6), xlab = 'z', ylab = 'c', type = 'l')
+abline(h = 0, lty = 'dashed')
+par(op)
+```
+

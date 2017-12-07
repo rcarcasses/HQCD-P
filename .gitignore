@@ -1,0 +1,9 @@
+.directory
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.log
+.DS_Store
+old/
+NAMESPACE
