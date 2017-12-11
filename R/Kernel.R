@@ -76,7 +76,7 @@ kernelBCDQ <- function(potPars = 'b', numReg = 3, kernelName = '') {
     lastKernel
   }
 
-  findKernel <- rediscache::cache(findKernelFun, kernelName)
+  findKernel <- cache(findKernelFun, kernelName)
   extractPotentialParameters <- function(...) do.call(p$extractPotentialParameters, list(...))
 
   k <- list(findKernel = findKernel,

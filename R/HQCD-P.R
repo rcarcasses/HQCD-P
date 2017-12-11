@@ -5,7 +5,6 @@
 #' @import magrittr
 #' @import rootSolve
 #' @import plotrix
-#' @import rediscache
 #' @import rredis
 #' @import cmaes
 #' @import scales
@@ -16,6 +15,7 @@
 
 #' @export
 init <- function(chebPoints = 400) {
+  startRedis()
   ihqcd <- iHQCD()
   #populate the ihqcd environment
   ihqcd$solve()

@@ -230,7 +230,7 @@ F2 <- function(potPars = 'bcde',
          size = length(data$F2), Js = Js, tr1 = tr1, tr2 = tr2, kernel = kernel)
   }
 
-  findBestCoeff <- rediscache::cache(findBestCoeffFun, kernelName)
+  findBestCoeff <- cache(findBestCoeffFun, kernelName)
   findBestCoeffFun <- function(...) {
     # first get the columns of the fns
     fs <- getFns(...)

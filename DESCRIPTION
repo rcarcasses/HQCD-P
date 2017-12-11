@@ -1,4 +1,4 @@
-Package: BCDQ
+Package: HQCDP
 Type: Package
 Title: An R package for the Holographic Pomeron
 Version: 0.1.0
@@ -19,7 +19,6 @@ Depends:
   optimx,
   parallel,
   plotrix,
-  rediscache,
   rootSolve,
   rredis,
   scales,
