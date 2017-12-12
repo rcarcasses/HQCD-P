@@ -43,6 +43,7 @@ F2model <- function(potPars = 'bcde',
                                                 paste0(k$prefix, i)))
   }
 
+  # prints the information of the current state of the model
   info <- function() {
     cat('\n\t##############################')
     cat('\n\t# Overview of the model')
@@ -92,8 +93,11 @@ F2model <- function(potPars = 'bcde',
       # get the parameters associated with this kernel
       indices <- names(k$optimPars)
       kPars <- pars[indices]
+      # get the right function to call according whether we are considering
+      # the non minimal coupling case or not
+      f <- ifelse(considerNonMinimalCoupling, k$f2.getAllFns, k$f2.getFns)
       # get the dataframe with the fns
-      kdf <- do.call(k$f2.getFns, as.list(kPars))
+      kdf <- do.call(f, as.list(kPars))
       # add the computed dataframe columns to the full one
       if(is.null(df))
         df <<- kdf
@@ -133,15 +137,15 @@ F2model <- function(potPars = 'bcde',
         rredis::redisSAdd(potPars, bestEval)
       } else if(bestEval$val > s ) {
         bestEval <<- list(pars = pars, coeff = coeff, val = s, chi2 = chi2)
-        cat('\n\t *chi2* =', chi2)
-        cat('\n\t  coeff =', coeff, '')
+        flog.debug(paste('\t *chi2* =', chi2))
+        flog.debug(paste('\t  coeff =', coeff, ''))
         rredis::redisSAdd(potPars, bestEval)
       }
     }
 
     # we want to force the soft pomeron intercept to 1.09, here is the right place to do it
     #s <- s + 1000000 * rss$size * (rss$Js[[2]] - 1.09)^2
-    cat('\nTODO: force soft pomeron intercept\n')
+    flog.error('TODO: force soft pomeron intercept')
     s
   }
 
@@ -150,7 +154,7 @@ F2model <- function(potPars = 'bcde',
   }
 
   chain <- function(method) {
-    cat('\nUsing last evaluation parameters\n', bestEval$pars, '\n')
+    flog.debug(paste('[F2model] Using last evaluation parameters\n', bestEval$pars))
     startOpt <<- bestEval$pars
     bestEval <<- NULL
     optimFun(method)
@@ -167,7 +171,7 @@ F2model <- function(potPars = 'bcde',
       op <<- fn(method)
       exectime <- toc()
       exectime <- exectime$toc - exectime$tic
-      cat('\n --- Iteration', i, ' completed in', round(exectime / 60), ' min, new chi2', bestEval$chi2, ' ---\n')
+      flog.debug(paste('[F2model]  -::- Iteration', i, ' completed in', round(exectime / 60), ' min, new chi2', bestEval$chi2, ' ---'))
       i <<- i + 1
     }
 
@@ -193,7 +197,7 @@ F2model <- function(potPars = 'bcde',
     if(is.null(method))
       method <- "Nelder-Mead"
 
-    cat('\n Using method', method, '\n')
+    flog.debug(paste('[F2model] Using method', method))
 
     if(method == 'hjk')
       op <- hjk(startOpt, fn = rssFun)
@@ -224,20 +228,20 @@ F2model <- function(potPars = 'bcde',
   }
 
   plotF2 <- function() {
-    cat('[WARN] Update to use the new kernels configuration\n')
+    flog.error(paste('[F2model] Update to use the new kernels configuration'))
     cat('Using', bestEval$pars, bestEval$coeff,'\n')
     do.call(f2$plot, as.list(c(parsSet, bestEval$pars, bestEval$coeff)))
   }
 
   plotSpectrum <- function() {
-    cat('[WARN] Update to use the new kernels configuration\n')
-    cat('Using', bestEval$pars, '\n')
+    flog.error('[F2model] Update to use the new kernels configuration')
+    flog.debug(paste('Using', bestEval$pars, '\n'))
     do.call(f2$plotSpectrum, as.list(c(parsSet, bestEval$pars)))
   }
 
   plotRegge <- function(glueballs = TRUE, mesons = TRUE) {
-    cat('[WARN] Update to use the new kernels configuration\n')
-    cat('Using', bestEval$pars, '\n')
+    flog.error('[F2model] Update to use the new kernels configuration')
+    flog.info(paste('Using', bestEval$pars))
     do.call(f2$plotRegge, as.list(c(parsSet, bestEval$pars)))
 
     if(glueballs)
@@ -248,7 +252,7 @@ F2model <- function(potPars = 'bcde',
   }
 
   plotEffectiveExponent <- function() {
-    cat('[WARN] Update to use the new kernels configuration\n')
+    flog.error('[F2model] Update to use the new kernels configuration')
     do.call(f2$plotEffectiveExponent, as.list(c(bestEval$pars, bestEval$coeff)))
   }
 

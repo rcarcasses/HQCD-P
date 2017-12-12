@@ -12,15 +12,16 @@ Q2s <- NULL
 
 #' @export
 getHERAF2 <- function(maxX = 0.01, maxF2 = 5, maxQ2 = 1110, minQ2 = 0.1) {
-  cat('\nLoading HERA data with maxX', maxX, ' and ', minQ2, ' <= Q2 <=', maxQ2, '\n')
+  flog.debug(paste('Loading HERA data with maxX', maxX, ' and ', minQ2, ' <= Q2 <=', maxQ2))
   # read the HERA nce+p data
-  nceppPath <- system.file('extdata', 'd09-158.nce+p.txt', package = 'BCDQ')
+  nceppPath <- system.file('extdata', 'd09-158.nce+p.txt', package = 'HQCDP')
+  flog.debug(paste('[HERA] Loading DIS HERA data from ', nceppPath))
   ncepp <- read.table(nceppPath, header = TRUE)
 
   # remove all the high x together with some points with "weird" F2
   data <- ncepp[ncepp$x < maxX & ncepp$F2 < maxF2 & ncepp$Q2 <= maxQ2 & ncepp$Q2 >= minQ2,]
   #data <- ncepp[ncepp$x < maxX & ncepp$F2 < maxF2 & ncepp$Q2 < maxQ2 & ncepp$Q2 > 7,]
-  cat('Q2 range [', min(data$Q2),',', max(data$Q2), '], number of data points', length(data$Q2),'\n')
+  flog.debug(paste('[HERA] Q2 range [', min(data$Q2),',', max(data$Q2), '], number of data points', length(data$Q2)))
   f2x <- data[,c('F2', 'Q2', 'x', 's_r', 'tot')]
 	# this list contains all the different Q2 entries
 	Q2s <- unique(data[, c("Q2")])

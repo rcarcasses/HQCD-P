@@ -230,7 +230,6 @@ F2 <- function(potPars = 'bcde',
          size = length(data$F2), Js = Js, tr1 = tr1, tr2 = tr2, kernel = kernel)
   }
 
-  findBestCoeff <- cache(findBestCoeffFun, kernelName)
   findBestCoeffFun <- function(...) {
     # first get the columns of the fns
     fs <- getFns(...)
@@ -242,6 +241,8 @@ F2 <- function(potPars = 'bcde',
     # this returns a fit model: the output of the lm function
     eval(parse(text = paste0('lm(data$F2~', fsString,' - 1, weights = 1/data$err^2)')))
   }
+
+  findBestCoeff <- cache(findBestCoeffFun, kernelName)
 
   rssFunOld <- function(fn = NULL, dof = NULL, ...) {
     base    <- rssFunBase(fn, dof, ...)

@@ -6,5 +6,5 @@
 .log
 .DS_Store
 old/
-run/test/
+R/runs/test/
 NAMESPACE

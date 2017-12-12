@@ -79,7 +79,7 @@ potential <- function(model = 'bcde', addAlfonsoTerm = TRUE) {
       lastU
     } else {
       # the potential has been set, use it
-      cat('Using custom potential\n')
+      flog.debug('[Potential] Using custom potential')
       potentialSet
     }
   }

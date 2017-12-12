@@ -22,14 +22,14 @@ cacheQ <- FALSE
 cache <- function(f, ...) {
   funName <- as.character(substitute(f))
   if(!cacheQ) {
-    cat('--> function ', funName, ' won\'t be cached, caching is disabled\n')
+    flog.debug(paste('[RedisCache] function ', funName, ' won\'t be cached, caching is disabled'))
     return(f)
   }
 
   extraKey <- ''
   if(length(list(...)) > 0) {
     extraKey <- paste0(list(...), collapse = ',')
-    cat('Using extra key *', extraKey, '* for labeling cached values for', funName, '\n')
+    flog.debug(paste('[RedisCache] Using extra key *', extraKey, '* for labeling cached values for', funName))
   }
 
   function(...) {

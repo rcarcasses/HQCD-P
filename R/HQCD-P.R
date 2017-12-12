@@ -1,3 +1,4 @@
+#' @import futile.logger
 #' @import schrodinger
 #' @import bvpSolve
 #' @import nloptr
@@ -15,7 +16,8 @@
 
 #' @export
 init <- function(chebPoints = 400) {
-  startRedis()
+  flog.debug("[HQCD-P] Initializing")
+  #startRedis()
   ihqcd <- iHQCD()
   #populate the ihqcd environment
   ihqcd$solve()

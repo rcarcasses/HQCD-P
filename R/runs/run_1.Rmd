@@ -10,7 +10,7 @@ output:
 In this section we will setup all the definitions we need before running, like the method to use to compute the eigenvalues, the potential of the Schrodinger problem associated to the kernel of the pomeron, the number of Reggeons, etc.
 
 ```{r}
-library(BCDQ)
+library(HQCDP)
 # use 400 points in the Chebyshev algorithm for finding the eigenvalues
 init(400)
 # get the required definitions from the holographic model in case
@@ -63,8 +63,8 @@ UJgtest <- function(J, invls2 = 1/0.153, a2 = -4.35, d = -0.117) {
 
 Let's just take a look how the potential looks like for some typical values:
 ```{r, fig.width = 1.5, fig.height = 1.5}
-#plot(z, UJg(J = 2), ylim = c(-5, 15), xlim = c(0, 8), type = 'l', ylab = expression(U[J](z)))
-plot(z, Ae, xlim = c(0, 6), type = 'l')
+plot(z, UJg(J = 2), ylim = c(-5, 15), xlim = c(0, 8), type = 'l', ylab = expression(U[J](z)))
+#plot(z, Ae, xlim = c(0, 6), type = 'l')
 abline(h = 0, lty = 'dashed')
 ```
 We are ready to create and train the predictor proposed for $F_2(x,Q^2)$. The predictor receives as model the potential function just created together with the parameters of the potential to optimize and the amount of reggeons desired.
