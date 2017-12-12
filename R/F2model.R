@@ -5,6 +5,7 @@ F2model <- function(potPars = 'bcde',
                     data = NULL,
                     addAlfonsoTerm = TRUE,
                     considerNonMinimalCoupling = TRUE,
+                    forceSPjsWeight = 10^5,
                     ihqcdPars = ''
                     ) {
   if(is.null(data))
@@ -38,9 +39,16 @@ F2model <- function(potPars = 'bcde',
     mapply(function(n, v) parameters[n] <<- v, names(kernelData$optimPars), kernelData$optimPars)
 
     # and update the list of column names
-    colNames <<- lapply(modelKernels, function(k)
-                      lapply(0:(k$numReg - 1), function(i)
-                                                paste0(k$prefix, i)))
+    colNames <<- lapply(modelKernels, function(k) {
+                   # create a vector with the names = prefix + index
+                   ns <- lapply(0:(k$numReg - 1), function(i) paste0(k$prefix, i))
+                   if(considerNonMinimalCoupling) {
+                     # add the NMC names
+                     ns <- c(ns, lapply(0:(k$numReg - 1), function(i) paste0(k$prefix, 'NMC', i)))
+                   }
+                   # return the names vector created
+                   ns
+                 })
   }
 
   # prints the information of the current state of the model
@@ -115,14 +123,6 @@ F2model <- function(potPars = 'bcde',
     lm <- eval(parse(text = lmString))
     coeff <- lm$coefficients
     print(coeff)
-    # multiply each colum of the data frame by the correspondent coefficient
-    # we need to transpose the data frame twice to achieve this
-    #df <- t(t(df) * coeff)
-    # to get the estimated F2 we need to sum all the rows
-    #F2df <- rowSums(df)
-    #chi2vec <- unlist(mapply(function(F2, F2pred, err)
-    #                          ((F2pred - F2) / err)^2, data$F2, F2df, data$err))
-    #s    <- sum(chi2vec)
     s    <- sum((resid(lm)/data$err)^2)
     chi2 <- s / (length(data$F2) - length(parameters))
     # cat('\r                                                                => chi2 =', chi2)
@@ -143,9 +143,12 @@ F2model <- function(potPars = 'bcde',
       }
     }
 
-    # we want to force the soft pomeron intercept to 1.09, here is the right place to do it
-    #s <- s + 1000000 * rss$size * (rss$Js[[2]] - 1.09)^2
-    flog.error('TODO: force soft pomeron intercept')
+    # we want to force the soft pomeron intercept to 1.09, here is where we do it
+    # we will take the second intercept from the first kernel added and
+    # will add a penalization term proportional to the difference to the desired value
+    spJs <- modelKernels[[1]]$f2.getJs()[2]
+    flog.debug(paste('intercepts ', modelKernels[[1]]$f2.getJs(), ' spJs =', spJs))
+    s <- s + forceSPjsWeight * (spJs - 1.09)^2
     s
   }
 

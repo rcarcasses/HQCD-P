@@ -15,9 +15,11 @@
 #' @import minpack.lm
 
 #' @export
-init <- function(chebPoints = 400) {
+init <- function(chebPoints = 400, userRedis = TRUE) {
   flog.debug("[HQCD-P] Initializing")
-  #startRedis()
+  if(userRedis)
+    startRedis()
+
   ihqcd <- iHQCD()
   #populate the ihqcd environment
   ihqcd$solve()
