@@ -18,6 +18,7 @@ kernelBCDQ <- function(potPars = 'b', numReg = 3, kernelName = '') {
 
   # the arguments here should be consistent with the potPars passed
   findKernelFun <- function(...) {
+    # flog.debug(paste('[Kernel] finding kernel for', dumpList(list(...))))
     fArgs <- do.call(p$extractPotentialParameters, list(...))    # sometimes the coefficients are passed to this, just ignore them
     start.time <- Sys.time()
     t <- function(J, n) {

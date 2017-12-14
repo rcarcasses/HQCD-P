@@ -1,6 +1,6 @@
 # the data accepted here is the one coming from the kernel function findKernel
 #' @export
-spectrumBCDQ <- function(data) {
+spectrumHQCDP <- function(data) {
   colors <- c('red', 'blue', 'green', 'cyan')
   trajName <- c('Hard Pomeron', 'Soft Pomeron', '3rd trajectory', '4th trajectory')
   plotSpectrum <- function(indices = NULL, grid = TRUE) {
@@ -111,4 +111,4 @@ spectrumBCDQ <- function(data) {
 }
 
 #' @export
-plot.spectrumBCDQ <- function(s) s$plot()
+plot.spectrumHQCDP <- function(s) s$plot()

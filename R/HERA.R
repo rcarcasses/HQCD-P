@@ -64,6 +64,23 @@ getHERAF2 <- function(maxX = 0.01, maxF2 = 5, maxQ2 = 1110, minQ2 = 0.1) {
   list(F2 = f2x$F2, Q2 = f2x$Q2, x = f2x$x, err = f2x$s_r * f2x$tot / 100, eff = eff, weights = W, xs = X, Q2s = Q2s)
 }
 
+# receives a data frame with the structure of HERA data
+# returns a data frame
+#' @export
+addAlternatingColToDataByQ2 <- function(df, colName = 'color', col = c('blue', 'red', 'green')) {
+  # df <- data.frame(F2 = data$F2, Q2 = data$Q2, x = data$x, err = data$err)
+  # a color represent a fixed value of Q2
+  Q2s <- unique(df$Q2)
+  cl  <- rep_len(col, as.integer(length(Q2s)))
+  # combine them
+  Q2cl <- cbind(Q2s, cl)
+  # make a new column with the right features per Q2 values
+  newCol <- unlist(lapply(df$Q2, function(Q2) Q2cl[Q2s == Q2][2]))
+  # and add it to the data
+  df[[colName]] <- newCol
+  df
+}
+
 #' @export
 plotHERARangeXvsQ <- function(maxX = 0.01, maxF2 = 5, maxQ2 = 1110, minQ2 = 0.1) {
   ncepp <- read.table("d09-158.nce+p.txt", header = TRUE)

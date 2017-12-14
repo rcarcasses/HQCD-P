@@ -6,5 +6,6 @@
 .log
 .DS_Store
 old/
+notes/
 R/runs/test/
 NAMESPACE

@@ -137,8 +137,17 @@ F2 <- function(potPars = 'bcde',
   # for each value of x and Q2
   # fn can be Fn or FnNMC currently
   getGenFns <- function(fn, ...) {
+    fnArgs  <- list(...)
+    fnData  <- data
+    # if a data object is passed, then use it
+    if(!is.null(fnArgs$data)) {
+      fnData <- fnArgs$data
+      # remove the data field, which is not needed to call findKernel
+      fnArgs$data <- NULL
+    }
+
     # compute the kernel if necessary
-    spect <- force(do.call(kernel$findKernel, list(...)))[1:numReg]
+    spect <- force(do.call(kernel$findKernel, fnArgs))[1:numReg]
     # update the Js values
     Js <<- lapply(spect, function(spec) spec$js)
 
@@ -151,7 +160,7 @@ F2 <- function(potPars = 'bcde',
                                fn(Q2, spec$js, spec$wf) * x^(1 - spec$js)
                             })))
               df <<- rbind(df, r)
-    }, data$Q2, data$x)
+    }, fnData$Q2, fnData$x)
     df
   }
 
@@ -322,11 +331,12 @@ F2 <- function(potPars = 'bcde',
     Js <<- lapply(spect, function(spec) spec$js)
     P13barVecQ2NMC(Q2, Js[[n]], spect[[n]]$wf)
   }
+
   spectrum <- function(...) {
     spectrumBCDQ(do.call(kernel$findKernel, list(...)))
   }
 
-  plotSpectrum <- function(...) plot.spectrumBCDQ(spectrum(...))
+  plotSpectrum <- function(...) plot.spectrumHQCDP(spectrum(...))
 
   plotRegge <- function(...) {
     do.call(r$plot, list(...))

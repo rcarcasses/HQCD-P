@@ -1,4 +1,5 @@
 #' @import futile.logger
+#' @import lubridate
 #' @import schrodinger
 #' @import bvpSolve
 #' @import nloptr
@@ -15,9 +16,9 @@
 #' @import minpack.lm
 
 #' @export
-init <- function(chebPoints = 400, userRedis = TRUE) {
+init <- function(chebPoints = 400, useRedis = TRUE) {
   flog.debug("[HQCD-P] Initializing")
-  if(userRedis)
+  if(useRedis)
     startRedis()
 
   ihqcd <- iHQCD()
@@ -37,25 +38,9 @@ cl <- NULL
   cl <<- makeCluster(cores)
 }
 
-# TODO, not working when the name of a parameter is longer than the value, like when b0 = 1 case
-catBeautifulNamedVector <- function(v, namTag = '', valTag = '', noNames = FALSE, justNames = FALSE) {
-  formatedName <- c()
-  mapply(function(n, val) {
-                      valLen <- length(strsplit(paste0(val), split = '')[[1]])
-                      if(valLen < 4)
-                        valLen <- length(strsplit(format(val, digits = 4), split = '')[[1]])
-
-                      nameLen      <- length(strsplit(n, split = '')[[1]])
-                      offsetX      <- as.integer((valLen - nameLen) / 2)
-                      leftSpace    <- paste0(rep(' ', len = offsetX), collapse = '')
-                      rightSpace   <- paste0(rep(' ', len = valLen - nameLen - offsetX), collapse = '')
-                      formatedName <<- c(formatedName, paste0(leftSpace, n, rightSpace))
-                    }, names(v), v)
-
-  if(!noNames)
-    cat(paste0('\n', namTag, paste0(formatedName, collapse = ' | ')))
-  if(!justNames)
-    cat(paste0('\n', valTag, paste0(v, collapse = ' | ')))
+#' @export
+dumpList <- function(l) {
+  paste(mapply(function(n, v) paste(n,'=', v), names(l), l), collapse = ', ')
 }
 
 on.exit({
@@ -64,7 +49,6 @@ on.exit({
   parallel::stopCluster(cl)
 })
 
-#' This is freaking helpful!
 #' @export
 copyEnv <- function(from, to, names=ls(from, all.names=TRUE)) {
   mapply(assign, names, mget(names, from), list(to),

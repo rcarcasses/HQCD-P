@@ -1,10 +1,9 @@
 #' @export
+cacheQ <- TRUE
+
+#' @export
 startRedis <- function(host = 'localhost', port = 6379) {
-  #conStarted <<-TRUE
-  #cat('\nStarting docker redis container...')
-  #system('docker start redis')
-  # redis needs some time to get up
-  #Sys.sleep(2)
+  cacheQ <-TRUE
   cat('connecting to redis...')
   rredis::redisConnect(host = host, port = port, nodelay = FALSE)
   cat('DONE\n')
@@ -14,9 +13,6 @@ startRedis <- function(host = 'localhost', port = 6379) {
 stopRedis <- function() {
   system('docker stop redis')
 }
-
-#' @export
-cacheQ <- FALSE
 
 #' @export
 cache <- function(f, ...) {
