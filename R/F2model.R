@@ -304,8 +304,10 @@ F2model <- function(potPars = 'bcde',
     df <- addAlternatingColToDataByQ2(df, colName = 'pch', col = 0:6)
     # do the plot
     Q2s <- unique(df$Q2)
+    # progress bar
+    pb <- txtProgressBar(min = 0, max = length(Q2s), style = 3)
     lapply(Q2s, function(Q2) {
-      Q2data <- df[Q2 == Q2]
+      Q2data <- df[df$Q2 == Q2,]
       # plot the experimental points
   	  lines(Q2data$x, Q2data$F2, type = "p", col = Q2data$color, cex = 0.5, pch = Q2data$pch)
   	  # create a vector of x that covers the experimental points
@@ -323,11 +325,13 @@ F2model <- function(potPars = 'bcde',
   		       length = 0.02, angle = 90, code = 3, col = Q2data$color)
 
   		# put the Q2 value at the end of the lined
-  		textPosX <- 0.5 * min(Q2data$x)
+  		textPosX <- 0.35 * min(Q2data$x)
   		#textPosX <- 10^(0.65 * (log(x, base = 10) + 5))
   		#cat('textX', textPosX,'\n')
   		textPosY <- splinefun(x, predF2)(textPosX)
       boxed.labels(textPosX, textPosY, labels = paste(Q2), col = Q2data$color, cex = 0.7, xpad = 1, ypad = 1, border = FALSE, bg = 'white')
+      # update the progress bar
+      setTxtProgressBar(pb, match(Q2, Q2s))
     })
 
     # empty return
@@ -335,10 +339,12 @@ F2model <- function(potPars = 'bcde',
   }
 
   plotSpectrum <- function() {
-    flog.error('[F2model] Update to use the new kernels configuration')
     lapply(modelKernels, function(mk) {
-      mk$plotSpectrum()
+      # call plotSpectrum on each kernel object with the best
+      # parameters found
+      do.call(mk$f2$plotSpectrum, as.list(bestEval$pars))
     })
+    flog.info('[F2model] Spectrum for each kernel plotted')
   }
 
   plotRegge <- function(glueballs = TRUE, mesons = TRUE) {

@@ -333,7 +333,7 @@ F2 <- function(potPars = 'bcde',
   }
 
   spectrum <- function(...) {
-    spectrumBCDQ(do.call(kernel$findKernel, list(...)))
+    spectrumHQCDP(do.call(kernel$findKernel, list(...)))
   }
 
   plotSpectrum <- function(...) plot.spectrumHQCDP(spectrum(...))
