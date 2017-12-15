@@ -28,9 +28,10 @@ F2 <- function(potPars = 'bcde',
   tr1 <- NULL
   tr2 <- NULL
 
-  # this function set the potential for the kernel
+  # this function set the potential for the kernel and for the Regge trajectories object
   setNewPotential <- function(f, pars) {
     kernel$setNewPotential(f, pars)
+    r$setNewPotential(f, pars)
   }
 
   plotEffectiveExponent <- function(...) {
@@ -342,6 +343,10 @@ F2 <- function(potPars = 'bcde',
     do.call(r$plot, list(...))
   }
 
+  plotReggeLines <- function(...) {
+    do.call(r$plotLines, list(...))
+  }
+
   plotGlueballMasses <- function() {
     r$plotGlueballMasses()
   }
@@ -504,6 +509,7 @@ F2 <- function(potPars = 'bcde',
              P13Bar = P13Bar,
              spectrum = spectrum,
              plotRegge = plotRegge,
+             plotReggeLines = plotReggeLines,
              plotGlueballMasses = plotGlueballMasses,
              plotMesonsMasses = plotMesonsMasses,
              plotSpectrum = plotSpectrum,

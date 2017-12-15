@@ -41,11 +41,13 @@ regge <- function(model = 'bcde', numReg = 3) {
   ld1 <- ld1[-c(1,3),]
   ld2 <- ld2[-c(1),]
 
-  getTrajectories <- function(n = 4, ...){
-    fArgs <- do.call(p$extractPotentialParameters, list(...))    # sometimes the coefficients are passed to this, just ignore them
+  getTrajectories <- function(n = 4, showProgress = TRUE, ...){
+    fArgs <- list(...)
     cat('getting trajectory for', unlist(fArgs), '\n')
     z  <- get('z', envir = ihqcdEnv)
     js <- seq(-0.3, 6.5, len = 100)
+    if(showProgress)
+      pb <- txtProgressBar(min = min(js), max = max(js), initial = min(js), style = 3)
     t <- function(J) {
       args <- as.list(c(J = J, unlist(fArgs)))
       # cat('calling u2 with args', unlist(args))
@@ -54,11 +56,14 @@ regge <- function(model = 'bcde', numReg = 3) {
       dE  <- abs(min(u2j)) / 200;
       # make it at least one for values that give a minimum near 0
       dE <- max(dE, 0.1)
-      cat("\rj =", J, " d0 =", dE)
       flush.console()
       setPotential(z, u2j)
       computeSpectrum(n, dE)
-      t <- getEnergiesAndIndices()
+      # update progress bar
+      if(showProgress)
+        setTxtProgressBar(pb, J)
+      # return the desired object
+      getEnergiesAndIndices()
     }
 
     getts <- function(J) {
@@ -70,8 +75,7 @@ regge <- function(model = 'bcde', numReg = 3) {
     r
   }
 
-  #' @export
-  plotTrajectories <- function(forceCal = TRUE, n = 4, ...) {
+  plotTrajectories <- function(forceCal = TRUE, n = 4, notJustLines = TRUE, ...) {
     if(is.null(r) || forceCal)
       getTrajectories(n, ...);
 
@@ -94,7 +98,7 @@ regge <- function(model = 'bcde', numReg = 3) {
       roots <- uniroot.all(sf, c(min(tr$j), max(tr$j)))
       tr$j0 <- min(roots)
       cat('j', i - 1,' = ', tr$j0, '\n', sep = '')
-      if(i == 1) {
+      if(i == 1 && notJustLines) {
         plot(tr$t, tr$j, ylim = c(min(r$j), max(r$j)), ylab = 'j(t)', xlab = 't', type = 'n', lwd = 2, xlim = limits)
         abline(h = 0, v = 0, col = "gray10")
         abline(v = 10 * (-1:10), h = c(1:6, seq(0.8, 1.5, by = 0.1)), col = "lightgray", lty = 3)
@@ -107,6 +111,11 @@ regge <- function(model = 'bcde', numReg = 3) {
     }
     pars <- list(...)
     #legend(x = limits[1], y = 4, legend = mapply(function(n, v) getParExpression(n, v), names(pars), pars))
+  }
+
+  plotJustLines <- function(n = 4, ...) {
+    # call the plot trajectories code asking juts to draw lines
+    do.call(plotTrajectories, as.list(c(forceCal = TRUE, n = n, notJustLines = FALSE, list(...))))
   }
 
   plotMesonsMasses <- function() {
@@ -131,6 +140,7 @@ regge <- function(model = 'bcde', numReg = 3) {
 
   r <- list(get = getTrajectories,
             plot = plotTrajectories,
+            plotLines = plotJustLines,
             setNewPotential = setNewPotential,
             plotGlueballMasses = plotGlueballMasses,
             plotMesonsMasses = plotMesonsMasses,

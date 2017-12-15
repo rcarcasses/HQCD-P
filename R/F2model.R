@@ -280,7 +280,7 @@ F2model <- function(potPars = 'bcde',
     plotHERAF2(...)
   }
 
-  plotHERAF2 <- function(...) {
+  plotHERAF2 <- function(showProgress = FALSE, ...) {
     if(is.null(bestEval)) {
       cat('Train the model first, try fit() or singleRun() functions \n')
       return()
@@ -302,10 +302,11 @@ F2model <- function(potPars = 'bcde',
     df <- addAlternatingColToDataByQ2(df, colName = 'color', col = c('blue', 'red', 'green'))
     # add some alternating shapes for the scattered plot
     df <- addAlternatingColToDataByQ2(df, colName = 'pch', col = 0:6)
-    # do the plot
     Q2s <- unique(df$Q2)
     # progress bar
-    pb <- txtProgressBar(min = 0, max = length(Q2s), style = 3)
+    if(showProgress)
+      pb <- txtProgressBar(min = 0, max = length(Q2s), style = 3)
+    # do the plot
     lapply(Q2s, function(Q2) {
       Q2data <- df[df$Q2 == Q2,]
       # plot the experimental points
@@ -331,7 +332,8 @@ F2model <- function(potPars = 'bcde',
   		textPosY <- splinefun(x, predF2)(textPosX)
       boxed.labels(textPosX, textPosY, labels = paste(Q2), col = Q2data$color, cex = 0.7, xpad = 1, ypad = 1, border = FALSE, bg = 'white')
       # update the progress bar
-      setTxtProgressBar(pb, match(Q2, Q2s))
+      if(showProgress)
+        setTxtProgressBar(pb, match(Q2, Q2s))
     })
 
     # empty return
@@ -347,16 +349,29 @@ F2model <- function(potPars = 'bcde',
     flog.info('[F2model] Spectrum for each kernel plotted')
   }
 
-  plotRegge <- function(glueballs = TRUE, mesons = TRUE) {
-    flog.error('[F2model] Update to use the new kernels configuration')
-    flog.info(paste('Using', bestEval$pars))
-    do.call(f2$plotRegge, as.list(c(parsSet, bestEval$pars)))
+  plotRegge <- function(showProgress = FALSE,
+                        xlim = c(-7, 35),
+                        ylim = c(-0.3, 6.5),
+                        glueballs = TRUE, mesons = TRUE) {
+    flog.info(paste('[F2model] Plotting Regge trajectories'))
+    # setup the plot
+    plot(1, xlim = xlim, ylim = ylim, ylab = 'j(t)', xlab = 't', type = 'n', lwd = 2)
+    abline(h = 0, v = 0, col = "gray10")
+    abline(v = 10 * (-1:10), h = c(1:6, seq(0.8, 1.5, by = 0.1)), col = "lightgray", lty = 3)
+    # and now plot the lines correspondent to each trajectory
+    # on each kernel
+    lapply(modelKernels, function(mk) {
+      # call plotReggeLines in each of the kernels
+      do.call(mk$f2$plotReggeLines, as.list(c(showProgress = showProgress, bestEval$pars)))
+    })
 
+    # to plot the experimental/lattice spectrum of mesons/glueballs
+    # invoke the respective function in the first kernel added
     if(glueballs)
-      f2$plotGlueballMasses()
+      modelKernels[[1]]$f2$plotGlueballMasses()
 
     if(mesons)
-      f2$plotMesonsMasses()
+      modelKernels[[1]]$f2$plotMesonsMasses()
   }
 
   plotEffectiveExponent <- function() {
