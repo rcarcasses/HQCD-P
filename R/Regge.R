@@ -43,7 +43,12 @@ regge <- function(model = 'bcde', numReg = 3) {
 
   getTrajectories <- function(n = 4, showProgress = TRUE, ...){
     fArgs <- list(...)
-    cat('getting trajectory for', unlist(fArgs), '\n')
+    # sometimes extra parameters are passed which are not parameters
+    # of the potential function, just ignore them
+    fDef  <- formalArgs(pot)
+    fDef  <- fDef[-match('J', fDef)]  # J is not a parameter
+    fArgs <- fArgs[fDef]
+    flog.info('[Regge] getting trajectory for %s', dumpList(fArgs))
     z  <- get('z', envir = ihqcdEnv)
     js <- seq(-0.3, 6.5, len = 100)
     if(showProgress)
@@ -80,7 +85,6 @@ regge <- function(model = 'bcde', numReg = 3) {
       getTrajectories(n, ...);
 
     limits <- c(-5, 30)
-    cat('\n')
 
     for (i in 1:length(r$t[[1]])){
       tr <- list(t = c(), j = c(), j0 = -10, splineInv = c())
@@ -97,7 +101,7 @@ regge <- function(model = 'bcde', numReg = 3) {
       tr$splineInv <- sf
       roots <- uniroot.all(sf, c(min(tr$j), max(tr$j)))
       tr$j0 <- min(roots)
-      cat('j', i - 1,' = ', tr$j0, '\n', sep = '')
+      flog.info(paste('[Regge] j', i - 1,' = ', tr$j0, sep = ''))
       if(i == 1 && notJustLines) {
         plot(tr$t, tr$j, ylim = c(min(r$j), max(r$j)), ylab = 'j(t)', xlab = 't', type = 'n', lwd = 2, xlim = limits)
         abline(h = 0, v = 0, col = "gray10")

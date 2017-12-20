@@ -122,13 +122,15 @@ F2model <- function(potPars = 'bcde',
     coeff <- lm$coefficients
     rss   <- sum((resid(lm)/data$err)^2)
     chi2  <- rss / (length(data$F2) - length(parameters))
+    jsk   <- unlist(lapply(modelKernels, function(mk) round(mk$f2$getJs(), digits = 3)))
+    flog.debug('jsk = %s', dumpList(jsk))
     # evaluation result
     value <- list(pars = pars,
                   coeff = coeff,
                   rss = rss,
                   chi2 = round(chi2, digits = 4),
                   df = df,
-                  jsk1 = round(modelKernels[[1]]$f2$getJs(), digits = 3))
+                  jsk = jsk)
     # and keep track of the best result found
     if(!is.na(rss)) {
       checkBestEval(value)
@@ -157,8 +159,11 @@ F2model <- function(potPars = 'bcde',
     # we want to force the soft pomeron intercept to 1.09, here is where we do it
     # we will take the second intercept from the first kernel added and
     # will add a penalization term proportional to the difference to the desired value
-    spJs        <- runStep$jsk1[2]
+    spJs        <- runStep$jsk[2]
     rssWeighted <- rssWeighted + forceSPjsWeight * (spJs - 1.09)^2
+    # if we have several kernels we will add a penalization of the intercepts are not
+    # ordered (maybe there is a better way of doing this)
+    rssWeighted <- rssWeighted + 10^6 * max(0, diff(runStep$jsk))
     rssWeighted
   }
 
@@ -168,11 +173,11 @@ F2model <- function(potPars = 'bcde',
       # first time
       bestEval <<- value
       flog.info('starting chi2 = %s', bestEval$chi2)
-      flog.debug(paste('\t\t jsk1 =', do.call(paste, as.list(bestEval$jsk1))))
+      flog.debug(paste('\t\t jsk =', do.call(paste, as.list(bestEval$jsk))))
     } else if(bestEval$rss > value$rss ) {
       bestEval <<- value
       flog.info(paste('\t *chi2* =', bestEval$chi2, 'pars', do.call(paste, as.list(round(bestEval$pars, digits = 3)))))
-      flog.debug(paste('\t\t jsk1 =', do.call(paste, as.list(bestEval$jsk1))))
+      flog.debug(paste('\t\t jsk =', do.call(paste, as.list(bestEval$jsk))))
     }
   }
 
@@ -208,7 +213,11 @@ F2model <- function(potPars = 'bcde',
   # call the optimization function as long as it gives a better result
   # if the difference between two successive attempts is less than tol
   # then it stops
-  fit <- function(method = NULL, tol = 1e-3) {
+  fit <- function(method = NULL, tol = 1e-3, dryRun = FALSE) {
+    # this is an alternative way of making a single run step
+    if(dryRun)
+      return(singleRun())
+
     op <- NULL
     i <- 1
     callFun <- function(fn) {
@@ -362,7 +371,7 @@ F2model <- function(potPars = 'bcde',
     # on each kernel
     lapply(modelKernels, function(mk) {
       # call plotReggeLines in each of the kernels
-      do.call(mk$f2$plotReggeLines, as.list(c(showProgress = showProgress, bestEval$pars)))
+      do.call(mk$f2$plotReggeLines, as.list(c(showProgress = showProgress, n = mk$numReg, bestEval$pars)))
     })
 
     # to plot the experimental/lattice spectrum of mesons/glueballs
