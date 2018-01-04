@@ -56,7 +56,7 @@ iHQCD <- function(A0 = 5#4.623038 #2.875115
         Phider1      <- Phispline(z, deriv = 1)
         Phider2      <- Phispline(z, deriv = 2)
         # also sometimes the warp factor in the string frame is needed
-        As           <- A + (2/3) * log(lambda)
+        As           <- A + (2/3) * Phi
         AsSpline     <- splinefun(z, As)
         Asder1       <- AsSpline(z, deriv = 1)
         Asder2       <- AsSpline(z, deriv = 2)
@@ -64,6 +64,13 @@ iHQCD <- function(A0 = 5#4.623038 #2.875115
         # compute the tensor glueball potential
         u2           <- (3/2) * Ader2 + (9/4) * Ader1^2
         LambdaQCD    <- exp(A0 - 1 / (b0 * lambda0)) / (b0 * lambda0)^(b1 / b0^2)
+        # some combinations that appear in the potential
+        aF           <- Phider2
+        bF           <- Asder2 - Asder1^2
+        cF           <- Phider1^2
+        l1_2         <- sqrt(lambda)
+        e2As         <- exp(2 * As)
+        e2A          <- exp(2 * A)
 
         # to avoid z=0 boundary effects the first values are removed
         # the biggest problem comes from the derivative of A
@@ -84,6 +91,12 @@ iHQCD <- function(A0 = 5#4.623038 #2.875115
                   Phider2 = Phider2[st:len],
                   As = As[st:len],
                   dress = dress[st:len],
+                  aF = aF[st:len],
+                  bF = bF[st:len],
+                  cF = cF[st:len],
+                  l1_2 = l1_2[st:len],
+                  e2As = e2As[st:len],
+                  e2A = e2A[st:len],
                   h = h,
                   A0 = A0,
                   LambdaQCD = LambdaQCD)
@@ -140,6 +153,9 @@ findBestA0 <- function(startA0 = 2.8) {
   #cat('Best A0', max(roots), '\n')
   op
 }
+
+#' @export
+getAvailableSymbolsIHQCD <- function() names(as.list(ihqcdEnv))
 
 #' @export
 findBestA0byM0 <- function() {
