@@ -1,3 +1,9 @@
+[![license](https://img.shields.io/github/license/rcarcasses/HQCD-P.svg)]()
+[![GitHub top language](https://img.shields.io/github/languages/top/rcarcasses/HQCD-P.svg)]()
+[![GitHub language count](https://img.shields.io/github/languages/count/rcarcasses/HQCD-P.svg)]()
+[![GitHub issues](https://img.shields.io/github/issues/rcarcasses/HQCD-P.svg)]()
+
+
 # HQCD-P
 A package for the Pomeron in Holographic QCD
 
