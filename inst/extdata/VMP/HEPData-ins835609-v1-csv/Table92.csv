@@ -1,0 +1,16 @@
+#: table_doi: 10.17182/hepdata.56191.v1/t92
+#: name: Table 92
+#: description: Q**2 dependence of the ratio R.
+
+#: data_file: Table92.yaml
+#: keyword reactions: E+ P --> E+ PHI DD | E- P --> E- PHI DD
+#: keyword observables: SIG/SIG
+#: keyword phrases: Exclusive | Integrated Cross Section | Cross Section | Electron production
+#: M(P=5) [GEV],<5
+#: RE,E+- P --> E+- PHI DD
+#: sqrts [GEV],300 + 320
+'Q**2 [GEV**2]','SIG(C=L)/SIG(C=T)','stat +','stat -','sys +','sys -'
+3.3,1.37,0.14,-0.13,0.09,-0.09
+6.6,2.87,0.4,-0.34,0.28,-0.26
+15.8,6.01,2.0,-1.33,1.0,-0.78
+

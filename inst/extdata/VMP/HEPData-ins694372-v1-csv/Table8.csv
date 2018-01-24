@@ -1,0 +1,19 @@
+#: table_doi: 10.17182/hepdata.46134.v1/t8
+#: name: Table 8
+#: description: Differential cross section for the elastic process GAMMA P --> J/PSI P as a function of T in Q**2 bins in the W range 40 to 160 GeV.
+
+#: data_file: Table8.yaml
+#: keyword reactions: E- P --> E- J/PSI P | E+ P --> E+ J/PSI P | GAMMA P --> J/PSI P
+#: keyword observables: DSIG/DT
+#: keyword phrases: Exclusive | J/Psi | Single Differential Cross Section | Photoproduction | Electron production
+#: keyword cmenergies: 40.0-160.0
+#: RE,,,GAMMA P --> J/PSI P
+#: W [GEV],,,40 TO 160
+#: Q**2 [GEV**2],,,3.2 (BIN=2 TO 5)
+#: SQRT(S) [GeV],,,40.0-160.0
+'ABS(T) [GEV**2]','ABS(T) [GEV**2] LOW','ABS(T) [GEV**2] HIGH','D(SIG)/DT [NB/GEV**2]','stat +','stat -','sys +','sys -'
+0.04,0.0,0.08,107.0,14.0,-14.0,10.0,-10.0
+0.13,0.08,0.18,95.1,11.0,-11.0,9.1,-9.1
+0.27,0.18,0.38,40.2,5.4,-5.4,3.9,-3.9
+0.68,0.38,1.2,8.04,1.05,-1.05,0.77,-0.77
+

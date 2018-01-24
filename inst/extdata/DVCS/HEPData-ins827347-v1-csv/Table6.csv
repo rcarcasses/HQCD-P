@@ -1,0 +1,17 @@
+#: table_doi: 10.17182/hepdata.54512.v1/t6
+#: name: Table 6
+#: description: Overall value of the SLOPE parameter of the fit to the DSIG/DT distribution.
+
+#: data_file: Table6.yaml
+#: keyword reactions: E- P --> E- GAMMA P | E+ P --> E+ GAMMA P | GAMMA* P --> GAMMA P
+#: keyword observables: SLOPE
+#: keyword plabs: ,
+#: keyword phrases: Exclusive | Photoproduction | Electron production
+#: keyword cmenergies: 30.0-140.0
+#: RE,,,GAMMA* P --> GAMMA P
+#: W [GEV],,,30 TO 140
+#: Q**2 [GEV**2],,,6.5 TO 80
+#: SQRT(S) [GeV],,,30.0-140.0
+'ABS(T) [GEV**2]','ABS(T) [GEV**2] LOW','ABS(T) [GEV**2] HIGH','SLOPE [GEV**-2]','stat +','stat -','sys +','sys -'
+0.5,0.0,1.0,5.41,0.14,-0.14,0.31,-0.31
+

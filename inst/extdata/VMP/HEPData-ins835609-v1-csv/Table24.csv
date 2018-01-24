@@ -1,0 +1,19 @@
+#: table_doi: 10.17182/hepdata.56191.v1/t24
+#: name: Table 24
+#: description: T dependence of the GAMMA* P cross section for dissociative PHI  production for several values. There is an additional overall normalization uncertainty of 5.3 PCT.
+
+#: data_file: Table24.yaml
+#: keyword reactions: GAMMA* P --> PHI DD
+#: keyword observables: DSIG/DT
+#: keyword phrases: Exclusive | Single Differential Cross Section | Photoproduction
+#: RE,GAMMA* P --> PHI DD
+#: W [GeV],75.0 (35.0-180.0)
+#: Q**2 [GeV^2],5.0
+#: sqrts [GEV],300 + 320
+#: M(P=4) [GEV],< 5
+'ABS(T) [GEV**2]','D(SIG)/DT [NB/GEV**2]','stat +','stat -','sys +','sys -'
+0.15,58.2,11.8,-11.8,9.0,-6.1
+0.5,23.1,5.5,-5.5,4.1,-2.6
+1.1,6.17,2.76,-2.76,2.28,-1.25
+2.25,0.681,0.418,-0.418,0.285,-0.301
+
