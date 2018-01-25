@@ -12,7 +12,7 @@ F2model <- function(potPars = 'bcde',
     data <- getHERAF2()
 
   # this variable contains all the kernels used in the model
-  modelKernels <- c()
+  modelUnits <- c()
   colNames     <- c()
   # the parameters to be optimized
   # we should keep in mind that there may be shared
@@ -24,10 +24,10 @@ F2model <- function(potPars = 'bcde',
   startOpt     <- NULL
 
   # add a new kernel to the fitting F2  model
-  addKernel <- function(...) {
+  addUnit <- function(...) {
     kernelData <- list(...)
     # create a f2 object with the configuration desired
-    f2 <- F2(numReg = kernelData$numReg,
+    f2 <- F2Unit(numReg = kernelData$numReg,
              data = data,
              kernelName = kernelData$prefix,
              considerNonMinimalCoupling = considerNonMinimalCoupling)
@@ -36,12 +36,12 @@ F2model <- function(potPars = 'bcde',
     # add the created object to the kernelData one
     kernelData <- c(kernelData, list(f2 = f2))
     # add this kernel to the list of kernels
-    modelKernels[[kernelData$prefix]] <<- kernelData
+    modelUnits[[kernelData$prefix]] <<- kernelData
     # update the parameters vector
     mapply(function(n, v) parameters[n] <<- v, names(kernelData$optimPars), kernelData$optimPars)
 
     # and update the list of column names
-    colNames <<- lapply(modelKernels, function(k) {
+    colNames <<- lapply(modelUnits, function(k) {
       # create a vector with the names = prefix + index
       ns <- lapply(0:(k$numReg - 1), function(i) paste0(k$prefix, i))
       if(considerNonMinimalCoupling) {
@@ -57,8 +57,8 @@ F2model <- function(potPars = 'bcde',
   info <- function() {
     cat('\n\t##############################')
     cat('\n\t# Overview of the model')
-    cat('\t- Number of kernels', length(modelKernels), '\n')
-    cat('\t- Reggeons by kernel', paste0(unlist(lapply(modelKernels, function(k) k$numReg)), collapse = ', '), '\n')
+    cat('\t- Number of kernels', length(modelUnits), '\n')
+    cat('\t- Reggeons by kernel', paste0(unlist(lapply(modelUnits, function(k) k$numReg)), collapse = ', '), '\n')
     cat('\t- Column names', getColNames(), '\n')
     cat('\t- Parameters to optimize are \n')
     print(parameters)
@@ -77,7 +77,7 @@ F2model <- function(potPars = 'bcde',
   # through the column names of the returned dataframe
   getFns <- function(pars) {
     df <- NULL
-    lapply(modelKernels, function(mk) {
+    lapply(modelUnits, function(mk) {
       # get the parameters associated with the potential of this kernel
       indices <- names(mk$optimPars)
       mkPars <- as.list(pars[indices])
@@ -122,7 +122,7 @@ F2model <- function(potPars = 'bcde',
     coeff <- lm$coefficients
     rss   <- sum((resid(lm)/data$err)^2)
     chi2  <- rss / (length(data$F2) - length(parameters))
-    jsk   <- unlist(lapply(modelKernels, function(mk) round(mk$f2$getJs(), digits = 3)))
+    jsk   <- unlist(lapply(modelUnits, function(mk) round(mk$f2$getJs(), digits = 3)))
     flog.debug('jsk = %s', dumpList(jsk))
     # evaluation result
     value <- list(pars = pars,
@@ -350,7 +350,7 @@ F2model <- function(potPars = 'bcde',
   }
 
   plotSpectrum <- function() {
-    lapply(modelKernels, function(mk) {
+    lapply(modelUnits, function(mk) {
       # call plotSpectrum on each kernel object with the best
       # parameters found
       do.call(mk$f2$plotSpectrum, as.list(bestEval$pars))
@@ -369,7 +369,7 @@ F2model <- function(potPars = 'bcde',
     abline(v = 10 * (-1:10), h = c(1:6, seq(0.8, 1.5, by = 0.1)), col = "lightgray", lty = 3)
     # and now plot the lines correspondent to each trajectory
     # on each kernel
-    lapply(modelKernels, function(mk) {
+    lapply(modelUnits, function(mk) {
       # call plotReggeLines in each of the kernels
       do.call(mk$f2$plotReggeLines, as.list(c(showProgress = showProgress, n = mk$numReg, bestEval$pars)))
     })
@@ -377,10 +377,10 @@ F2model <- function(potPars = 'bcde',
     # to plot the experimental/lattice spectrum of mesons/glueballs
     # invoke the respective function in the first kernel added
     if(glueballs)
-      modelKernels[[1]]$f2$plotGlueballMasses()
+      modelUnits[[1]]$f2$plotGlueballMasses()
 
     if(mesons)
-      modelKernels[[1]]$f2$plotMesonsMasses()
+      modelUnits[[1]]$f2$plotMesonsMasses()
   }
 
   plotEffectiveExponent <- function() {
@@ -394,7 +394,7 @@ F2model <- function(potPars = 'bcde',
             singleRun = singleRun,
             predict = predictF2,
             info = info,
-            addKernel = addKernel,
+            addUnit = addUnit,
             plot = plotF2,
             plotRegge = plotRegge,
             plotSpectrum = plotSpectrum,

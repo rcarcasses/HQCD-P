@@ -80,6 +80,9 @@ potential <- function(model = 'bcde', addAlfonsoTerm = TRUE) {
     } else {
       # the potential has been set, use it
       flog.debug('[Potential] Using custom potential')
+      # set the external potential function environment to ihqcdEnv one
+      # so we can use symbols like Phider1 in the body of the potential function
+      environment(potentialSet) <- ihqcdEnv
       potentialSet
     }
   }

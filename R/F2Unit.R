@@ -1,5 +1,5 @@
 #' @export
-F2 <- function(potPars = 'bcde',
+F2Unit<- function(potPars = 'bcde',
                  numReg = 3,
                  data = NULL,
                  kernelName = '',
@@ -18,7 +18,7 @@ F2 <- function(potPars = 'bcde',
   h       <- get('h', envir = ihqcdEnv)
 
   # create a kernel
-  kernel <- kernelBCDQ(potPars, numReg, kernelName = kernelName)
+  kernel <- kernelUnit(potPars, numReg, kernelName = kernelName)
 
   # create a regge object
   r <- regge(potPars, numReg = numReg)
@@ -303,10 +303,10 @@ F2 <- function(potPars = 'bcde',
     wfder1  <- wffun(z, deriv = 1)
     wfder2  <- wffun(z, deriv = 2)
     # contribution from the transverse part
-    t2fun   <- splinefun(z, f2Q(z) * ((Asder1 * Phider1 - 0.5 * Asder1^2) * wfEval + Asder1 * wfder1))
+    t2fun   <- splinefun(z, f2Q(z) * ((Asder1 * Phider1 - 1.5 * Asder1^2) * wfEval + Asder1 * wfder1))
     # contribution from the longitudinal part
     t3fun   <- splinefun(z, (f2Qder1(z) / Q2) * (wfder2 + 2 * (Phider1 - Asder1) * wfder1 +
-         (Phider2 + (J - 1.5) * Asder2 - Asder1 * (2 * Phider1 + J - 1) + Phider1^2 + 0.75 * Asder1^2) * wfEval))
+         (Phider2 + (J - 2.5) * Asder2 - Asder1 * (2 * Phider1 + J - 1) + Phider1^2 + 0.75 * Asder1^2) * wfEval))
 
     integral <- integrate(function(x) t1fun(x) * (t2fun(x) + t3fun(x)), z[1], z[length(z)], stop.on.error = FALSE)
     # cat('int ', integral$value, '\n')

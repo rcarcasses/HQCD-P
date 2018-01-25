@@ -24,4 +24,6 @@ Depends:
   rredis,
   scales,
   schrodinger,
+  testthat,
   tictoc 
+Suggests: testthat

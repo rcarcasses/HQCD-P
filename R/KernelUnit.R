@@ -1,7 +1,7 @@
 # kernelName is important when doing multikernel computations, should be unique
 # numReg indicates the number of reggions to be considered while finding the kernel
 #' @export
-kernelBCDQ <- function(potPars = 'b', numReg = 3, kernelName = '') {
+kernelUnit <- function(potPars = 'b', numReg = 3, kernelName = '') {
   p <- potential(potPars)
 
   pot <- p$u()
@@ -86,6 +86,6 @@ kernelBCDQ <- function(potPars = 'b', numReg = 3, kernelName = '') {
             extractPotentialParameters = extractPotentialParameters,
             getLast = function() lastKernel,
             getTimeTaken = function() time.taken)
-  class(k) <- append(class(k), 'kernelBCDQ')
+  class(k) <- append(class(k), 'kernelUnit')
   k
 }

@@ -1,6 +1,6 @@
 # the data accepted here is the one coming from the kernel function findKernel
 #' @export
-spectrumHQCDP <- function(data) {
+spectrumUnit <- function(data) {
   colors <- c('red', 'blue', 'green', 'cyan')
   trajName <- c('Hard Pomeron', 'Soft Pomeron', '3rd trajectory', '4th trajectory')
   plotSpectrum <- function(indices = NULL, grid = TRUE) {
@@ -31,10 +31,10 @@ spectrumHQCDP <- function(data) {
              ylab = 'U', xlab = 'z', main = info[i])
         abline(h = 0, v = 0, col = "gray60")
         abline(h = c(-5, 5, 10) , v = c(2, 4, 6), col = "lightgray", lty = 3)
-        # we need to show explicitly that the potential goes up near the boundary
-        if(i > 2) {
-          abline(v = 0, lwd = 3)
-        }
+        # (deprecated) we need to show explicitly that the potential goes up near the boundary
+        #if(i > 2) {
+        #  abline(v = 0, lwd = 3)
+        #}
         # the factor (-1)^(i + 1) is just to match the sign with what is obtained from the data analysis
         lines(d$wf$x, 10 * (1)^(i + 2) * d$wf$y, lwd = 2, lty = 5)
       } else {
@@ -106,9 +106,9 @@ spectrumHQCDP <- function(data) {
             plot = plotSpectrum,
             plotNMC = plotNMC
             )
-  class(s) <- append(class(s), 'spectrumBCDQ')
+  class(s) <- append(class(s), 'spectrumUnit')
   s
 }
 
 #' @export
-plot.spectrumHQCDP <- function(s) s$plot()
+plot.spectrumUnit <- function(s) s$plot()
