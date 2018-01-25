@@ -72,7 +72,7 @@ We are ready to create and train the predictor proposed for $F_2(x,Q^2)$. The pr
 ```{r}
 f2model <- F2model(considerNonMinimalCoupling = FALSE)
 # here we add the kernels we want to consider in this run
-f2model$addKernel(potential = UJg,
+f2model$addUnit(potential = UJg,
                   numReg = 4,
                   comment = 'Leading twist gluon sector',
                   prefix = 'gluon', # this has to be unique: is used to name the couplings and the kernel

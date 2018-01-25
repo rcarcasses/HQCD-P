@@ -12,6 +12,7 @@
 #' @import scales
 #' @import tictoc
 #' @import optimx
+#' @import testthat
 #' @import latex2exp
 #' @import minpack.lm
 
@@ -101,4 +102,4 @@ detachAllPackages <- function() {
   if (length(package.list)>0)  for (package in package.list) detach(package, character.only=TRUE)
 }
 
-detachAllPackages()
+# detachAllPackages()

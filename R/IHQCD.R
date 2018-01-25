@@ -51,6 +51,7 @@ iHQCD <- function(A0 = 5#4.623038 #2.875115
         # derivatives are useful for different applications, so let's export them as well
         Ader1        <- Aspline(z, deriv = 1)
         Ader2        <- Aspline(z, deriv = 2)
+        Ader3        <- Aspline(z, deriv = 3)
         lambdader1   <- lambdaspline(z, deriv = 1)
         lambdader2   <- lambdaspline(z, deriv = 2)
         Phider1      <- Phispline(z, deriv = 1)
@@ -60,6 +61,7 @@ iHQCD <- function(A0 = 5#4.623038 #2.875115
         AsSpline     <- splinefun(z, As)
         Asder1       <- AsSpline(z, deriv = 1)
         Asder2       <- AsSpline(z, deriv = 2)
+        Asder3       <- AsSpline(z, deriv = 3)
         dress        <- exp(2 * A)
         # compute the tensor glueball potential
         u2           <- (3/2) * Ader2 + (9/4) * Ader1^2
@@ -81,8 +83,10 @@ iHQCD <- function(A0 = 5#4.623038 #2.875115
                   A = A[st:len],
                   Ader1 = Ader1[st:len],
                   Ader2 = Ader2[st:len],
+                  Ader3 = Ader2[st:len],
                   Asder1 = Asder1[st:len],
                   Asder2 = Asder2[st:len],
+                  Asder3 = Asder3[st:len],
                   lambda = lambda[st:len],
                   lambdader1 = lambdader1[st:len],
                   lambdader2 = lambdader2[st:len],

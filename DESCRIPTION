@@ -9,7 +9,7 @@ License: MIT
 LazyData: TRUE
 Encoding: UTF-8
 RoxygenNote: 5.0.1
-Depends: 
+Depends:
   futile.logger,
   cmaes,
   deSolve,
@@ -24,4 +24,6 @@ Depends:
   rredis,
   scales,
   schrodinger,
+  testthat,
   tictoc 
+Suggests: testthat

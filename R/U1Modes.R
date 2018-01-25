@@ -3,16 +3,16 @@
 modesEnv <- new.env()
 
 #' @export
-getMode <- function(Q2, A0 = NULL, h) {
+getMode <- function(Q2, A0 = NULL, h, alpha = -0.06718486) {
   if(is.null(A0)) {
     cat('[WARN] A0 is null in getMode(), setting to the IHQCD value\n')
     A0 <- get('A0', envir = ihqcdEnv)
   }
 
-  key <- paste('u1m', A0, h, sep = '')
+  key <- paste('u1m', A0, h, alpha, sep = '-')
   if(!exists(key, envir = modesEnv)){  # compute them if needed
     if(!rredis::redisExists(key))
-      findU1modesForAllQ2(key, A0, h)
+      findU1modesForAllQ2(key, A0, h, alpha)
 
     # copy all from redis to a local environment
     assign(key, rredis::redisGet(key), envir = modesEnv)
@@ -60,24 +60,43 @@ getMode <- function(Q2, A0 = NULL, h) {
   cat(paste('[WARN] No mode found for Q^2=', Q2,'\n'))
 }
 
-
+# these are the non-normalizable modes
 #' @export
-findU1Modes <- function(Q2 = 3.5) {
+findU1Modes <- function(Q2 = 3.5, alpha = 0) {
+  flog.debug(paste('finding mode', Q2, 'alpha', alpha))
   x             <- get('z', envir = ihqcdEnv)
-  A             <- get('A', envir = ihqcdEnv)
-  Ader1fun      <- splinefun(x, get('Ader1', envir = ihqcdEnv))
-  lambdafun     <- splinefun(x, get('lambda', envir = ihqcdEnv))
-  lambdader1fun <- splinefun(x, get('lambdader1', envir = ihqcdEnv))
+  As            <- get('As', envir = ihqcdEnv)
+  Asder1        <- get('Asder1', envir = ihqcdEnv)
+  Asder2        <- get('Asder2', envir = ihqcdEnv)
+  Asder3        <- get('Asder3', envir = ihqcdEnv)
+  Phider1       <- get('Phider1', envir = ihqcdEnv)
+  Asfun         <- splinefun(x, As)
+  Asder1fun     <- splinefun(x, Asder1)
+  Asder2fun     <- splinefun(x, Asder2)
+  Asder3fun     <- splinefun(x, Asder3)
+  Phider1fun    <- splinefun(x, Phider1)
+  # this is useful for the non minimal coupling case
+  fact0fun      <- splinefun(x, (1 - 2 * exp(-2 * As) * alpha * Asder2) / (1 - 2 * exp(-2 * As) * alpha * Asder1^2))
+  fact1fun      <- splinefun(x, exp(2 * As) - 2 * alpha * Asder2)
 
   # now we need to define the differential equation for the U(1) field modes
   fun <- function(x, y, pars) {
-    list(c(y[2], Q2 * y[1] - (Ader1fun(x) - (1/3) * (lambdader1fun(x) / lambdafun(x))) * y[2]))
+    dy2 <- Q2 * y[1] - (Asder1fun(x) - Phider1fun(x)) * y[2]
+    dy1 <- y[2]
+    list(c(dy1, dy2))
   }
-
-  mode <- as.data.frame(bvpcol(yini = c(y = 1, dy = NA), x = x, func = fun, yend = c(0, NA), nmax = 100000, atol = 1e-9))
-  #plot.new()
-  #plot(mode$x, mode$y, type = 'l', main = paste("Q=", Q), xlab = "z", ylab = "f(z)", xlim = c(0, 3))
-  return(mode)
+  funAlpha <- function(x, y, pars) {
+    # remark: we are using Q2=q^2 and not the usual -q^2 since we are using the GR metric convention for eta
+    dy2 <- Q2 * y[1] * fact0fun(x) - (Asder1fun(x) - Phider1fun(x)
+                        + 2 * alpha * (2 * Asder1fun(x) * Asder2fun(x) - Asder3fun(x)) / fact1fun(x)) * y[2]
+    dy1 <- y[2]
+    list(c(dy1, dy2))
+  }
+  odeFun <- fun
+  if (abs(alpha) > 0)
+    odeFun <- funAlpha
+  # return the solution as a data frame
+  as.data.frame(bvpcol(yini = c(y = 1, dy = NA), x = x, func = odeFun, yend = c(0, NA), nmax = 100000, atol = 1e-9))
 }
 
 #' @export
@@ -158,12 +177,12 @@ Q2s <- c(0.10, 0.15, 0.20, 0.25, 0.35, 0.40, 0.50, 0.65, 0.85, 1.20, 1.50, 2.00,
 
 # this is to cache the results
 #' @export
-findU1modesForAllQ2 <- function(key = NULL, A0 = NULL, h = 0.01, doPlot = FALSE) {
+findU1modesForAllQ2 <- function(key = NULL, A0 = NULL, h = 0.01, alpha = 0, doPlot = FALSE) {
   if(is.null(A0))
     A0 <- get('A0', envir = ihqcdEnv)
 
   if(is.null(key))
-    key <- paste('u1modes', A0, h, sep = '')
+    key <- paste('u1modes', A0, h, alpha, sep = '-')
 
   # cat('\n Finding modes for A0 =', A0, ', h =', h, ', Q2s', Q2s, '\n')
   # set the constants in the IHQCD package
@@ -183,7 +202,7 @@ findU1modesForAllQ2 <- function(key = NULL, A0 = NULL, h = 0.01, doPlot = FALSE)
 	cl <- rainbow(length(Q2s))
   i <- 1
   for(Q2 in Q2s) {
-    m       <- force(findU1Modes(Q2))
+    m <- force(findU1Modes(Q2, alpha = alpha))
 
     # DEBUG
     # do not clip text outside the graph

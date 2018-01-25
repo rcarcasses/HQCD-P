@@ -31,10 +31,10 @@ spectrumHQCDP <- function(data) {
              ylab = 'U', xlab = 'z', main = info[i])
         abline(h = 0, v = 0, col = "gray60")
         abline(h = c(-5, 5, 10) , v = c(2, 4, 6), col = "lightgray", lty = 3)
-        # we need to show explicitly that the potential goes up near the boundary
-        if(i > 2) {
-          abline(v = 0, lwd = 3)
-        }
+        # (deprecated) we need to show explicitly that the potential goes up near the boundary
+        #if(i > 2) {
+        #  abline(v = 0, lwd = 3)
+        #}
         # the factor (-1)^(i + 1) is just to match the sign with what is obtained from the data analysis
         lines(d$wf$x, 10 * (1)^(i + 2) * d$wf$y, lwd = 2, lty = 5)
       } else {

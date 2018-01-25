@@ -24,10 +24,10 @@ F2model <- function(potPars = 'bcde',
   startOpt     <- NULL
 
   # add a new kernel to the fitting F2  model
-  addKernel <- function(...) {
+  addUnit <- function(...) {
     kernelData <- list(...)
     # create a f2 object with the configuration desired
-    f2 <- F2(numReg = kernelData$numReg,
+    f2 <- F2Unit(numReg = kernelData$numReg,
              data = data,
              kernelName = kernelData$prefix,
              considerNonMinimalCoupling = considerNonMinimalCoupling)
@@ -394,7 +394,7 @@ F2model <- function(potPars = 'bcde',
             singleRun = singleRun,
             predict = predictF2,
             info = info,
-            addKernel = addKernel,
+            addUnit = addUnit,
             plot = plotF2,
             plotRegge = plotRegge,
             plotSpectrum = plotSpectrum,
