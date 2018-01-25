@@ -334,10 +334,12 @@ F2Unit<- function(potPars = 'bcde',
   }
 
   spectrum <- function(...) {
-    spectrumHQCDP(do.call(kernel$findKernel, list(...)))
+    spectrumUnit(do.call(kernel$findKernel, list(...)))
   }
 
-  plotSpectrum <- function(...) plot.spectrumHQCDP(spectrum(...))
+  plotNMC <- function(...) spectrum(...)$plotNMC()
+
+  plotSpectrum <- function(...) plot(spectrum(...))
 
   plotRegge <- function(...) {
     do.call(r$plot, list(...))
@@ -509,6 +511,7 @@ F2Unit<- function(potPars = 'bcde',
              P13Bar = P13Bar,
              spectrum = spectrum,
              plotRegge = plotRegge,
+             plotNMC = plotNMC,
              plotReggeLines = plotReggeLines,
              plotGlueballMasses = plotGlueballMasses,
              plotMesonsMasses = plotMesonsMasses,

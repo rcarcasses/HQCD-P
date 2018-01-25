@@ -76,7 +76,7 @@ spectrumUnit <- function(data) {
     DperpPsi <- lapply(actualData, function(d) {
       wffun <- splinefun(d$wf$x, d$wf$y)
       wfder1 <- wffun(z, deriv = 1)
-      (Asder1 * Phider1 - 0.5 * Asder1^2) * wffun(z) + Asder1 * wfder1
+      (Asder1 * Phider1 - 1.5 * Asder1^2) * wffun(z) + Asder1 * wfder1
     })
     # compute Dparallel psi
     DparallelPsi <- lapply(actualData, function(d) {
@@ -85,7 +85,7 @@ spectrumUnit <- function(data) {
       wfder1 <- wffun(z, deriv = 1)
       wfder2 <- wffun(z, deriv = 2)
       wfder2 + 2 * (Phider1 - Asder1) * wfder1 +
-         (Phider2 + (J - 1.5) * Asder2 - Asder1 * (2 * Phider1 + J - 1) + Phider1^2 + 0.75 * Asder1^2) * wffun(z)
+         (Phider2 + (J - 2.5) * Asder2 - Asder1 * (2 * Phider1 + J - 1) + Phider1^2 + 0.75 * Asder1^2) * wffun(z)
     })
 
     mapply(function(d, Dp, Dpa, col, i) {
