@@ -18,7 +18,7 @@ F2Unit<- function(potPars = 'bcde',
   h       <- get('h', envir = ihqcdEnv)
 
   # create a kernel
-  kernel <- kernelBCDQ(potPars, numReg, kernelName = kernelName)
+  kernel <- kernelUnit(potPars, numReg, kernelName = kernelName)
 
   # create a regge object
   r <- regge(potPars, numReg = numReg)
