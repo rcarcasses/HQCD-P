@@ -523,9 +523,26 @@ F2Unit<- function(potPars = 'bcde',
              F2A2 = F2A2,
              F2M = F2M,
              plot = plotF2)
-  class(f2) <- append(class(f2), 'F2')
+  class(f2) <- append(class(f2), 'F2Unit')
   f2
 }
 
 #' @export
-plot.F2 <- function(f2, ...) f2$plot(...)
+plot.F2Unit <- function(f2, ...) f2$plot(...)
+#' @export
+getAllFns.F2Unit <- function(f2, ...) f2$getAllFns(...)
+#' @export
+getFns.F2Unit <- function(f2, ...) f2$getFns(...)
+#' @export
+getJs.F2Unit <- function(f2, ...) f2$getJs(...)
+#' @export
+setNewPotential.F2Unit <- function(f2, ...) f2$setNewPotential(...)
+#' @export
+plotSpectrum.F2Unit <- function(f2, ...) f2$plotSpectrum(...)
+#' @export
+plotReggeLines.F2Unit <- function(f2, ...) f2$plotReggeLines(...)
+#' @export
+plotGlueballMasses.F2Unit <- function(f2, ...) f2$plotGlueballMasses(...)
+#' @export
+plotMesonsMasses.F2Unit <- function(f2, ...) f2$plotMesonsMasses(...)
+

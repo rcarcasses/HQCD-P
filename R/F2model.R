@@ -32,7 +32,7 @@ F2model <- function(potPars = 'bcde',
              kernelName = kernelData$prefix,
              considerNonMinimalCoupling = considerNonMinimalCoupling)
     # configure the f2 object with the custom potential passed
-    f2$setNewPotential(kernelData$potential, kernelData$optimPars)
+    setNewPotential(f2, kernelData$potential, kernelData$optimPars)
     # add the created object to the kernelData one
     kernelData <- c(kernelData, list(f2 = f2))
     # add this kernel to the list of kernels
@@ -88,7 +88,7 @@ F2model <- function(potPars = 'bcde',
 
       # get the right function to call according whether we are considering
       # the non minimal coupling case or not
-      f <- if(considerNonMinimalCoupling) mk$f2$getAllFns else mk$f2$getFns
+      f <- if(considerNonMinimalCoupling) getAllFns(mk$f2) else getFns(mk$f2)
       # get the dataframe with the fns
       mkdf <- do.call(f, mkPars)
       # add the computed dataframe columns to the full one
@@ -122,7 +122,7 @@ F2model <- function(potPars = 'bcde',
     coeff <- lm$coefficients
     rss   <- sum((resid(lm)/data$err)^2)
     chi2  <- rss / (length(data$F2) - length(parameters))
-    jsk   <- unlist(lapply(modelUnits, function(mk) round(mk$f2$getJs(), digits = 3)))
+    jsk   <- unlist(lapply(modelUnits, function(mk) round(getJs(mk$f2), digits = 3)))
     flog.debug('jsk = %s', dumpList(jsk))
     # evaluation result
     value <- list(pars = pars,
@@ -377,10 +377,10 @@ F2model <- function(potPars = 'bcde',
     # to plot the experimental/lattice spectrum of mesons/glueballs
     # invoke the respective function in the first kernel added
     if(glueballs)
-      modelUnits[[1]]$f2$plotGlueballMasses()
+      plotGlueballMasses(modelUnits[[1]]$f2)
 
     if(mesons)
-      modelUnits[[1]]$f2$plotMesonsMasses()
+      plotMesonsMasses(modelUnits[[1]]$f2)
   }
 
   plotEffectiveExponent <- function() {
