@@ -17,7 +17,7 @@ kernelUnit <- function(potPars = 'b', numReg = 3, kernelName = '') {
   }
 
   # the arguments here should be consistent with the potPars passed
-  findKernelFun <- function(...) {
+  findKernelFun <- function(atT = 0, ...) {
     # flog.debug(paste('[Kernel] finding kernel for', dumpList(list(...))))
     fArgs <- do.call(p$extractPotentialParameters, list(...))    # sometimes the coefficients are passed to this, just ignore them
     start.time <- Sys.time()
@@ -40,7 +40,7 @@ kernelUnit <- function(potPars = 'b', numReg = 3, kernelName = '') {
     # define the get intecept function
     Js <- seq(0.2, 2, len = 20)
     getIntercept <- function(n) {
-      tspline <- function(j) tvec(j, n)
+      tspline <- function(j) tvec(j, n) - atT
       roots <- uniroot.all(tspline, c(0.2, 2.2), n = 6)
       if(length(roots) > 0)
         js <- max(roots)
@@ -52,9 +52,9 @@ kernelUnit <- function(potPars = 'b', numReg = 3, kernelName = '') {
     }
 
     if(!is.null(cl))
-      s <- lapply(seq(1, numReg), getIntercept)
+      s <- lapply(1:numReg, getIntercept)
     else
-      s <- parLapply(cl, seq(1, numReg), getIntercept)
+      s <- parLapply(cl, 1:numReg, getIntercept)
 
     # normalize the wave function
     lapply(1:numReg, function(i){
