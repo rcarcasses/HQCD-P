@@ -4,7 +4,7 @@ filesAtFolder <- function(folder, n) unlist(lapply(n, function(n) paste0(folder,
 
 # load all the data and put it in the proper format
 loadDVCS_sigma <- function() {
-  # This function creates vectors with the values of W, Q2, sigma and dsigma
+  # This function creates vectors with the values of W, Q2, sigma and delta_sigma
   # of the data used by Marko in his DVCS paper with Miguel
   # Getting data from 761990 folder
   # Getting data from Table1.csv file
@@ -64,6 +64,7 @@ loadDVCS_sigma <- function() {
 
   return (data.frame(W, Q2, sigma, delta_sigma))
 }
+
 loadDVCS_dsigma <- function() {
   # This function creates vectors with the values of W, Q2, dsigma and delta_sigma
   # of the data used by Marko in his DVCS paper with Miguel
