@@ -1,6 +1,6 @@
 #' @export
 VMPSigmaUnit <- function() {
-  data <- loadVMP_dsigma()
+  data <- loadVMP_sigma()
   vmp <- list(data = data)
   class(vmp) <- append(class(vmp), 'VMPSigmaUnit')
   vmp
