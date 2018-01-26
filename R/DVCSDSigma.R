@@ -1,14 +1,9 @@
 #' @export
-DVCSDSigmaUnit <- function() {
-  data <- loadData.DVCSDSigma()
-  dvcs <- list(data = data)
-  class(dvcs) <- append(class(dvcs), 'DVCSDSigmaUnit')
-  dvcs
-}
+DVCSDSigma <- function() ProcessObservable('DVCSDSigma')
 
 #' @export
-expVal.DVCSDSigmaUnit <- function(dvcs) dvcs$data$dsigma
+expVal.DVCSDSigma <- function(dvcs) dvcs$data$dsigma
 #' @export
-expErr.DVCSDSigmaUnit <- function(dvcs) dvcs$data$deltaDSigma
+expErr.DVCSDSigma <- function(dvcs) dvcs$data$deltaDSigma
 #' @export
-expKinematics.DVCSDSigmaUnit <- function(dvcs) dvcs$data[c('Q2', 'W', 't')]
+expKinematics.DVCSDSigma <- function(dvcs) dvcs$data[c('Q2', 'W', 't')]

@@ -1,7 +1,7 @@
 # load all the data and put it in the proper format
 
 #' @export
-loadData.DVCSSigma <- function() {
+loadData.DVCSSigma <- function(dvcs) {
   # This function creates vectors with the values of W,  Q2,  sigma and deltaSigma
   # of the data used by Marko in his DVCS paper with Miguel
   # Getting data from 761990 folder
@@ -63,7 +63,7 @@ loadData.DVCSSigma <- function() {
   data.frame(W,  Q2,  sigma,  deltaSigma)
 }
 #' @export
-loadData.DVCSDSigma <- function() {
+loadData.DVCSDSigma <- function(dvcs) {
   # This function creates vectors with the values of W,  Q2,  dsigma and deltaSigma
   # of the data used by Marko in his DVCS paper with Miguel
   # Getting data from 761990 folder
