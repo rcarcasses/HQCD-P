@@ -6,7 +6,7 @@ m_phi    <- 1.019445
 m_omega  <- 0.78265
 
 #' @export
-loadData.VMPSigma <- function() {
+loadData.VMPSigma <- function(vmp) {
   # This function creates vectors with the values of m,  W,  Q2,  sigma and deltaSigma
   # of the data used by arxiv:1307.0009
   # Getting data from 694372 folder
@@ -119,7 +119,7 @@ loadData.VMPSigma <- function() {
 }
 
 #' @export
-loadData.VMPDSigma  <- function(){
+loadData.VMPDSigma  <- function(vmp) {
   # This function creates vectors with the values of m,  W,  Q2,  t,  dsigma and deltaDSigma
   # of the data used by arxiv:1307.0009
   # Getting data from 694372 folder
