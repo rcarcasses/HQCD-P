@@ -1,0 +1,16 @@
+#: table_doi: 10.17182/hepdata.56191.v1/t100
+#: name: Table 100
+#: description: Dependence of the exponential slope of the T distribution as a function of the di-pion mass for the Q**2 range 2.5 to 5 GeV**2.
+
+#: data_file: Table100.yaml
+#: keyword reactions: GAMMA* P --> RHO0 P
+#: keyword observables: SLOPE
+#: keyword phrases: Exclusive | Photoproduction
+#: RE,GAMMA* P --> RHO0 P
+#: Q**2 [GeV^2],3.3 (2.5-5.0)
+#: sqrts [GEV],300 + 320
+'M(C=PI+PI-) [GEV]','SLOPE [GEV**-2]','stat +','stat -','sys +','sys -'
+0.67,7.33,0.51,-0.51,0.38,-0.36
+0.87,8.25,0.4,-0.4,0.26,-0.29
+1.07,7.73,0.51,-0.51,0.46,-0.42
+

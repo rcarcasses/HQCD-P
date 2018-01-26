@@ -1,0 +1,23 @@
+#: table_doi: 10.17182/hepdata.56191.v1/t72
+#: name: Table 72
+#: description: Spin density matrix elements for diffractive electroproduction of PHI mesons as a function of  T.
+
+#: data_file: Table72.yaml
+#: keyword reactions: E+ P --> E+ PHI DD | E- P --> E- PHI DD
+#: keyword observables: RHO
+#: keyword phrases: Exclusive | Electron production
+#: M(P=5) [GEV],< 5
+#: RE,E+- P --> E+- PHI DD
+#: W [GeV],75.0 (35.0-180.0)
+#: sqrts [GEV],300 + 320
+'ABS(T) [GEV**2]','ABS(T) [GEV**2]','','stat +','stat -','sys +','sys -'
+0.08,0.08,0.667,0.019,-0.019,0.012,-0.011
+0.34,0.08,0.641,0.027,-0.027,0.021,-0.021
+1.05,0.08,0.83,0.039,-0.039,0.087,-0.088
+0.08,0.34,0.002,0.014,-0.014,0.01,-0.012
+0.34,0.34,0.008,0.02,-0.02,0.02,-0.021
+1.05,0.34,-0.01,0.041,-0.041,0.033,-0.026
+0.08,1.05,-0.014,0.016,-0.016,0.004,-0.002
+0.34,1.05,-0.003,0.023,-0.023,0.01,-0.006
+1.05,1.05,-0.036,0.044,-0.044,0.012,-0.024
+

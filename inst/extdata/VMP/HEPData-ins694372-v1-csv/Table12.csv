@@ -1,0 +1,36 @@
+#: table_doi: 10.17182/hepdata.46134.v1/t12
+#: name: Table 12
+#: description: Differential electroproduction cross section for the elastic process GAMMA P --> J/PSI P as a function of W in bins of ABS(T).
+
+#: data_file: Table12.yaml
+#: keyword reactions: E- P --> E- J/PSI P | E+ P --> E+ J/PSI P | GAMMA P --> J/PSI P
+#: keyword observables: DSIG/DT
+#: keyword phrases: Exclusive | J/Psi | Single Differential Cross Section | Photoproduction | Electron production
+#: keyword cmenergies: 57.0-140.0
+#: ABS(T) [GEV**2],0 TO 0.1
+#: RE,GAMMA P --> J/PSI P
+#: Q**2 [GEV**2],8.9 (BIN=2 TO 80)
+#: SQRT(S) [GeV],57.0-140.0
+'W [GEV]','D(SIG)/DT [NB/GEV**2]','stat +','stat -','sys +','sys -'
+57.0,33.3,4.9,-4.9,3.28,-3.28
+98.0,51.3,6.7,-6.7,4.98,-4.98
+140.0,60.0,12.0,-12.0,68.0,-68.0
+
+#: ABS(T) [GEV**2],0.1 TO 0.3
+#: RE,GAMMA P --> J/PSI P
+#: Q**2 [GEV**2],8.9 (BIN=2 TO 80)
+#: SQRT(S) [GeV],57.0-140.0
+'W [GEV]','D(SIG)/DT [NB/GEV**2]','stat +','stat -','sys +','sys -'
+57.0,17.3,2.2,-2.2,1.7,-1.7
+98.0,30.1,3.5,-3.5,2.9,-2.9
+140.0,31.5,5.8,-5.8,3.0,-3.0
+
+#: ABS(T) [GEV**2],0.3 TO 1.2
+#: RE,GAMMA P --> J/PSI P
+#: Q**2 [GEV**2],8.9 (BIN=2 TO 80)
+#: SQRT(S) [GeV],57.0-140.0
+'W [GEV]','D(SIG)/DT [NB/GEV**2]','stat +','stat -','sys +','sys -'
+57.0,3.4,0.5,-0.5,0.3,-0.3
+98.0,5.5,0.7,-0.7,0.5,-0.5
+140.0,6.0,1.1,-1.1,0.6,-0.6
+

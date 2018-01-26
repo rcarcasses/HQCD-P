@@ -1,0 +1,18 @@
+#: table_doi: 10.17182/hepdata.56191.v1/t95
+#: name: Table 95
+#: description: W dependence of the ratio R.
+
+#: data_file: Table95.yaml
+#: keyword reactions: E+ P --> E+ RHO0 DD | E- P --> E- RHO0 DD
+#: keyword observables: SIG/SIG
+#: keyword phrases: Exclusive | Integrated Cross Section | Cross Section | Electron production
+#: M(P=5) [GEV],<5
+#: RE,E+- P --> E+- RHO0 DD
+#: Q**2 [GeV^2],22.5 (15.5-60.0)
+#: sqrts [GEV],300 + 320
+'W [GEV]','SIG(C=L)/SIG(C=T)','stat +','stat -','sys +','sys -'
+72.0,3.59,0.98,-0.74,0.59,-0.37
+97.0,5.96,2.48,-1.6,1.19,-1.05
+122.0,6.27,2.98,-1.76,1.41,-1.02
+147.0,6.01,3.13,-1.71,1.08,-2.14
+
