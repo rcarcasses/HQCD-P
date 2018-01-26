@@ -101,5 +101,12 @@ detachAllPackages <- function() {
   package.list <- setdiff(package.list,basic.packages)
   if (length(package.list)>0)  for (package in package.list) detach(package, character.only=TRUE)
 }
-
 # detachAllPackages()
+
+# Some test function (actually the one being used in the NMC paper)
+#' @export
+UJgTest <- function(J, invls = 1/0.153, a = -4.35, b = 1.41, c = 0.626, d = -0.117) {
+  # the deformation of the potential of the graviton
+  u2 + (J - 2) * ((2 * e2As * invls^2) * (1 + d / l1_2) + e2A * (J + 2)
+                  + (a * aF + b * bF + c * cF))
+}

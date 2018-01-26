@@ -30,6 +30,7 @@ F2Unit<- function(potPars = 'bcde',
 
   # this function set the potential for the kernel and for the Regge trajectories object
   setNewPotential <- function(f, pars) {
+    cat('setting new potential')
     kernel$setNewPotential(f, pars)
     r$setNewPotential(f, pars)
   }
@@ -349,14 +350,6 @@ F2Unit<- function(potPars = 'bcde',
     do.call(r$plotLines, list(...))
   }
 
-  plotGlueballMasses <- function() {
-    r$plotGlueballMasses()
-  }
-
-  plotMesonsMasses <- function() {
-    r$plotMesonsMasses()
-  }
-
   fi <- function(n, Q2 = NULL, ...) {
     if(is.null(Q2))
       Q2 <- Q2s
@@ -513,8 +506,6 @@ F2Unit<- function(potPars = 'bcde',
              plotRegge = plotRegge,
              plotNMC = plotNMC,
              plotReggeLines = plotReggeLines,
-             plotGlueballMasses = plotGlueballMasses,
-             plotMesonsMasses = plotMesonsMasses,
              plotSpectrum = plotSpectrum,
              plotEffectiveExponent = plotEffectiveExponent,
              fDL = fDL,
@@ -541,8 +532,3 @@ setNewPotential.F2Unit <- function(f2, ...) f2$setNewPotential(...)
 plotSpectrum.F2Unit <- function(f2, ...) f2$plotSpectrum(...)
 #' @export
 plotReggeLines.F2Unit <- function(f2, ...) f2$plotReggeLines(...)
-#' @export
-plotGlueballMasses.F2Unit <- function(f2, ...) f2$plotGlueballMasses(...)
-#' @export
-plotMesonsMasses.F2Unit <- function(f2, ...) f2$plotMesonsMasses(...)
-
