@@ -1,6 +1,6 @@
 #' @export
 DVCSDSigmaUnit <- function() {
-  data <- loadDVCS_dsigma()
+  data <- loadData.DVCSDSigma()
   dvcs <- list(data = data)
   class(dvcs) <- append(class(dvcs), 'DVCSDSigmaUnit')
   dvcs
@@ -9,6 +9,6 @@ DVCSDSigmaUnit <- function() {
 #' @export
 expVal.DVCSDSigmaUnit <- function(dvcs) dvcs$data$dsigma
 #' @export
-expErr.DVCSDSigmaUnit <- function(dvcs) dvcs$data$delta_dsigma
+expErr.DVCSDSigmaUnit <- function(dvcs) dvcs$data$deltaDSigma
 #' @export
 expKinematics.DVCSDSigmaUnit <- function(dvcs) dvcs$data[c('Q2', 'W', 't')]
