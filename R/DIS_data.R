@@ -11,7 +11,7 @@ e0 <- 1 - jn
 Q2s <- NULL
 
 #' @export
-getHERAF2 <- function(maxX = 0.01, maxF2 = 5, maxQ2 = 1110, minQ2 = 0.1) {
+loadData.F2 <- function(f2, maxX = 0.01, maxF2 = 5, maxQ2 = 1110, minQ2 = 0.1) {
   flog.debug(paste('Loading HERA data with maxX', maxX, ' and ', minQ2, ' <= Q2 <=', maxQ2))
   # read the HERA nce+p data
   nceppPath <- system.file('extdata', 'd09-158.nce+p.txt', package = 'HQCDP')

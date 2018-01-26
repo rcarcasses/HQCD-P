@@ -5,7 +5,7 @@ modesEnv <- new.env()
 #' @export
 getMode <- function(Q2, A0 = NULL, h, alpha = -0.06718486) {
   if(is.null(A0)) {
-    cat('[WARN] A0 is null in getMode(), setting to the IHQCD value\n')
+    # flog.debug('[WARN] A0 is null in getMode(), setting to the IHQCD value')
     A0 <- get('A0', envir = ihqcdEnv)
   }
 
