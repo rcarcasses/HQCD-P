@@ -88,9 +88,9 @@ F2model <- function(potPars = 'bcde',
 
       # get the right function to call according whether we are considering
       # the non minimal coupling case or not
-      f <- if(considerNonMinimalCoupling) getAllFns(mk$f2) else getFns(mk$f2)
+      f <- if(considerNonMinimalCoupling) getAllFns else getFns
       # get the dataframe with the fns
-      mkdf <- do.call(f, mkPars)
+      mkdf <- do.call(f, c(list(mk$f2), mkPars))
       # add the computed dataframe columns to the full one
       if(is.null(df))
         df <<-mkdf
@@ -353,7 +353,7 @@ F2model <- function(potPars = 'bcde',
     lapply(modelUnits, function(mk) {
       # call plotSpectrum on each kernel object with the best
       # parameters found
-      do.call(mk$f2$plotSpectrum, as.list(bestEval$pars))
+      do.call(plotSpectrum, c(list(mk$f2), bestEval$pars))
     })
     flog.info('[F2model] Spectrum for each kernel plotted')
   }
@@ -374,13 +374,12 @@ F2model <- function(potPars = 'bcde',
       do.call(mk$f2$plotReggeLines, as.list(c(showProgress = showProgress, n = mk$numReg, bestEval$pars)))
     })
 
-    # to plot the experimental/lattice spectrum of mesons/glueballs
-    # invoke the respective function in the first kernel added
+    # plot the experimental/lattice spectrum of mesons/glueballs if required so
     if(glueballs)
-      plotGlueballMasses(modelUnits[[1]]$f2)
+      drawGlueballMasses()
 
     if(mesons)
-      plotMesonsMasses(modelUnits[[1]]$f2)
+      drawMesonsMasses()
   }
 
   plotEffectiveExponent <- function() {
