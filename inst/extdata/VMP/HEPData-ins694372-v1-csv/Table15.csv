@@ -1,0 +1,39 @@
+#: table_doi: 10.17182/hepdata.46134.v1/t15
+#: name: Table 15
+#: description: Spin density matrices and ratio R of cross sections of longitudinal and polarized photons as a function of Q**2 for ABS(T) < 5 GeV**2 and W from 40 to 160 GeV.
+
+#: data_file: Table15.yaml
+#: keyword reactions: E- P --> E- J/PSI P | E+ P --> E+ J/PSI P | GAMMA P --> J/PSI P
+#: keyword observables: POL.RHO | SIG
+#: keyword phrases: Exclusive | J/Psi | Integrated Cross Section | Cross Section | Polarization | Photoproduction | Electron production
+#: keyword cmenergies: 40.0-160.0
+#: ABS(T) [GEV**2],,,< 5
+#: RE,,,GAMMA P --> J/PSI P
+#: W [GEV],,,40 TO 160
+#: SQRT(S) [GeV],,,40.0-160.0
+'Q**2 [GEV**2]','Q**2 [GEV**2] LOW','Q**2 [GEV**2] HIGH','POL.RHO(ALPHA=04//MM=00)','stat +','stat -','sys +','sys -'
+0.05,0.0,1.0,-0.03,0.016,-0.016,0.027,-0.027
+3.2,2.0,5.0,0.049,0.079,-0.079,0.05,-0.05
+7.0,5.0,10.0,0.19,0.14,-0.14,0.06,-0.06
+22.4,10.0,50.0,0.38,0.16,-0.16,0.06,-0.06
+
+#: ABS(T) [GEV**2],,,< 5
+#: RE,,,GAMMA P --> J/PSI P
+#: W [GEV],,,40 TO 160
+#: SQRT(S) [GeV],,,40.0-160.0
+'Q**2 [GEV**2]','Q**2 [GEV**2] LOW','Q**2 [GEV**2] HIGH','POL.RHO(ALPHA=04//MM=1-1)','stat +','stat -','sys +','sys -'
+0.05,0.0,1.0,0.02,0.016,-0.016,0.042,-0.042
+3.2,2.0,5.0,-0.129,0.07,-0.07,0.039,-0.039
+7.0,5.0,10.0,-0.017,0.1,-0.1,0.04,-0.04
+22.4,10.0,50.0,-0.04,0.12,-0.12,0.04,-0.04
+
+#: ABS(T) [GEV**2],,,< 5
+#: RE,,,GAMMA P --> J/PSI P
+#: W [GEV],,,40 TO 160
+#: SQRT(S) [GeV],,,40.0-160.0
+'Q**2 [GEV**2]','Q**2 [GEV**2] LOW','Q**2 [GEV**2] HIGH','SIG(C=L)/SIG(C=T)','stat +','stat -','sys +','sys -'
+0.05,0.0,1.0,-0.03,0.015,-0.015,0.026,-0.025
+3.2,2.0,5.0,0.052,0.096,-0.081,0.059,-0.053
+7.0,5.0,10.0,0.23,0.25,-0.18,0.09,-0.08
+22.4,10.0,50.0,0.62,0.59,-0.34,0.17,-0.14
+

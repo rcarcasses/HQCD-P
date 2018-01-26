@@ -1,0 +1,38 @@
+#: table_doi: 10.17182/hepdata.56191.v1/t59
+#: name: Table 59
+#: description: Spin density matrix elements for diffractive electroproduction of RHO0 mesons as a function of  W.
+
+#: data_file: Table59.yaml
+#: keyword reactions: E+ P --> E+ RHO0 DD | E- P --> E- RHO0 DD
+#: keyword observables: RHO
+#: keyword phrases: Exclusive | Electron production
+#: M(P=5) [GEV],< 5
+#: RE,E+- P --> E+- RHO0 DD
+#: Q**2 [GeV^2],22.5
+#: sqrts [GEV],300 + 320
+'W [GEV]','RHO(JJ=1,MM=1-1)','stat +','stat -','sys +','sys -'
+72.0,0.024,0.019,-0.019,0.004,-0.002
+97.0,-0.012,0.022,-0.022,0.003,-0.006
+122.0,-0.024,0.015,-0.015,0.002,-0.004
+147.0,-0.005,0.015,-0.015,0.004,-0.003
+
+#: M(P=5) [GEV],< 5
+#: RE,E+- P --> E+- RHO0 DD
+#: Q**2 [GeV^2],22.5
+#: sqrts [GEV],300 + 320
+'W [GEV]',' RHO(JJ=2,MM=10)','stat +','stat -','sys +','sys -'
+72.0,-0.005,0.015,-0.015,0.004,-0.003
+97.0,-0.032,0.016,-0.016,0.004,-0.003
+122.0,-0.015,0.018,-0.018,0.004,-0.005
+147.0,0.021,0.027,-0.027,0.02,-0.017
+
+#: M(P=5) [GEV],< 5
+#: RE,E+- P --> E+- RHO0 DD
+#: Q**2 [GeV^2],22.5
+#: sqrts [GEV],300 + 320
+'W [GEV]','  IM(RHO(JJ=2,MM=1-1))','stat +','stat -','sys +','sys -'
+72.0,0.021,0.027,-0.027,0.02,-0.017
+97.0,-0.003,0.029,-0.029,0.002,-0.024
+122.0,0.029,0.03,-0.03,0.006,-0.02
+147.0,0.037,0.033,-0.033,0.006,-0.012
+

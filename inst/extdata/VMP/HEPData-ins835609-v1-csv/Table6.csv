@@ -1,0 +1,20 @@
+#: table_doi: 10.17182/hepdata.56191.v1/t6
+#: name: Table 6
+#: description: Q**2 + MASS(V)**2 dependence of the ratio pf the PHI to RHO0 elastic cross section for mean W There is an additional overall normalization uncertainty of 4.0 PCT.
+
+#: data_file: Table6.yaml
+#: keyword reactions: GAMMA* P --> RHO0 P | GAMMA* P --> PHI P
+#: keyword observables: SIG/SIG
+#: keyword phrases: Exclusive | Integrated Cross Section | Cross Section | Photoproduction
+#: RE(Q=PHI),GAMMA* P --> PHI P
+#: W [GeV],75.0 (35.0-180.0)
+#: sqrts [GEV],300 + 320
+#: RE(Q=RHO0),GAMMA* P --> RHO0 P
+'(Q**2 + M(P=4)**2) [GEV**2]','SIG(Q=PHI)/SIG(Q=RHO0)','stat +','stat -','sys +','sys -'
+3.94,0.186,0.015,-0.015,0.014,-0.012
+5.14,0.205,0.017,-0.017,0.011,-0.008
+7.64,0.192,0.013,-0.013,0.008,-0.005
+12.94,0.185,0.019,-0.019,0.007,-0.005
+19.64,0.154,0.027,-0.027,0.01,-0.007
+32.34,0.195,0.049,-0.049,0.01,-0.009
+

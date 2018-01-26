@@ -1,0 +1,48 @@
+#: table_doi: 10.17182/hepdata.56191.v1/t103
+#: name: Table 103
+#: description: Q**2 dependence of the ratio of the helicity amplitudes (assumed purely imaginary) and phase difference between the T11 and T00 amplitudes for PHI  production.
+
+#: data_file: Table103.yaml
+#: keyword reactions: E+ P --> E+ PHI DD | E- P --> E- PHI DD
+#: keyword observables: AMP/AMP | PHASE
+#: keyword phrases: Exclusive | Electron production
+#: M(P=5) [GEV],<5
+#: RE,E+- P --> E+- PHI DD
+#: sqrts [GEV],300 + 320
+'Q**2 [GEV**2]','AMP(42=11)/AMP(42=00)','stat +','stat -','sys +','sys -'
+3.4,0.823,0.033,-0.033,0.024,-0.019
+6.6,0.58,0.029,-0.029,0.014,-0.014
+15.7,0.375,0.035,-0.035,0.019,-0.014
+
+#: M(P=5) [GEV],<5
+#: RE,E+- P --> E+- PHI DD
+#: sqrts [GEV],300 + 320
+'Q**2 [GEV**2]','AMP(42=01)/AMP(42=00)','stat +','stat -','sys +','sys -'
+3.4,0.049,0.031,-0.031,0.039,-0.041
+6.6,0.115,0.035,-0.035,0.035,-0.041
+15.7,0.097,0.041,-0.041,0.052,-0.073
+
+#: M(P=5) [GEV],<5
+#: RE,E+- P --> E+- PHI DD
+#: sqrts [GEV],300 + 320
+'Q**2 [GEV**2]','AMP(42=10)/AMP(42=00)','stat +','stat -','sys +','sys -'
+3.4,-0.027,0.02,-0.02,0.015,-0.019
+6.6,-0.001,0.02,-0.02,0.01,-0.009
+15.7,-0.028,0.027,-0.027,0.013,-0.024
+
+#: M(P=5) [GEV],<5
+#: RE,E+- P --> E+- PHI DD
+#: sqrts [GEV],300 + 320
+'Q**2 [GEV**2]','AMP(42=-11)/AMP(42=00)','stat +','stat -','sys +','sys -'
+3.4,-0.151,0.027,-0.027,0.011,-0.007
+6.6,0.076,0.026,-0.026,0.005,-0.003
+15.7,0.008,0.027,-0.027,0.014,-0.023
+
+#: M(P=5) [GEV],<5
+#: RE,E+- P --> E+- PHI DD
+#: sqrts [GEV],300 + 320
+'Q**2 [GEV**2]','COS(PHASE(42=11)-PHASE(42=00))','stat +','stat -','sys +','sys -'
+3.4,0.982,0.048,-0.048,0.011,-0.07
+6.6,0.993,0.057,-0.057,0.003,-0.091
+15.7,0.867,0.115,-0.115,0.069,-0.051
+

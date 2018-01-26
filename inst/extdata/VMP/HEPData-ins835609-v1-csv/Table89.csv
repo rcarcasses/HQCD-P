@@ -1,0 +1,18 @@
+#: table_doi: 10.17182/hepdata.56191.v1/t89
+#: name: Table 89
+#: description: T dependence of the matrix element combination RHO(JJ=5,MM=00) + 2*RHO(JJ=5,MM=11).
+
+#: data_file: Table89.yaml
+#: keyword reactions: E+ P --> E+ RHO0 DD | E- P --> E- RHO0 DD
+#: keyword observables: RHO
+#: keyword phrases: Exclusive | Electron production
+#: M(P=5) [GEV],<5
+#: RE,E+- P --> E+- RHO0 DD
+#: sqrts [GEV],300 + 320
+'ABS(T) [GEV**2]','RHO(JJ=5,MM=00)+2*RHO(JJ=5,MM=11)','stat +','stat -','sys +','sys -'
+0.03,0.074,0.022,-0.022,0.032,-0.036
+0.13,0.109,0.022,-0.022,0.062,-0.052
+0.31,0.2,0.028,-0.028,0.064,-0.086
+0.7,0.249,0.051,-0.051,0.063,-0.038
+1.44,0.308,0.077,-0.077,0.086,-0.096
+

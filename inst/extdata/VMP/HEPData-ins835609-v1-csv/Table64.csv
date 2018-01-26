@@ -1,0 +1,24 @@
+#: table_doi: 10.17182/hepdata.56191.v1/t64
+#: name: Table 64
+#: description: Spin density matrix elements for diffractive electroproduction of RHO0 mesons as a function of  T.
+
+#: data_file: Table64.yaml
+#: keyword reactions: E+ P --> E+ RHO0 DD | E- P --> E- RHO0 DD
+#: keyword observables: RHO
+#: keyword phrases: Exclusive | Electron production
+#: M(P=5) [GEV],< 5
+#: RE,E+- P --> E+- RHO0 DD
+#: W [GeV],75.0 (35.0-180.0)
+#: Q**2 [GeV^2],3.3
+#: sqrts [GEV],300 + 320
+'ABS(T) [GEV**2]','ABS(T) [GEV**2]','','stat +','stat -','sys +','sys -'
+0.08,0.08,0.143,0.016,-0.016,0.006,-0.009
+0.34,0.08,0.149,0.024,-0.024,0.011,-0.013
+1.05,0.08,0.075,0.048,-0.048,0.01,-0.022
+0.08,0.34,0.018,0.013,-0.013,0.012,-0.012
+0.34,0.34,0.072,0.021,-0.021,0.016,-0.016
+1.05,0.34,0.104,0.046,-0.046,0.017,-0.025
+0.08,1.05,-0.192,0.015,-0.015,0.007,-0.006
+0.34,1.05,-0.108,0.023,-0.023,0.016,-0.008
+1.05,1.05,-0.207,0.056,-0.056,0.018,-0.022
+
