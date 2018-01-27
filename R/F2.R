@@ -11,7 +11,7 @@ F2 <- function() ProcessObservable('F2')
 predict.F2 <- function(f2, points, spectrums) {
   # get the fns for the given spectrums
   fns <- getFns(f2, points, spectrums)
-  fns <- fns[c(-1, -2)]  # remove the Q2 and x columns
+  fns <- fns[-match(c('Q2', 'x'), names(points))]  # remove the Q2 and x columns if any
   # fit the linear model
   f2Data <- expVal(f2)
   fit <- lm(f2Data ~ ., data = fns)
