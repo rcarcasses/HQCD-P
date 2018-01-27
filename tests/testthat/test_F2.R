@@ -15,5 +15,5 @@ test_that('predict and rssComplete generic functions are called properly', {
   k   <- kernelUnit()
   s   <- k$findKernel()
   rss <- rssComplete(f2, spectra = list(s))
-  expect_lt(abs(rss$rss - 607.2166), 1e-3)
+  expect_lt(abs(rss$rss - 1771.225), 1e-3)
 })
