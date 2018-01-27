@@ -6,11 +6,11 @@ F2 <- function() ProcessObservable('F2')
 #' @param points the data points over which F2 will be predicted. This
 #' should be a data frame with the same structure as the one returned
 #' by expKinematics. Is important to keep the order of the columns.
-#' @param spectrums a collection of spectrums of different kernels which can have different amount of Reggeons, etc.
+#' @param spectra a collection of spectrum of different kernels which can have different amount of Reggeons, etc.
 #' @export
-predict.F2 <- function(f2, points, spectrums) {
+predict.F2 <- function(f2, points, spectra) {
   # get the fns for the given spectrums
-  fns <- getFns(f2, points, spectrums)
+  fns <- getFns(f2, points, spectra)
   fns <- fns[-match(c('Q2', 'x'), names(points))]  # remove the Q2 and x columns if any
   # fit the linear model
   f2Data <- expVal(f2)
@@ -24,10 +24,10 @@ predict.F2 <- function(f2, points, spectrums) {
 #' @export
 #' @return A data frame where the first columns are the points passed
 #' and the next ones are the values of fns for each one of the kernels
-getFns.F2 <- function(f2, points, spectrums) {
+getFns.F2 <- function(f2, points, spectra) {
   newColumns <- data.frame(Q2 = points$Q2, x = points$x)
   # iterate over kernel's spectrum
-  lapply(spectrums, function(s) {
+  lapply(spectra, function(s) {
     # iterate over each Reggeon for the given spectrum
     # remember, the tr1 and tr2 are not data about the reggeons
     lapply(s[names(s) == ''], function(spec) {

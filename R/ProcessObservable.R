@@ -14,7 +14,7 @@ predict.ProcessObservable <- function(obs, points = NULL, ...) {
   if(is.null(points))
     points <- expKinematics(obs)
   # call the next function
-  NextMethod('predict', obs, points, ...)
+  NextMethod('predict', object = obs, points, ...)
 }
 
 #' @export
