@@ -17,6 +17,14 @@ predict.ProcessObservable <- function(obs, points = NULL, ...) {
   NextMethod('predict', object = obs, points, ...)
 }
 
+#' Every experiment have a set of values for t for which
+#' the kernels have to be computed. This information should
+#' be returned by this function
+#' @export
+getNeededTVals <- function(x) UseMethod('getNeededTVals')
+#' @export
+getNeededTVals.default <- function(x) 'getNeededTVals should be custom implemented for each ProcessObservable subtype'
+
 #' @export
 rssComplete <- function(x, ...) UseMethod('rssComplete')
 #' @export
