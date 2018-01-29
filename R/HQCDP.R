@@ -7,6 +7,10 @@ HQCDP <- function() {
   class(h) <- c('HQCDP', class(h))  # pay attention to the class name
   h
 }
+
+#' @export
+getNeededTVals.HQCDP <- function(p) unique(unlist(lapply(p$processes, getNeededTVals)))
+
 #' @export
 addKernel <- function(x, ...) UseMethod('addKernel')
 #' @export
