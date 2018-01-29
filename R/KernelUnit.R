@@ -1,29 +1,27 @@
-# kernelName is important when doing multikernel computations, should be unique
-# numReg indicates the number of reggions to be considered while finding the kernel
+#' A kernel unit represents a single type of pomeron kernel
+#' @param  potential A function that computes the potential and has as arguments J plus the potential parameters
+#' @param  numReg Indicates the number of reggions to be considered while finding the kernel
+#' @param  kernelName Is important when doing multikernel computations, should be unique
+#' @param comment Can be used to add some additional information about what this kernel represents
+#' @param optimPars Indicate which parameters can be optimized for this kernel
 #' @export
-kernelUnit <- function(potPars = 'b', numReg = 3, kernelName = '') {
-  p <- potential(potPars)
-
-  pot <- p$u()
-  z   <- p$z
+kernelUnit <- function(potential, numReg = 3, kernelName = '', comment = '', optimPars = c()) {
+  # make the variables defined in ihqcdEnv available into the potential body
+  environment(potential) <- ihqcdEnv
+  z <- get('z', envir = ihqcdEnv)
   lastKernel <- NULL
   time.taken <- NULL
 
-  # set the potential to an external one
-  setNewPotential <- function(f, pars) {
-    p$setNewPotential(f, pars)
-    # update the local potential function
-    pot <<- p$u()
-  }
-
   # the arguments here should be consistent with the potPars passed
-  findKernelFun <- function(atT = 0, ...) {
-    # flog.debug(paste('[Kernel] finding kernel for', dumpList(list(...))))
-    fArgs <- do.call(p$extractPotentialParameters, list(...))    # sometimes the coefficients are passed to this, just ignore them
+  # the .t name is to prevent partial matching with extra arguments passed
+  # (please prevent users to use variable names starting with .!)
+  findKernelFun <- function(.t = 0, ...) {
+    # sometimes the coefficients are passed to this, just ignore them
+    fArgs <- getPotentialArgs(potential, ...)
     start.time <- Sys.time()
     t <- function(J, n) {
       args <- as.list(c(J = J, fArgs))
-      u2j  <- do.call(pot, args)
+      u2j  <- do.call(potential, args)
       dE   <- abs(min(u2j)) / 400;
       # make it at least one for values that give a minimum near 0
       dE   <- max(dE, 0.01)
@@ -40,7 +38,7 @@ kernelUnit <- function(potPars = 'b', numReg = 3, kernelName = '') {
     # define the get intecept function
     Js <- seq(0.2, 2, len = 20)
     getIntercept <- function(n) {
-      tspline <- function(j) tvec(j, n) - atT
+      tspline <- function(j) tvec(j, n) - .t
       roots <- uniroot.all(tspline, c(0.2, 2.2), n = 6)
       if(length(roots) > 0)
         js <- max(roots)
@@ -58,7 +56,6 @@ kernelUnit <- function(potPars = 'b', numReg = 3, kernelName = '') {
 
     # normalize the wave function
     lapply(1:numReg, function(i){
-      # cat(paste('j', i, sep = ''),'= ', s$js, '     ')
       wffun <- splinefun(s[[i]]$wf$x, s[[i]]$wf$y^2)
       c <- integrate(wffun, s[[i]]$wf$x[1], s[[i]]$wf$x[length(s[[i]]$wf$x)])$value
       s[[i]]$wf$y <<- (s[[i]]$wf$y[10] / abs(s[[i]]$wf$y[10])) * s[[i]]$wf$y / sqrt(c)
@@ -78,14 +75,24 @@ kernelUnit <- function(potPars = 'b', numReg = 3, kernelName = '') {
   }
 
   findKernel <- cache(findKernelFun, kernelName)
-  extractPotentialParameters <- function(...) do.call(p$extractPotentialParameters, list(...))
 
   k <- list(findKernel = findKernel,
-            potential = p,
-            setNewPotential = setNewPotential,
-            extractPotentialParameters = extractPotentialParameters,
+            potential = potential,
+            comment = comment,
+            optimPars = optimPars,
             getLast = function() lastKernel,
             getTimeTaken = function() time.taken)
   class(k) <- append(class(k), 'kernelUnit')
   k
+}
+
+#' @export
+getPotentialArgs <- function(pot, ...) {
+  fArgs <- list(...)
+  fDef  <- formalArgs(pot)
+  fDef  <- fDef[-match('J', fDef)]  # J is not a parameter
+  fArgs <- fArgs[fDef]
+  # remove the null values
+  fArgs <- Filter(Negate(is.null), fArgs)
+  fArgs
 }

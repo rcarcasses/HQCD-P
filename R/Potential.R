@@ -1,5 +1,5 @@
 
-#' @export
+#'
 potential <- function(model = 'bcde', addAlfonsoTerm = TRUE) {
   model <- strsplit(model, split = '')[[1]]
   terms <- c()
@@ -268,14 +268,14 @@ potential <- function(model = 'bcde', addAlfonsoTerm = TRUE) {
   p
 }
 
-#' @export
+#'
 print.potential <- function(p, ...) print(paste('potential is:', p$u2jBody()))
-#' @export
+#'
 show.potential <- function(p) print(p)
-#' @export
+#'
 cat.potential <- function(p) print(p)
 
-#' @export
+#'
 plot.potential <- function(p, ...) {
   brokenPars <- p$breakParams(...) # distingish between potential and plot parameters
   pars <- brokenPars$pars          # assign the potential parameters
@@ -298,7 +298,7 @@ plot.potential <- function(p, ...) {
   boxed.labels(p$z[[i]], u[[i]], labels = labels, col = cl, cex = 0.7, xpad = 1, ypad = 1, border = FALSE, bg = 'white')
 }
 
-#' @export
+#'
 lines.potential <- function(p,...) {
   brokenPars <- p$breakParams(...) # distingish between potential and plot parameters
   pars <- brokenPars$pars          # assign the potential parameters

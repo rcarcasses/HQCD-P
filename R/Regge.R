@@ -14,14 +14,9 @@ regge <- function(model = 'bcde', numReg = 3) {
   }
 
   getTrajectories <- function(n = 4, showProgress = TRUE, ...){
-    fArgs <- list(...)
     # sometimes extra parameters are passed which are not parameters
     # of the potential function, just ignore them
-    fDef  <- formalArgs(pot)
-    fDef  <- fDef[-match('J', fDef)]  # J is not a parameter
-    fArgs <- fArgs[fDef]
-    # remove the null values
-    fArgs <- Filter(Negate(is.null), fArgs)
+    fArgs <- getPotentialArgs(pot, ...)
     flog.info('[Regge] getting trajectory for %s', dumpList(fArgs))
     z  <- get('z', envir = ihqcdEnv)
     js <- seq(-0.3, 6.5, len = 100)

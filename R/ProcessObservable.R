@@ -26,13 +26,21 @@ getNeededTVals <- function(x) UseMethod('getNeededTVals')
 getNeededTVals.default <- function(x) 'getNeededTVals should be custom implemented for each ProcessObservable subtype'
 
 #' @export
-rssComplete <- function(x, ...) UseMethod('rssComplete')
+rss <- function(x, ...) UseMethod('rss')
 #' @export
-rssComplete.ProcessObservable <- function(obs, ...) {
+rss.ProcessObservable <- function(obs, ...) {
   pred <- predict(obs, ...)
+  # recall that predict give additional information if the attribute 'complete' is set
+  if(!is.null(attr(obs, 'complete')))
+    pred <- pred$val
   exp  <- expVal(obs)
   err  <- expErr(obs)
-  list(rss = sum(((pred - exp) / err)^2))
+  val  <- sum(((pred - exp) / err)^2)
+  # return the full information according with the attribute 'complete' of the object
+  if(is.null(attr(obs, 'complete')))
+    val
+  else
+    list(val = val)
 }
 
 #' @export

@@ -3,17 +3,36 @@ context('F2 process')
 init()
 
 test_that('Fns are computed', {
-  k   <- kernelUnit()
+  k   <- kernelUnit(UJgTest)
   s   <- k$findKernel()
-  fns <- getFns(f2, data.frame(Q2 = c(1.2), x = c(1e-4)), list(s))
+  f2  <- F2()
+  # pay attention to the structure of the spectra object
+  spectra <- list(s, s, s)
+  fns <- getFns(f2, data.frame(Q2 = c(1.2), x = c(1e-4)), spectra)
   fns <- fns[c(-1,-2)]
-  expect_equal(length(fns), 3)
+  expect_equal(length(fns), 9)
 })
 
-test_that('predict and rssComplete generic functions are called properly', {
+test_that('predict and rss generic functions are called properly', {
   # recall that predict is used by rssComplete, if this work then the former as well
-  k   <- kernelUnit()
+  k   <- kernelUnit(UJgTest)
   s   <- k$findKernel()
-  rss <- rssComplete(f2, spectra = list(s))
-  expect_lt(abs(rss$rss - 1771.225), 1e-3)
+  f2  <- F2()
+  # pay attention to the structure of the spectra object
+  spectra <- list(list(t = 1, spectra = list(s)), list(t = 0, spectra = list(s, s, s)))
+  val <- rss(f2, spectra = spectra)
+  # first the simple answer
+  expect_lt(abs(val - 1771.225), 1e-3)
+  # now let's check passing the 'complete' attribute
+  attr(f2, 'complete') <- TRUE
+  val <- rss(f2, spectra = spectra)
+  print(val)
+  # first the simple answer
+  expect_lt(abs(val$val - 1771.225), 1e-3)
+})
+
+
+test_that('getNeededTVals works properly', {
+  f2  <- F2()
+  expect_true(getNeededTVals(f2) == 0)
 })

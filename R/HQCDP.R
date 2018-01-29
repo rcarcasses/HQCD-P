@@ -12,11 +12,9 @@ addKernel <- function(x, ...) UseMethod('addKernel')
 #' @export
 addKernel.default <- function(x, ...) 'calling addKernel in the wrong object'
 #' @export
-addKernel.HQCDP <- function(h, x) {
-  if(is.element('kernelUnit', class(x)))
-    h$kernels <- append(h$kernels, list(x))
-  else
-    flog.error(paste('Adding an object of unknown classes:', class(x)))
+addKernel.HQCDP <- function(h, ...) {
+  k <- kernelUnit(...)
+  h$kernels <- append(h$kernels, list(k))
   # return the modified HQCD object
   h
 }
