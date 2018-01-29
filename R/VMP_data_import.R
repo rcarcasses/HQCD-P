@@ -223,5 +223,5 @@ loadData.VMPDSigma  <- function(vmp) {
   dsigma       <- c(dsigma,c(8.24,10.7,3.89,3.96,2.32,0.702,0.349))
   deltaDSigma  <- c(deltaDSigma,c(sqrt(1.14**2+1.09**2),sqrt(1.4**2+1.3**2),sqrt(0.85**2+0.59**2),sqrt(0.80**2+0.56**2),sqrt(0.47**2+0.39**2),sqrt(0.296**2+0.188**2),sqrt(0.278**2+0.160**2)))
 
-  data.frame(m,  W,  Q2,  t,  dsigma,  deltaDSigma)
+  data.frame(m,  W,  Q2,  t = -t,  dsigma,  deltaDSigma)
 }

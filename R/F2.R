@@ -16,6 +16,7 @@ predict.F2 <- function(f2, points, spectra) {
   # get the fns for the given spectrums
   # spectra is a list of type list(list(t = 0, spectra = list(s, s, s,  list(t = 0, spectra = list(s, s, s)))
   # we need to take only the t=0 one
+  cat('js = ', unlist(lapply(spectra[[1]]$spectra[[1]], function(spec) spec$js)))
   spectraForTZero <- Filter(function(s) s$t == 0, spectra)[[1]]$spectra
   fns <- getFns(f2, points, spectraForTZero)
   fns <- fns[-match(c('Q2', 'x'), names(points))]  # remove the Q2 and x columns if any

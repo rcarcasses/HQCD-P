@@ -16,7 +16,8 @@ kernelUnit <- function(potential, numReg = 3, kernelName = '', comment = '', opt
   # the .t name is to prevent partial matching with extra arguments passed
   # (please prevent users to use variable names starting with .!)
   findKernelFun <- function(.t = 0, ...) {
-    # sometimes the coefficients are passed to this, just ignore them
+    # cat('finding kernel for t =', .t, ..., ' \n')
+    # extra parameters may come, just ignore them
     fArgs <- getPotentialArgs(potential, ...)
     start.time <- Sys.time()
     t <- function(J, n) {
@@ -80,6 +81,7 @@ kernelUnit <- function(potential, numReg = 3, kernelName = '', comment = '', opt
             potential = potential,
             comment = comment,
             optimPars = optimPars,
+            numReg = numReg,
             getLast = function() lastKernel,
             getTimeTaken = function() time.taken)
   class(k) <- append(class(k), 'kernelUnit')

@@ -172,7 +172,7 @@ loadData.DVCSDSigma <- function(dvcs) {
   dsigma       <- c(dsigma, c(11., 3.71, 1.18, 0.24))
   deltaDSigma  <- c(deltaDSigma, c(sqrt(0.85**2+2.23**2), sqrt(0.31**2+0.49**2), sqrt(0.13**2+0.16**2), sqrt(0.03**2+0.04**2)))
 
-  data.frame(W,  Q2,  t,  dsigma,  deltaDSigma)
+  data.frame(W,  Q2,  t = -t,  dsigma,  deltaDSigma)
 }
 
 
