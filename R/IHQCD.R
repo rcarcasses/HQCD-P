@@ -19,7 +19,7 @@ iHQCD <- function(A0 = 5#4.623038 #2.875115
     # Solves the Gursoy, Kiritsis and Nitti model.
     # Finds A and lambda as a function of z.
     solveIHQCD  <- function() {
-        flog.info(paste('[IHQCD] Solving IHQCD for A0', A0,' in z = [', round(zmin, digits = 4), ',', zmax,';', h, '] grid size', length(z),'\n'))
+        flog.debug(paste('[IHQCD] Solving IHQCD for A0', A0,' in z = [', round(zmin, digits = 4), ',', zmax,';', h, '] grid size', length(z),'\n'))
         pars    <- c(b0 = b0, b1 = b1, aa = aa, LAdS = LAdS)
         initCon <- c(A = A0, lambda = lambda0)
 

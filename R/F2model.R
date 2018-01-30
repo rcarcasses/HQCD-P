@@ -224,8 +224,7 @@ F2model <- function(potPars = 'bcde',
       tic()
       op <<- fn(method)
       exectime <- toc()
-      exectime <- exectime$toc - exectime$tic
-      flog.debug(paste('[F2model]  -::- Iteration', i, ' completed in', seconds_to_period(round(exectime / 60)), ' min, new chi2', bestEval$chi2))
+      flog.debug(paste('[F2model]  -::- Iteration', i, ' completed in', seconds_to_period(round(exectime$toc - exectime$tic)), ' min, new chi2', bestEval$chi2))
       i <<- i + 1
     }
 

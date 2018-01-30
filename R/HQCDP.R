@@ -5,6 +5,9 @@
 HQCDP <- function() {
   h <- list(processes = list(), kernels = list())
   class(h) <- c('HQCDP', class(h))  # pay attention to the class name
+  # add the constraint for the intercept of the soft pomeron
+  # the value of this attribute will be used as weight while fitting
+  attr(h, 'addSPconstraint') <- 1e6
   h
 }
 
@@ -47,25 +50,55 @@ print.HQCDP <- function(x) {
 rss.HQCDP <- function(x, ...) {
   # first we need to compute the spectra of the kernels
   spectra <- getSpectra(x, ...)
-  sum(unlist(lapply(x$processes, rss, spectra = spectra)))
+  val <- sum(unlist(lapply(x$processes, rss, spectra = spectra)))
+  # TODO: add SP constraint here
+  if(!is.null(attr(x, 'addSPconstraint'))) {
+    spectraForTZero <- Filter(function(s) s$t == 0, spectra)[[1]]$spectra
+    jsSP <- spectraForTZero[[1]][[2]]$js
+    # cat('SP intercept', jsSP, '\n')
+    val <- val + attr(x, 'addSPconstraint') * (jsSP - 1.09)^2
+  }
+  val
 }
 
 #' @export
 fit <- function(x, ...) UseMethod('fit')
 #' @export
-fit.HQCDP <- function(x) {
-  # get all the parameters to fit
-  allPars <- getKernelPars(x)
+fit.HQCDP <- function(x, allPars = NULL) {
+  # get all the parameters to fit if required
+  if(is.null(allPars))
+    allPars <- getKernelPars(x)
+  # reset the bestEvalEnv
+  resetBestEval(allPars)
+  # the function to internally called by optim
   fn <- function(pars) {
     names(pars) <- names(allPars)
     rssArgs <- as.list(c(list(x), pars))
     val <- do.call(rss, rssArgs)
     DoF <- getDoF(x)
     chi2 <- val / DoF
-    cat( ' chi2 =', chi2, '\n')
+    # store the partial results in the best eval tracker
+    saveStep(chi2, val, pars)
     val
   }
-  op <- optim(allPars, fn = fn, hessian = FALSE)
+
+  i <- 1
+  while(TRUE) {
+    tic()
+    bestEval <- get('bestEval', envir = bestEvalEnv)
+    lastBestChi2 <- bestEval$chi2
+    startPars <- bestEval$pars
+    op <- optim(startPars, fn = fn, hessian = FALSE)
+    bestEval <- get('bestEval', envir = bestEvalEnv)
+    newBestChi2 <- bestEval$chi2
+    if(abs(newBestChi2 - lastBestChi2) < 1e-3) # the new iteration wasn't better than the one before
+      break
+
+    lastBestChi2 <- newBestChi2
+    exectime <- toc()
+    flog.debug(paste('[HQCDP]  -::- Iteration', i, ' completed in', seconds_to_period(round(exectime$toc - exectime$tic)), ' min, new chi2', bestEval$chi2))
+    i <<- i + 1
+  }
   op
 }
 
