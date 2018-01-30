@@ -12,7 +12,8 @@ saveStep <- function(chi2, val, pars) {
   bestEval <- get('bestEval', envir = bestEvalEnv)
   if(bestEval$val > val) {
     assign('bestEval', evalStep, envir = bestEvalEnv)
-    cat('-> chi2 =', chi2,' pars =', pars, '\n')
+    str <- paste('-> chi2 =', round(chi2, 4),' pars =', do.call(paste, as.list(round(pars, 3))))
+    flog.debug(str)
   }
 }
 

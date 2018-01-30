@@ -51,20 +51,27 @@ rss.HQCDP <- function(x, ...) {
   # first we need to compute the spectra of the kernels
   spectra <- getSpectra(x, ...)
   val <- sum(unlist(lapply(x$processes, rss, spectra = spectra)))
-  # TODO: add SP constraint here
+  # add SP constraint here
+  valWeighted <- 0
   if(!is.null(attr(x, 'addSPconstraint'))) {
     spectraForTZero <- Filter(function(s) s$t == 0, spectra)[[1]]$spectra
     jsSP <- spectraForTZero[[1]][[2]]$js
     # cat('SP intercept', jsSP, '\n')
-    val <- val + attr(x, 'addSPconstraint') * (jsSP - 1.09)^2
+    valWeighted <- val + attr(x, 'addSPconstraint') * (jsSP - 1.09)^2
   }
-  val
+  # return the result in the appropiated format
+  if(is.null(attr(x, 'complete')))
+    val
+  else
+    list(val = val, valWeighted = valWeighted)
 }
 
 #' @export
 fit <- function(x, ...) UseMethod('fit')
 #' @export
 fit.HQCDP <- function(x, allPars = NULL) {
+  # here we declare that we want the full output of the rss function for instance
+  attr(x, 'complete') <- TRUE
   # get all the parameters to fit if required
   if(is.null(allPars))
     allPars <- getKernelPars(x)
@@ -73,13 +80,15 @@ fit.HQCDP <- function(x, allPars = NULL) {
   # the function to internally called by optim
   fn <- function(pars) {
     names(pars) <- names(allPars)
-    rssArgs <- as.list(c(list(x), pars))
-    val <- do.call(rss, rssArgs)
+    rssArgs     <- as.list(c(list(x), pars))
+    completeVal <- do.call(rss, rssArgs)
+    val         <- completeVal$val
+    valWeighted <- completeVal$valWeighted
     DoF <- getDoF(x)
     chi2 <- val / DoF
     # store the partial results in the best eval tracker
     saveStep(chi2, val, pars)
-    val
+    valWeighted
   }
 
   i <- 1
