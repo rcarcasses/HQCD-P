@@ -121,7 +121,7 @@ F2model <- function(potPars = 'bcde',
     lm    <- getLinearFnsFit(df)
     coeff <- lm$coefficients
     rss   <- sum((resid(lm)/data$err)^2)
-    chi2  <- rss / (length(data$F2) - length(parameters))
+    chi2  <- rss / (length(data$F2) - length(parameters)) # we need to remove
     jsk   <- unlist(lapply(modelUnits, function(mk) round(getJs(mk$f2), digits = 3)))
     flog.debug('jsk = %s', dumpList(jsk))
     # evaluation result

@@ -106,6 +106,8 @@ iHQCD <- function(A0 = 5#4.623038 #2.875115
                   LambdaQCD = LambdaQCD)
         # set all these inside the environmet
         mapply(function(n, v) assign(n, v, envir = ihqcdEnv), names(s), s)
+        # put the list itself into the environment
+        assign('ihqcd', s, envir = ihqcdEnv)
         s
     }
 
@@ -124,6 +126,16 @@ iHQCD <- function(A0 = 5#4.623038 #2.875115
               U2 = U2)
     class(i) <- append(class(i), 'IHQCD')
     i
+}
+
+#' This helpful function takes another function and injects inside all
+#' the content of the ihqcdEnv, making available the variables z, As, etc.
+#' in the body of the function
+#' @export
+injectIHQCDEnv <- function(f) {
+  ihqcd <- get('ihqcd', envir = ihqcdEnv)
+  environment(f) <- list2env(ihqcd, parent = environment(f))
+  f
 }
 
 # find the best value for A0 such that the mass of the spin 2 glueball is 1.475 GeV

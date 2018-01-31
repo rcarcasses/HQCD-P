@@ -64,20 +64,20 @@ getMode <- function(Q2, A0 = NULL, h, alpha = 0) { # NMC alpha = -0.06718486
 #' @export
 findU1Modes <- function(Q2 = 3.5, alpha = 0) {
   flog.debug(paste('finding mode', Q2, 'alpha', alpha))
-  x             <- get('z', envir = ihqcdEnv)
+  z             <- get('z', envir = ihqcdEnv)
   As            <- get('As', envir = ihqcdEnv)
   Asder1        <- get('Asder1', envir = ihqcdEnv)
   Asder2        <- get('Asder2', envir = ihqcdEnv)
   Asder3        <- get('Asder3', envir = ihqcdEnv)
   Phider1       <- get('Phider1', envir = ihqcdEnv)
-  Asfun         <- splinefun(x, As)
-  Asder1fun     <- splinefun(x, Asder1)
-  Asder2fun     <- splinefun(x, Asder2)
-  Asder3fun     <- splinefun(x, Asder3)
-  Phider1fun    <- splinefun(x, Phider1)
+  Asfun         <- splinefun(z, As)
+  Asder1fun     <- splinefun(z, Asder1)
+  Asder2fun     <- splinefun(z, Asder2)
+  Asder3fun     <- splinefun(z, Asder3)
+  Phider1fun    <- splinefun(z, Phider1)
   # this is useful for the non minimal coupling case
-  fact0fun      <- splinefun(x, (1 - 2 * exp(-2 * As) * alpha * Asder2) / (1 - 2 * exp(-2 * As) * alpha * Asder1^2))
-  fact1fun      <- splinefun(x, exp(2 * As) - 2 * alpha * Asder2)
+  fact0fun      <- splinefun(z, (1 - 2 * exp(-2 * As) * alpha * Asder2) / (1 - 2 * exp(-2 * As) * alpha * Asder1^2))
+  fact1fun      <- splinefun(z, exp(2 * As) - 2 * alpha * Asder2)
 
   # now we need to define the differential equation for the U(1) field modes
   fun <- function(x, y, pars) {
@@ -96,7 +96,7 @@ findU1Modes <- function(Q2 = 3.5, alpha = 0) {
   if (abs(alpha) > 0)
     odeFun <- funAlpha
   # return the solution as a data frame
-  as.data.frame(bvpcol(yini = c(y = 1, dy = NA), x = x, func = odeFun, yend = c(0, NA), nmax = 100000, atol = 1e-9))
+  as.data.frame(bvpcol(yini = c(y = 1, dy = NA), x = z, func = odeFun, yend = c(0, NA), nmax = 100000, atol = 1e-9))
 }
 
 #' @export
