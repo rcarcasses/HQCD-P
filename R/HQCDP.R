@@ -48,6 +48,13 @@ print.HQCDP <- function(x) {
 #' This is the function to minimize in the optimization procedure.
 #' @export
 rss.HQCDP <- function(x, ...) {
+  # warn the user that there are configurations
+  # that are still required
+  if(length(x$processes) == 0 || length(x$kernels) == 0) {
+    cat('Please complete your HQCDP configuration first\n')
+    return()
+  }
+
   # first we need to compute the spectra of the kernels
   spectra <- getSpectra(x, ...)
   val <- sum(unlist(lapply(x$processes, rss, spectra = spectra)))

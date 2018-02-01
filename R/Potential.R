@@ -52,24 +52,6 @@ potential <- function(model = 'bcde', addAlfonsoTerm = TRUE) {
   dfactor    <- NULL
   efactor    <- NULL
 
-  loadAll <- function() {
-    A          <<- get('A', envir = ihqcdEnv)
-    As         <<- get('As', envir = ihqcdEnv)
-    lambda     <<- get('lambda', envir = ihqcdEnv)
-    u2         <<- get('u2', envir = ihqcdEnv)
-    z          <<- get('z', envir = ihqcdEnv)
-    dress      <<- get('dress', envir = ihqcdEnv)
-    lambdader1 <<- get('lambdader1', envir = ihqcdEnv)
-    lambdader2 <<- get('lambdader2', envir = ihqcdEnv)
-    Asder1     <<- get('Asder1', envir = ihqcdEnv)
-    Asder2     <<- get('Asder2', envir = ihqcdEnv)
-    afactor    <<- 1
-    bfactor    <<- exp(2 * A) * lambda^(5/6)
-    cfactor    <<- (lambdader2 / lambda) - (lambdader1 / lambda)^2
-    dfactor    <<- Asder2 - Asder1^2
-    efactor    <<- (lambdader1 / lambda)^2
-  }
-
   u <- function() {
     if(is.null(potentialSet)) {
       # load all the possible terms

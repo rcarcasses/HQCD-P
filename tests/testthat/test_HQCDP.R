@@ -1,5 +1,8 @@
 context('HQCDP')
 
+init()
+clearCache()
+
 test_that('HQCDP addKernel and addProcessObservable are functional', {
   # test the addKernel
   p <- HQCDP()
@@ -41,4 +44,16 @@ test_that('HQCDP addKernel is functional', {
   p <- addProcessObservable(p, f2)
   p <- addProcessObservable(p, dvcs)
   expect_true(length(p$processes) == 2)
+})
+
+test_that('The same result as in https://arxiv.org/abs/1704.08280 is gotten', {
+  # compute this with 400 cheb points
+  p <- HQCDP()
+  p <- addKernel(p, potential = UJgTest,
+                 numReg = 4,
+                 comment = 'Leading twist gluon sector',
+                 kernelName = 'gluon', # this has to be unique: is used to name the couplings and the kernel
+                 optimPars = c(invls = 1/0.153, a = -4.35, b = 1.41, c = 0.626, d = -0.117))
+  p <- addProcessObservable(p, F2())
+  expect_lt(abs(rss(p) - 457.6966), 1e-3)
 })

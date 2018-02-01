@@ -7,7 +7,6 @@ spectrumUnit <- function(data) {
     if(is.null(indices))
       indices <- 1:length(data)
 
-    z <- get('z', envir = ihqcdEnv)
     plot.new() # reset the plot
     if(grid)
       old.par <- par(mfrow=c(2, 2))
@@ -63,12 +62,6 @@ spectrumUnit <- function(data) {
   # the function obtained acting with the Dperp and Dparallel
   # operators which appear in the non minimal coupling case
   plotNMC <- function(indices = c(1)) {
-    As      <- get('As', envir = ihqcdEnv)
-    Asder1  <- get('Asder1', envir = ihqcdEnv)
-    Asder2  <- get('Asder2', envir = ihqcdEnv)
-    Phider1 <- get('Phider1', envir = ihqcdEnv)
-    Phider2 <- get('Phider2', envir = ihqcdEnv)
-    z       <- get('z', envir = ihqcdEnv)
     # get the computed spectral data
     # and then the specified indices
     actualData <- Filter(function(d) !is.null(d$js), data)[indices]

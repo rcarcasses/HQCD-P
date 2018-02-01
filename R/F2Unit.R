@@ -7,16 +7,6 @@ F2Unit<- function(potPars = 'bcde',
   if(is.null(data))
     data <- getHERAF2()
 
-  # at initialization get the data that will be needed later
-  As      <- get('As', envir = ihqcdEnv)
-  Asder1  <- get('Asder1', envir = ihqcdEnv)
-  Asder2  <- get('Asder2', envir = ihqcdEnv)
-  Phider1 <- get('Phider1', envir = ihqcdEnv)
-  Phider2 <- get('Phider2', envir = ihqcdEnv)
-  z       <- get('z', envir = ihqcdEnv)
-  A0      <- get('A0', envir = ihqcdEnv)
-  h       <- get('h', envir = ihqcdEnv)
-
   # create a kernel
   kernel <- kernelUnit(potPars, numReg, kernelName = kernelName)
 

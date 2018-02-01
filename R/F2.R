@@ -54,16 +54,13 @@ getFns.F2 <- function(f2, points, spectraForTZero) {
   newColumns
 }
 
-fN <- Vectorize(function(Q2, x, J, wf) {
-  As <- get('As', envir = ihqcdEnv)
-  z  <- get('z', envir = ihqcdEnv)
-  h  <- get('h', envir = ihqcdEnv)
+fN <- function(Q2, x, J, wf) {
   t1fun <- splinefun(z, exp((-J + 1.5) * As))
-  t2fun <- getMode(Q2 = Q2, h = h)$factor
+  t2fun <- getU1NNMode(Q2 = Q2, alpha = 0)$factor # this is a spline fun
   t3fun <- splinefun(wf$x, wf$y)
   integral <- integrate(function(x) t1fun(x) * t2fun(x) * t3fun(x), z[1], z[length(z)], stop.on.error = FALSE)
   x^(1 - J) * Q2^J * integral$value
-}, c('Q2', 'x'))
+}
 
 #' @export
 expVal.F2 <- function(f2) f2$data$F2

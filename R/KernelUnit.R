@@ -6,9 +6,6 @@
 #' @param optimPars Indicate which parameters can be optimized for this kernel
 #' @export
 kernelUnit <- function(potential, numReg = 3, kernelName = '', comment = '', optimPars = c()) {
-  # make the variables defined in ihqcdEnv available into the potential body
-  environment(potential) <- ihqcdEnv
-  z <- get('z', envir = ihqcdEnv)
   lastKernel <- NULL
   time.taken <- NULL
 
@@ -16,7 +13,7 @@ kernelUnit <- function(potential, numReg = 3, kernelName = '', comment = '', opt
   # the .t name is to prevent partial matching with extra arguments passed
   # (please prevent users to use variable names starting with .!)
   findKernelFun <- function(.t = 0, ...) {
-    # cat('finding kernel for t =', .t, ..., ' \n')
+    flog.debug(paste('finding kernel for t =', .t, ...))
     # extra parameters may come, just ignore them
     fArgs <- getPotentialArgs(potential, ...)
     start.time <- Sys.time()

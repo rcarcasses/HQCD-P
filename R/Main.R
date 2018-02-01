@@ -22,9 +22,7 @@ init <- function(chebPoints = 400, useRedis = TRUE) {
   if(useRedis)
     startRedis()
 
-  ihqcd <- iHQCD()
-  #populate the ihqcd environment
-  ihqcd$solve()
+  solve(iHQCD())
   # set the method we want to use to compute the eigenvalues
   schrodinger::setSchroMethod('cheb', chebPoints);
 }
@@ -103,7 +101,7 @@ detachAllPackages <- function() {
 }
 # detachAllPackages()
 
-# Some test function (actually the one being used in the NMC paper)
+# Some test function (actually the one being used in the 1704.08280 paper)
 #' @export
 UJgTest <- function(J, invls = 1/0.153, a = -4.35, b = 1.41, c = 0.626, d = -0.117) {
   # the deformation of the potential of the graviton

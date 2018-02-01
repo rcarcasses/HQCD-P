@@ -1,5 +1,6 @@
 context('F2 process')
 
+flogLevel <- flog.threshold(INFO)
 init()
 
 test_that('Fns are computed', {
@@ -22,13 +23,13 @@ test_that('predict and rss generic functions are called properly', {
   spectra <- list(list(t = 1, spectra = list(s)), list(t = 0, spectra = list(s, s, s)))
   val <- rss(f2, spectra = spectra)
   # first the simple answer
-  expect_lt(abs(val - 1771.225), 1e-3)
+  expect_lt(abs(val - 990.0943), 1e-3)
   # now let's check passing the 'complete' attribute
   attr(f2, 'complete') <- TRUE
   val <- rss(f2, spectra = spectra)
   print(val)
   # first the simple answer
-  expect_lt(abs(val$val - 1771.225), 1e-3)
+  expect_lt(abs(val$val - 990.0943), 1e-3)
 })
 
 

@@ -18,7 +18,6 @@ regge <- function(model = 'bcde', numReg = 3) {
     # of the potential function, just ignore them
     fArgs <- getPotentialArgs(pot, ...)
     flog.info('[Regge] getting trajectory for %s', dumpList(fArgs))
-    z  <- get('z', envir = ihqcdEnv)
     js <- seq(-0.3, 6.5, len = 100)
     if(showProgress)
       pb <- txtProgressBar(min = min(js), max = max(js), initial = min(js), style = 3)

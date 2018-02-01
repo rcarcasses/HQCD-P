@@ -25,7 +25,8 @@ cache <- function(f, ...) {
   extraKey <- ''
   if(length(list(...)) > 0) {
     extraKey <- paste0(list(...), collapse = ',')
-    flog.debug(paste('[RedisCache] Using extra key *', extraKey, '* for labeling cached values for', funName))
+    if(extraKey != '')
+      flog.debug(paste('[RedisCache] Using extra key *', extraKey, '* for labeling cached values for', funName))
   }
 
   function(...) {
