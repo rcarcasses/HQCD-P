@@ -10,11 +10,16 @@ test_that('Experimental data is being loaded', {
 })
 
 test_that('Computation of the differential cross-section is working.',{
-  k   <- kernelUnit(UJgTest)
-  s   <- k$findKernel()
-  gs <- list(list(g0 = 1, g1 = 1), list(g0 = 1, g1 = 1), list(g0 = 1, g1 = 1))
+  k    <- kernelUnit(UJgTest)
+  s    <- k$findKernel()
+  gs   <- list(
+            list(list(g0 = 1, g1 = 1), list(g0 = 1, g1 = 1), list(g0 = 1, g1 = 1)),
+            list(list(g0 = 1, g1 = 1), list(g0 = 1, g1 = 1), list(g0 = 1, g1 = 1))
+          )
   dvcs <- DVCSDSigma()
   # some dummy spectra
   spectra <- lapply(getNeededTVals(dvcs), function(t) list(t = t, spectra = list(s, s)))
-  predict(dvcs)
+  p <- predict(dvcs, gs = gs, spectra = spectra)
+  expect_that(p,  is_a('numeric'))
+  expect_equal(length(p),  length(loadData(dvcs)$Q2))
 })
