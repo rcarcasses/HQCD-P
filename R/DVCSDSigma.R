@@ -22,9 +22,10 @@ predict.DVCSDSigma <- function(dvcsDSigma, points, gs, spectra) {
   (1 / W^4) * abs(amplitude)^2
 }
 
-#' @export
+#' Compute the amplitude
 #' @return A data frame where the first columns are the points passed
 #' and the next ones are the values of fns for each one of the kernels
+#' @export
 computeAmplitude.DVCSDSigma <- function(dvcsDSigma, points, gs, spectra) {
   apply(points, 1, function(row) {
     W  <- row[1]
@@ -33,21 +34,25 @@ computeAmplitude.DVCSDSigma <- function(dvcsDSigma, points, gs, spectra) {
     # get the spectra of all kernels for a given value of t
     spectraForT <- Filter(function(s) s$t == t, spectra)[[1]]$spectra
     # iterate over each kernel's spectrum
-    mapply(function(s, g) {
+    sum(unlist(mapply(function(s, gker) {
+      # s: spectrum of a single kernel, have many reggeons
+      # gker: list of coefficients for the couplings for a given kernel
       # iterate over each Reggeon for the given spectrum
       # remember, the tr1 and tr2 are not data about the reggeons
-      lapply(s[names(s) == ''], function(spec) {
-        # we are approximating g(t) = g0 + g1 * t + ...
-        (g$g0  + g$g1 * t) * fN(W, Q2, spec$js, spec$wf)
-      }, spectraForT, gs)
-    })
+      sum(unlist(mapply(function(spec, g) {
+          # spec: spectrum of a given Reggeon inside this kernel
+          # g: the associated coupling parameters
+          # we are approximating g(t) = g0 + g1 * t + ...
+          (g$g0  + g$g1 * t) * fN(dvcsDSigma, W, Q2, spec$js, spec$wf)
+        }, s[names(s) == ''], gker)))
+      }, spectraForT, gs)))
   })
 }
 
 
-fN <- function(W, Q2, J, wf) {
+fN.DVCSDSigma <- function(dvcsDSigma, W, Q2, J, wf) {
   t1fun <- splinefun(z, exp((-J + 1.5) * As))
-  t2fun <- getMode(Q2 = Q2, h = h)$fQ
+  t2fun <- getU1NNMode(Q2 = Q2)$fQ
   t3fun <- splinefun(wf$x, wf$y)
   integral <- integrate(function(x)  t1fun(x) * t2fun(x) * t3fun(x), z[1], z[length(z)], stop.on.error = FALSE)
   # return the full thing needed for the amplitude

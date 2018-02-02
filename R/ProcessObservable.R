@@ -15,7 +15,9 @@ predict.ProcessObservable <- function(obs, points = NULL, ...) {
     points <- expKinematics(obs)
   # call the next function
   arg <- list(...)
-  arg$points <- points
+  arg$points  <- points
+  arg$generic <- 'predict'
+  arg$object  <- obs
   do.call(NextMethod, arg)
 }
 
