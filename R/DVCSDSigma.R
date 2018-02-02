@@ -9,31 +9,49 @@ getNeededTVals.DVCSDSigma <- function(x) unique(expKinematics(x)$t)
 #' @param points the data points over which dsigma/dt for dvcs will be predicted.
 #' This should be a data frame with the same structure as the one returned
 #' by expKinematics. Is important to keep the order of the columns.
+#' @param gs A list of list which contains the coefficients of  g(t) = g0 + g1 * t + ...
+#' for each one of the Reggeons.
 #' @param spectra a collection of spectrum of different kernels which can have different amount of Reggeons, etc.
 #' @export
-predict.DVCSDSigma <- function(dvcsDSigma, points, spectra) {
-  # get the fns for the given spectrums
-  fns <- getFns(dvcsDSigma, points, spectra)
-  fns <- fns[-match(c('Q2', 'W', 't'), names(points))]  # remove the Q2 and x columns if any
-  # fit the linear model
-  dvcsDSigmaData <- expVal(dvcsDSigma)
-  fit <- lm(dvcsDSigmaData ~ ., data = fns)
-  # finally return the predicted value for this linear fit for the
-  # points used in the fit
-  predict(fit)
+predict.DVCSDSigma <- function(dvcsDSigma, points, gs, spectra) {
+  # compute the amplitude
+  amplitude <- computeAmplitude(dvcsDSigma, points, gs, spectra)
+  # get the Ws
+  W <- points$W
+  # return the differential cross sections
+  (1 / W^4) * abs(amplitude)^2
 }
 
-fN <- function(Q2, W, t, J, wf) {
-  As <- get('As', envir = ihqcdEnv)
-  z  <- get('z', envir = ihqcdEnv)
-  h  <- get('h', envir = ihqcdEnv)
+#' @export
+#' @return A data frame where the first columns are the points passed
+#' and the next ones are the values of fns for each one of the kernels
+computeAmplitude.DVCSDSigma <- function(dvcsDSigma, points, gs, spectra) {
+  apply(points, 1, function(row) {
+    W  <- row[1]
+    Q2 <- row[2]
+    t  <- row[3]
+    # get the spectra of all kernels for a given value of t
+    spectraForT <- Filter(function(s) s$t == t, spectra)[[1]]$spectra
+    # iterate over each kernel's spectrum
+    mapply(function(s, g) {
+      # iterate over each Reggeon for the given spectrum
+      # remember, the tr1 and tr2 are not data about the reggeons
+      lapply(s[names(s) == ''], function(spec) {
+        # we are approximating g(t) = g0 + g1 * t + ...
+        (g$g0  + g$g1 * t) * fN(W, Q2, spec$js, spec$wf)
+      }, spectraForT, gs)
+    })
+  })
+}
+
+
+fN <- function(W, Q2, J, wf) {
   t1fun <- splinefun(z, exp((-J + 1.5) * As))
-  t1barfun <- splinefun(z,exp((-J + 3.5)*As))
-  t2fun <- getMode(Q2 = Q2, h = h)$factor
-  t22fun <- getMode(Q2 = 0, h = h)$factor
+  t2fun <- getMode(Q2 = Q2, h = h)$fQ
   t3fun <- splinefun(wf$x, wf$y)
-  integral <- integrate(function(x) t1fun(x) * t1barfun(x) * t2fun(x) * t22fun(x) * t3fun(x), z[1], z[length(z)], stop.on.error = FALSE)
-  result <- - (kU1(J)*kPhi(J)/2^J) * W^(2 * J) * (pi/2) * integral$value
+  integral <- integrate(function(x)  t1fun(x) * t2fun(x) * t3fun(x), z[1], z[length(z)], stop.on.error = FALSE)
+  # return the full thing needed for the amplitude
+  (1 - 1i/ tan(pi * J / 2)) * W^(2*J) *integral$value
 }
 
 #' @export

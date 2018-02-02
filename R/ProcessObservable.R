@@ -14,7 +14,9 @@ predict.ProcessObservable <- function(obs, points = NULL, ...) {
   if(is.null(points))
     points <- expKinematics(obs)
   # call the next function
-  NextMethod('predict', object = obs, points, ...)
+  arg <- list(...)
+  arg$points <- points
+  do.call(NextMethod, arg)
 }
 
 #' Every experiment have a set of values for t for which
@@ -53,16 +55,14 @@ expKinematics <- function(x) UseMethod('expKinematics')
 loadData <- function(x) UseMethod('loadData')
 
 #' @export
-getAllFns <- function(x, ...) UseMethod('getAllFns')
-getAllFns.default <- function(x, ...) flog.error('getAllFns called in an object with no implementation')
-
-#' @export
-getFns <- function(x, ...) UseMethod('getFns')
-getFns.default <- function(x) 'getFns called in an object with no implementation'
-
-#' @export
 setNewPotential <- function(x, ...) UseMethod('setNewPotential')
 setNewPotential.default <- function(x) 'setNewPotential called in an object with no implementation'
+
+#' @export
+fN <- function(x, ...) UseMethod('fN')
+
+#' @export
+computeAmplitude <- function(x, ...) UseMethod('computeAmplitude')
 
 #' @export
 getJs <- function(x, ...) UseMethod('getJs')

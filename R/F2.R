@@ -31,12 +31,13 @@ predict.F2 <- function(f2, points, spectra) {
   else
     list(val = val, coefficients = summary(fit)$coefficients)
 }
+
 #' This function returns a term in the sum for F2 with the
 #' exception of the overall constant.
 #' @export
 #' @return A data frame where the first columns are the points passed
 #' and the next ones are the values of fns for each one of the kernels
-getFns.F2 <- function(f2, points, spectraForTZero) {
+getFns <- function(f2, points, spectraForTZero) {
   newColumns <- data.frame(Q2 = points$Q2, x = points$x)
   # iterate over each kernel's spectrum
   lapply(spectraForTZero, function(s) {
@@ -54,7 +55,7 @@ getFns.F2 <- function(f2, points, spectraForTZero) {
   newColumns
 }
 
-fN <- function(Q2, x, J, wf) {
+fN.F2 <- function(Q2, x, J, wf) {
   t1fun <- splinefun(z, exp((-J + 1.5) * As))
   t2fun <- getU1NNMode(Q2 = Q2, alpha = 0)$factor # this is a spline fun
   t3fun <- splinefun(wf$x, wf$y)
