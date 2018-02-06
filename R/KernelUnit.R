@@ -44,7 +44,7 @@ kernelUnit <- function(potential, numReg = 3, kernelName = '', comment = '', opt
         js <- 0
 
       tresult <- t(js, n)
-      list(js = js, wf = tresult$wf, u2j = tresult$u2j)
+      list(js = js, wf = tresult$wf, u2j = tresult$u2j, name = paste0(kernelName, '.', n))
     }
 
     if(!is.null(cl))

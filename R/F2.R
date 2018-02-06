@@ -56,7 +56,9 @@ getFns.F2 <- function(f2, points, spectra) {
         x  <- row[2]
         fN(f2, Q2, x, spec$js, spec$wf)
       })
-      newColumns <<- cbind(newColumns, fn)
+      fnNamed <- list()
+      fnNamed[[spec$name]] <- fn
+      newColumns <<- cbind(newColumns, fnNamed)
     })
   })
   newColumns[-match(c('Q2', 'x'), names(points))]  # remove the Q2 and x columns

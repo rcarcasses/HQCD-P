@@ -4,7 +4,7 @@ flogLevel <- flog.threshold(INFO)
 init()
 
 test_that('Fns are computed', {
-  k   <- kernelUnit(UJgTest)
+  k   <- kernelUnit(UJgTest, kernelName = 'g')
   s   <- k$findKernel()
   f2  <- F2()
   # pay attention to the structure of the spectra object

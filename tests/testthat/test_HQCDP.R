@@ -55,5 +55,5 @@ test_that('The same result as in https://arxiv.org/abs/1704.08280 is gotten', {
                  kernelName = 'gluon', # this has to be unique: is used to name the couplings and the kernel
                  optimPars = c(invls = 1/0.153, a = -4.35, b = 1.41, c = 0.626, d = -0.117))
   p <- addProcessObservable(p, F2())
-  expect_lt(abs(rss(p) - 457.6966), 1e-3)
+  expect_equal(rss(p) - 446.9823, tolerance = 1e-3)
 })
