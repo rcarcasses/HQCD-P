@@ -8,9 +8,8 @@ test_that('Fns are computed', {
   s   <- k$findKernel()
   f2  <- F2()
   # pay attention to the structure of the spectra object
-  spectra <- list(s, s, s)
+  spectra <- list(list(t = 1, spectra = list(s)), list(t = 0, spectra = list(s, s, s)))
   fns <- getFns(f2, data.frame(Q2 = c(1.2), x = c(1e-4)), spectra)
-  fns <- fns[c(-1,-2)]
   expect_equal(length(fns), 9)
 })
 
@@ -23,13 +22,13 @@ test_that('predict and rss generic functions are called properly', {
   spectra <- list(list(t = 1, spectra = list(s)), list(t = 0, spectra = list(s, s, s)))
   val <- rss(f2, spectra = spectra)
   # first the simple answer
-  expect_lt(abs(val - 990.0943), 1e-3)
+  #expect_lt(abs(val - 990.0943), 1e-3)
+  expect_equal(val, 1214.598, tolerance = 1e-3)
   # now let's check passing the 'complete' attribute
   attr(f2, 'complete') <- TRUE
   val <- rss(f2, spectra = spectra)
-  print(val)
   # first the simple answer
-  expect_lt(abs(val$val - 990.0943), 1e-3)
+  expect_equal(val$val, 1214.598, tolerance = 1e-3)
 })
 
 

@@ -7,37 +7,44 @@ getNeededTVals.F2 <- function(f2) c(0)
 
 #' Predicts the values of F2 for the points passed
 #' @param f2 the object over which the prediction will happend
-#' @param points the data points over which F2 will be predicted. This
-#' should be a data frame with the same structure as the one returned
-#' by expKinematics. Is important to keep the order of the columns.
-#' @param spectra a collection of spectrum of different kernels which can have different amount of Reggeons, etc.
+#' @param fns the return of the getFns function on this object. Contains
+#' the values of the integrals for each one of the Reggeons involved
+#' @param gs the coefficients, which together with the fns, can be used to compute
+#' the observable values.
+#' @param ... Additional arguments will be ignored.
 #' @export
-predict.F2 <- function(f2, points, spectra) {
-  # get the fns for the given spectrums
-  # spectra is a list of type list(list(t = 0, spectra = list(s, s, s,  list(t = 0, spectra = list(s, s, s)))
-  # we need to take only the t=0 one
-  # cat('js = ', unlist(lapply(spectra[[1]]$spectra[[1]], function(spec) spec$js)))
-  spectraForTZero <- Filter(function(s) s$t == 0, spectra)[[1]]$spectra
-  fns <- getFns(f2, points, spectraForTZero)
-  fns <- fns[-match(c('Q2', 'x'), names(points))]  # remove the Q2 and x columns if any
-  # fit the linear model
-  f2Data <- expVal(f2)
-  fit <- lm(f2Data ~ ., data = fns)
-  # finally return the predicted value for this linear fit for the
-  # points used in the fit
-  val <- predict(fit)
+predict.F2 <- function(f2, fns, gs, ...) {
+  # get the predicted vector: sum_i(g_i * fn_i)
+  val <- rowSums(mapply(function(c, g) c * g, fns, gs), na.rm = TRUE)
+
   if(is.null(attr(f2, 'complete')))
     val
   else
-    list(val = val, coefficients = summary(fit)$coefficients)
+    list(val = val, coefficients = gs)
+}
+
+#' Given a pre-computed set of fns find the best coefficients
+#' such that prediction matches best with the F2 data.
+#' In this case the dependence of F2 with the gs is linear, which
+#' makes the problem very simple.
+#' @export
+getBestGs.F2 <- function(f2, fns) {
+  f2Data <- expVal(f2)
+  # the -1 indicate that we don't want an intercept
+  fit <- lm(f2Data ~ .-1, data = cbind(f2Data, fns))
+  fit$coefficients
 }
 
 #' This function returns a term in the sum for F2 with the
 #' exception of the overall constant.
-#' @export
+#' @param points The kinematical points over which the fns will be computed
+#' @param spectra An object with the spectrum of all the kernels for different
+#' values of t required for computing the integrals
 #' @return A data frame where the first columns are the points passed
 #' and the next ones are the values of fns for each one of the kernels
-getFns <- function(f2, points, spectraForTZero) {
+#' @export
+getFns.F2 <- function(f2, points, spectra) {
+  spectraForTZero <- Filter(function(s) s$t == 0, spectra)[[1]]$spectra
   newColumns <- data.frame(Q2 = points$Q2, x = points$x)
   # iterate over each kernel's spectrum
   lapply(spectraForTZero, function(s) {
@@ -47,20 +54,59 @@ getFns <- function(f2, points, spectraForTZero) {
       fn <- apply(points, 1, function(row) {
         Q2 <- row[1]
         x  <- row[2]
-        fN(Q2, x, spec$js, spec$wf)
+        fN(f2, Q2, x, spec$js, spec$wf)
       })
       newColumns <<- cbind(newColumns, fn)
     })
   })
-  newColumns
+  newColumns[-match(c('Q2', 'x'), names(points))]  # remove the Q2 and x columns
 }
 
-fN.F2 <- function(Q2, x, J, wf) {
+#' @export
+fN.F2 <- function(f2, Q2, x, J, wf) {
   t1fun <- splinefun(z, exp((-J + 1.5) * As))
   t2fun <- getU1NNMode(Q2 = Q2, alpha = 0)$factor # this is a spline fun
   t3fun <- splinefun(wf$x, wf$y)
   integral <- integrate(function(x) t1fun(x) * t2fun(x) * t3fun(x), z[1], z[length(z)], stop.on.error = FALSE)
   x^(1 - J) * Q2^J * integral$value
+}
+
+fNNMC.F2 <- function(Q2, x, J, wf, alpha = 0) {
+  mode  <- getU1NNMode(Q2 = Q2, alpha)
+  fQ2   <- mode$fQ2
+  dfQ2  <- mode$dfQ2
+  # here is where the non-minimal coupling changes are implemented
+  # we have included the factor of exp(-2 As) in the definition of the Ds
+  t1fun <- splinefun(z, exp((-J + 1.5) * As))
+  # contribution from the transverse part
+  t2fun   <- splinefun(z, fQ2(z) * DperpPsi(wf))
+  # contribution from the longitudinal part
+  t3fun   <- splinefun(z, (dfQ2(z) / Q2) * DparallelPsi(wf, J))
+  integral <- integrate(function(x) t1fun(x) * (t2fun(x) + t3fun(x)), z[1], z[length(z)], stop.on.error = FALSE)
+  # cat('int ', integral$value, '\n')
+  integral$value
+}
+
+# compute Dperp psi
+DperpPsi <- function(wf) {
+  wffun <- splinefun(wf$x, wf$y)
+  wfder1 <- wffun(z, deriv = 1)
+  # return object
+  exp(-2 * As) * (
+    (Asder1 * Phider1 - 1.5 * Asder1^2) * wffun(z) + Asder1 * wfder1
+  )
+}
+# compute Dparallel psi
+DparallelPsi <- function(wf, J) {
+  wffun <- splinefun(wf$x, wf$y)
+  wfder1 <- wffun(z, deriv = 1)
+  wfder2 <- wffun(z, deriv = 2)
+  # return object
+  exp(-2 * As) * (
+    wfder2 + 2 * (Phider1 - Asder1) * wfder1 +
+     (Phider2 + (J - 2.5) * Asder2 - Asder1 * (2 * Phider1 + J - 1)
+      + Phider1^2 + 0.75 * Asder1^2) * wffun(z)
+    )
 }
 
 #' @export
