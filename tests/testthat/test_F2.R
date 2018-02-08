@@ -31,6 +31,33 @@ test_that('predict and rss generic functions are called properly', {
   expect_equal(val$val, 1214.598, tolerance = 1e-3)
 })
 
+test_that('getBestGs is working properly', {
+  k <- kernelUnit(potential = UJgTest,
+                  numReg = 4,
+                  comment = 'Leading twist gluon sector',
+                  kernelName = 'gluon', # this has to be unique: is used to name the couplings and the kernel
+                  optimPars = c(invls = 1/0.153, a = -4.35, b = 1.41, c = 0.626, d = -0.117)
+  )
+  s <- k$findKernel()
+  spectra <- list(list(t = 1, spectra = list(s)), list(t = 0, spectra = list(s)))
+  f2 <- F2()
+  fns <- getFns(f2, spectra = spectra)
+  # find rss only specifying the spectra
+  rss1 <- rss(f2, spectra)
+  # find rss now with fns and gs
+  rss2 <- rss(f2, fns = fns, gs = c(0.1787147, 0.1041425, 0.1853301, -1.530063))
+  # now find rss using the HQCDP getBestGs
+  p <- HQCDP()
+  p <- addKernel(p, potential = UJgTest,
+                 numReg = 4,
+                 comment = 'Leading twist gluon sector',
+                 kernelName = 'gluon', # this has to be unique: is used to name the couplings and the kernel
+                 optimPars = c(invls = 1/0.153, a = -4.35, b = 1.41, c = 0.626, d = -0.117))
+  p <- addProcessObservable(p, f2)
+  rss3 <- rss(p)
+  expect_equal(rss1 * rss2 / rss3^2, 1)
+})
+
 
 test_that('getNeededTVals works properly', {
   f2  <- F2()
