@@ -1,4 +1,3 @@
-#' @export
 ProcessObservable <- function(className) {
   obs <- list()
   class(obs) <- append(class(obs), className)

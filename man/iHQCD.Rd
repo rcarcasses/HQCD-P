@@ -9,4 +9,3 @@ iHQCD(A0 = 5, zmax = 10, h = 0.002, lambda0 = 0.0337462)
 \description{
 Constructor
 }
-

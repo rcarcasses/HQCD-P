@@ -16,4 +16,3 @@ sift.nls(fn = NULL, data = NULL, start = NULL, traces = TRUE,
 \description{
 Perform a nls minimization with a custom function.
 }
-

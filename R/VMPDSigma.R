@@ -1,9 +1,15 @@
 #' @export
-VMPDSigma <- function() ProcessObservable('VMPDSigma')
+VMPDSigma <- function(vmName) {
+  obs <- DSigma('VMPDSigma')
+  attr(obs, 'vmName') <- vmName
+  # filter experimental data by Vector Meson type
+  obs$data <- subset(obs$data, vmName = vmName)
+  obs
+}
 
-#' @export
-expVal.VMPDSigma <- function(vmp) vmp$data$dsigma
-#' @export
-expErr.VMPDSigma <- function(vmp) vmp$data$deltaDSigma
-#' @export
-expKinematics.VMPDSigma <- function(vmp) vmp$data[c('m', 'Q2', 'W', 't')]
+getExternalU1wf.DVCSDSigma <- function(vmp, Q2 = Q2, ...) {
+  vmName <- attr(vmp, 'vmName')
+  #TODO: find the right expression
+  getU1NNMode(Q2 = Q2)$fQ
+}
+

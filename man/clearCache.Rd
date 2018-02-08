@@ -9,4 +9,3 @@ clearCache()
 \description{
 Clears all the cached values
 }
-
