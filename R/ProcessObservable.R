@@ -9,14 +9,24 @@ ProcessObservable <- function(className) {
 }
 
 #' @export
-predict.ProcessObservable <- function(obs, spectra, points = NULL, fns = NULL, gs = NULL, ...) {
+predict.ProcessObservable <- function(obs,
+                                      spectra = NULL,
+                                      points = NULL,
+                                      fns = NULL,
+                                      gs = NULL, ...) {
+  # if there is not enough data complaint
+  if(is.null(spectra) && is.null(fns)) {
+    flog.error(paste('Not enough information to make a prediction over the object with classes', class(obs)))
+    return()
+  }
   # if no points are provided, use the experimental ones
   if(is.null(points))
     points <- expKinematics(obs)
   if(is.null(fns))
-    fns <- getFns(obs, points, spectra)
+    fns <- getFns(obs, points = points, spectra = spectra)
   if(is.null(gs))
     gs <- getBestGs(obs, fns)
+
   # call the next function
   arg <- list(...)
   arg$points  <- points     # add the experimental points of this process
@@ -52,33 +62,52 @@ getNeededTVals.default <- function(x) 'getNeededTVals should be custom implement
 getFns <- function(x, ...) UseMethod('getFns')
 #' @export
 getFns.default <- function(x) paste('getFns has to be implemented for this object with classes', class(x))
-
-#' Given an ProcessObservable object and its associated fns already computed
-#' find the best coefficients, gs, such that the sum of difference squared
-#' weigthed by the inverse of the error squared (rss) between the prediction
-#' and the experimental values of the process is minimized.
 #' @export
-getBestGs <- function(x, ...) UseMethod('getBestGs')
-#' @export
-getBestGs.default <- function(x) paste('getBestGs has to be implemented for this object with classes', class(x))
+getFns.ProcessObservable <- function(obs, spectra, points = NULL, ...) {
+  # if no points are provided, use the experimental ones
+  if(is.null(points))
+    points <- expKinematics(obs)
+  # call the next function
+  arg <- list(...)
+  arg$points  <- points     # add the experimental points of this process
+  arg$generic <- 'predict'  # set the next method to call
+  arg$object  <- obs        # and pass the same object as argument
+  do.call(NextMethod, arg)  # finally call the next method in the chain
+}
 
 #' @export
 rss <- function(x, ...) UseMethod('rss')
 #' @export
 rss.ProcessObservable <- function(obs, ...) {
-  pred <- predict(obs, ...)
-  # recall that predict give additional information if the attribute 'complete' is set
-  if(!is.null(attr(obs, 'complete')))
-    pred <- pred$val
-  exp  <- expVal(obs)
-  err  <- expErr(obs)
-  val  <- sum(((pred - exp) / err)^2)
+  val  <- sum((diffObsWeighted(obs, ...))^2)
   # return the full information according with the attribute 'complete' of the object
   if(is.null(attr(obs, 'complete')))
     val
   else
     list(val = val)
 }
+
+diffObsWeighted <- function(x, ...) UseMethod('diffObsWeighted')
+diffObsWeighted.ProcessObservable <- function(obs, ...) {
+  pred <- predict(obs, ...)
+  # recall that predict give additional information if the attribute 'complete' is set
+  if(!is.null(attr(obs, 'complete')))
+    pred <- pred$val
+
+  exp  <- expVal(obs)
+  err  <- expErr(obs)
+  (pred - exp) / err
+}
+
+#' @export
+gradRSSGs <- function(x, ...) UseMethod('gradRSSGs')
+gradRSSGs.ProcessObservable <- function(obs, fns, gs) {
+  # sum over the experimental values
+  2 * colSums(diffObsWeighted(obs, fns = fns, gs = gs) * gradG(obs, fns, gs) / expErr(obs))
+}
+
+gradG <- function(x, ...) UseMethod('gradG')
+gradG.default <- function(x, ...) 'gradG not defined for this object'
 
 #' @export
 expVal <- function(x) UseMethod('expVal')

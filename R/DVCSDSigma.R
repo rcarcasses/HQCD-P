@@ -13,42 +13,46 @@ getNeededTVals.DVCSDSigma <- function(x) unique(expKinematics(x)$t)
 #' for each one of the Reggeons.
 #' @param spectra a collection of spectrum of different kernels which can have different amount of Reggeons, etc.
 #' @export
-predict.DVCSDSigma <- function(dvcsDSigma, points, gs, spectra) {
+predict.DVCSDSigma <- function(dvcsDSigma, fns, gs, points, ...) {
+  gts <- apply(gs, 1, function(row) {
+    g0 <- row[1]
+    g1 <- row[2]
+    g0 + g1 * points$t
+  })
   # compute the amplitude
-  amplitude <- computeAmplitude(dvcsDSigma, points, gs, spectra)
+  amplitude <- rowSums(fns * gts, na.rm = TRUE)
   # get the Ws
   W <- points$W
   # return the differential cross sections
   (1 / W^4) * abs(amplitude)^2
 }
 
-#' Compute the amplitude
-#' @return A data frame where the first columns are the points passed
-#' and the next ones are the values of fns for each one of the kernels
 #' @export
-computeAmplitude.DVCSDSigma <- function(dvcsDSigma, points, gs, spectra) {
-  apply(points, 1, function(row) {
+getFns.DVCSDSigma <- function(dvcsDSigma, points, spectra) {
+  fnNames <- unlist(lapply(spectra[[1]]$spectra,
+                      function(s)
+                        unlist(lapply(s[names(s) == ''],
+                          function(spec) paste0('fn.', spec$name)))))
+  df <- data.frame(row.names = fnNames)
+  as.data.frame(t(apply(points, 1, function(row) {
     W  <- row[1]
     Q2 <- row[2]
     t  <- row[3]
     # get the spectra of all kernels for a given value of t
     spectraForT <- Filter(function(s) s$t == t, spectra)[[1]]$spectra
     # iterate over each kernel's spectrum
-    sum(unlist(mapply(function(s, gker) {
+    r <- unlist(lapply(spectraForT, function(s) {
       # s: spectrum of a single kernel, have many reggeons
-      # gker: list of coefficients for the couplings for a given kernel
       # iterate over each Reggeon for the given spectrum
       # remember, the tr1 and tr2 are not data about the reggeons
-      sum(unlist(mapply(function(spec, g) {
-          # spec: spectrum of a given Reggeon inside this kernel
-          # g: the associated coupling parameters
-          # we are approximating g(t) = g0 + g1 * t + ...
-          (g$g0  + g$g1 * t) * fN(dvcsDSigma, W, Q2, spec$js, spec$wf)
-        }, s[names(s) == ''], gker)))
-      }, spectraForT, gs)))
-  })
+      lapply(s[names(s) == ''], function(spec) {
+          fN(dvcsDSigma, W, Q2, spec$js, spec$wf)
+        })
+    }), recursive = TRUE)
+    names(r) <- fnNames
+    r
+  })))
 }
-
 
 fN.DVCSDSigma <- function(dvcsDSigma, W, Q2, J, wf) {
   t1fun <- splinefun(z, exp((-J + 1.5) * As))
@@ -57,6 +61,19 @@ fN.DVCSDSigma <- function(dvcsDSigma, W, Q2, J, wf) {
   integral <- integrate(function(x)  t1fun(x) * t2fun(x) * t3fun(x), z[1], z[length(z)], stop.on.error = FALSE)
   # return the full thing needed for the amplitude
   (1 - 1i/ tan(pi * J / 2)) * W^(2*J) *integral$value
+}
+
+gradG.DVCSDSigma <- function(dvcs, fns, gs) {
+  points <- expKinematics(dvcs)
+  gts <- apply(gs, 1, function(row) {
+    g0 <- row[1]
+    g1 <- row[2]
+    g0 + g1 * points$t
+  })
+  # keep in mind that * is not matrix multiplication
+  df  <- as.data.frame(2 * Re (as.matrix(fns) * rowSums(Conj(as.matrix(fns)) * gts)))
+  dft <- df * points$t
+  cbind(df, dft)
 }
 
 #' @export

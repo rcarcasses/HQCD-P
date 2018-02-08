@@ -57,3 +57,17 @@ test_that('The same result as in https://arxiv.org/abs/1704.08280 is gotten', {
   p <- addProcessObservable(p, F2())
   expect_equal(rss(p) - 446.9823, tolerance = 1e-3)
 })
+
+test_that('The gs are converted from a vector to a data.frame back and forth properly', {
+  # create to sample vectors of the same size
+  g0 <- 1:6
+  g1 <- 7:12
+  # build a dataframe with them
+  gs <- data.frame(g0, g1)
+  # get a vector from this
+  allGs <- c(g0, g1)
+  # now convert it back to a dataframe
+  df <- as.data.frame(matrix(allGs, ncol = 2))
+  # check that df and gs are the same
+  expect_true(Reduce(and, df == gs))
+})

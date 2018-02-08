@@ -3,6 +3,7 @@
 #' in real time
 #' @export
 bestEvalEnv <- new.env()
+assign('startGs', NULL, envir = bestEvalEnv)
 
 #' @export
 saveStep <- function(chi2, val, pars) {

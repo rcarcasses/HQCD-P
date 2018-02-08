@@ -54,10 +54,14 @@ rss.HQCDP <- function(x, ...) {
     cat('Please complete your HQCDP configuration first\n')
     return()
   }
-
   # first we need to compute the spectra of the kernels
   spectra <- getSpectra(x, ...)
-  val <- sum(unlist(lapply(x$processes, rss, spectra = spectra)))
+  # now we find all the fns for each one of the processes
+  allProcFns <- lapply(x$processes, getFns, spectra = spectra)
+  # now we proceed to the gs submanifold optimization
+  bestGs <- getBestGs(x, allProcFns)
+  val <- bestGs$value
+  #val <- sum(unlist(lapply(x$processes, rss, spectra = spectra)))
   # add SP constraint here
   valWeighted <- 0
   if(!is.null(attr(x, 'addSPconstraint'))) {
@@ -70,8 +74,56 @@ rss.HQCDP <- function(x, ...) {
   if(is.null(attr(x, 'complete')))
     val
   else
-    list(val = val, valWeighted = valWeighted)
+    list(val = val, valWeighted = valWeighted, gs = bestGs$gs)
 }
+
+#' Given an ProcessObservable or HQCDP object and its associated fns already computed
+#' find the best coefficients, gs, such that the sum of difference squared
+#' weigthed by the inverse of the error squared (rss) between the prediction
+#' and the experimental values of the process is minimized.
+#' @export
+getBestGs <- function(x, ...) UseMethod('getBestGs')
+#' @export
+getBestGs.default <- function(x) paste('getBestGs has to be implemented for this object with classes', class(x))
+
+#' Given a pre computed processes fns find the best values for the gs
+#' @return an optim object
+#' @export
+getBestGs.HQCDP <- function(x, allProcFns) {
+  # first we need to define an function depending only of the gs
+  # to be optimized
+  fn <- function(allGs) {
+    # build a dataframe of gs, which is what the predict function of the ProcessObservable
+    # is expecting, from the allGs passed
+    # pay attention to the number of columns
+    gs <- gs.as.data.frame(allGs)
+    # find the rss for each process for the given values of gs and fns
+    sum(unlist(mapply(function(proc, procFns) {
+      rss(proc, fns = procFns, gs = gs)
+    }, x$processes, allProcFns)))
+  }
+  # now use some good starting point for this optimization
+  startGs <- get('startGs', envir = bestEvalEnv)
+  # if is the fist time just put something there
+  if(is.null(startGs))
+    startGs <- rep(1, len = 2 * sum(unlist(lapply(allProcFns, length))))
+
+  grad <- function(allGs) {
+    gs <- gs.as.data.frame(allGs)
+    rowSums(as.data.frame(mapply(function(proc, procFns) {
+      gradRSSGs(proc, fns = procFns, gs = gs)
+    }, x$processes, allProcFns)))
+  }
+  # TODO: chain optimizations (?)
+  op <- optim(startGs, gr = grad, fn = fn, method = 'BFGS', hessian = FALSE)
+  # store the best gs found so they can be used as a starting point of the next call
+  assign('startGs', op$par, envir = bestEvalEnv)
+  # add the property gs with the dataframe format
+  op$gs <- gs.as.data.frame(op$par)
+  op
+}
+
+gs.as.data.frame <- function(allGs) as.data.frame(matrix(allGs, ncol = 2))
 
 #' @export
 fit <- function(x, ...) UseMethod('fit')
@@ -124,11 +176,12 @@ getKernelPars <- function(x) {
   allPars[keep]
 }
 
-getDoF <- function(x){
+getDoF <- function(x, gDeg = 2) {
   # get the experimental points per process
   expPoints <- sum(unlist(lapply(x$processes, function(p) length(expVal(p)))))
   # get the amount of fitting parameters
-  fitParams <- sum(unlist(lapply(x$kernels, function(k) k$numReg)))
+  # gDeg * number of Reggeons since g(t) = g0 + g1 * t +...
+  fitParams <- gDeg * sum(unlist(lapply(x$kernels, function(k) k$numReg)))
   fitParams <- fitParams + length(getKernelPars(x))
   expPoints - fitParams
 }

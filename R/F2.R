@@ -14,6 +14,10 @@ getNeededTVals.F2 <- function(f2) c(0)
 #' @param ... Additional arguments will be ignored.
 #' @export
 predict.F2 <- function(f2, fns, gs, ...) {
+  # if we are passing the full gs then use only the g(t=0) part
+  if(is.data.frame(gs))
+    gs <- gs[,1]
+
   # get the predicted vector: sum_i(g_i * fn_i)
   val <- rowSums(mapply(function(c, g) c * g, fns, gs), na.rm = TRUE)
 
@@ -30,8 +34,10 @@ predict.F2 <- function(f2, fns, gs, ...) {
 #' @export
 getBestGs.F2 <- function(f2, fns) {
   f2Data <- expVal(f2)
+  w <- 1/expErr(f2)^2
   # the -1 indicate that we don't want an intercept
-  fit <- lm(f2Data ~ .-1, data = cbind(f2Data, fns))
+  fit <- lm(f2Data ~ .-1, data = cbind(f2Data, fns), weights = w)
+  #cat('getBestGs.F2', fit$coefficients, '\n')
   fit$coefficients
 }
 
@@ -109,6 +115,11 @@ DparallelPsi <- function(wf, J) {
      (Phider2 + (J - 2.5) * Asder2 - Asder1 * (2 * Phider1 + J - 1)
       + Phider1^2 + 0.75 * Asder1^2) * wffun(z)
     )
+}
+
+gradG.F2 <- function(obs, fns, gs) {
+  # derivatives respect of g1 are zero
+  cbind(fns, as.data.frame(matrix(0, ncol = length(fns), nrow = length(fns[[1]]))))
 }
 
 #' @export
