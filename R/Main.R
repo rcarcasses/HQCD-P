@@ -17,7 +17,7 @@
 #' @import minpack.lm
 
 #' @export
-init <- function(chebPoints = 400, useRedis = TRUE) {
+init <- function(chebPoints = 400, useRedis = TRUE, numCores = NULL) {
   flog.debug("[HQCD-P] Initializing")
   if(useRedis)
     startRedis()
@@ -30,8 +30,15 @@ init <- function(chebPoints = 400, useRedis = TRUE) {
 # we have to define the value to something otherwise the <<- won't work
 cl <- NULL
 .onLoad <- function(lib, pkg) {
-  # Calculate the number of cores, left one for the system
-  cores <- detectCores() - 1
+  cores <- if(Sys.getenv('USE_CORES') == '') {
+    # Calculate the number of cores, left one for the system
+    detectCores() - 1
+  } else {
+    # use the value in the USE_CORES system environment variable
+    # as the amount of desired cores
+    as.integer(Sys.getenv('USE_CORES'))
+  }
+
   cat('Number of cores available:', cores, '\n')
   # Initiate cluster, all the variables available to all nodes
   cl <<- makeCluster(cores)
