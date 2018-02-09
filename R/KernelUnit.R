@@ -13,22 +13,14 @@ kernelUnit <- function(potential, numReg = 3, kernelName = '', comment = '', opt
   # the .t name is to prevent partial matching with extra arguments passed
   # (please prevent users to use variable names starting with .!)
   findKernelFun <- function(.t = 0, ...) {
-    flog.debug(paste('finding kernel for t =', .t, ...))
+    flog.debug(paste('finding kernel for t =', .t, ' pars:', do.call(paste, as.list(format(list(...), digits = 3)))))
     # extra parameters may come, just ignore them
     fArgs <- getPotentialArgs(potential, ...)
     start.time <- Sys.time()
     t <- function(J, n) {
-      args <- as.list(c(J = J, fArgs))
-      u2j  <- do.call(potential, args)
-      dE   <- abs(min(u2j)) / 400;
-      # make it at least one for values that give a minimum near 0
-      dE   <- max(dE, 0.01)
-      # cat("j =", J, " d0 =", dE, "\n")
-      setPotential(z, u2j)
-      computeSpectrum(n, dE)
-      energies <- getEnergies()
-      wf <- getWavefunctions()[[n]]
-      list(t = energies[[n]], wf = wf, u2j = u2j, energies = energies)
+      u2j  <- do.call(UJgTest, as.list(c(J = J, fArgs)))
+      s <- computeSpectrum(z, u2j, n)
+      list(t = s$energies[[n]], wf = s$wf[[n]], u2j = u2j, energies = s$energies)
     }
 
     tvec <- function(J, n) sapply(J, function(j) t(j, n)$t)
@@ -47,10 +39,11 @@ kernelUnit <- function(potential, numReg = 3, kernelName = '', comment = '', opt
       list(js = js, wf = tresult$wf, u2j = tresult$u2j, name = paste0(kernelName, '.', n))
     }
 
-    if(!is.null(cl))
-      s <- lapply(1:numReg, getIntercept)
-    else
-      s <- parLapply(cl, 1:numReg, getIntercept)
+    # use mcapply to parallelize the computation
+    # The current implementation of schrodinger package
+    # does not work with mclapply in mac
+    lapplyType <- if(Sys.info()['sysname'] == 'Linux') mclapply else lapply
+    s <- lapplyType(1:numReg, getIntercept)
 
     # normalize the wave function
     lapply(1:numReg, function(i){

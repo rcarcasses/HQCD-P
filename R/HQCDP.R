@@ -3,12 +3,34 @@
 #' tested again a configurable list of experimental obsevables
 #' @export
 HQCDP <- function() {
-  h <- list(processes = list(), kernels = list())
+  h <- list(processes = list(), kernels = list(), cluster = NULL)
   class(h) <- c('HQCDP', class(h))  # pay attention to the class name
   # add the constraint for the intercept of the soft pomeron
   # the value of this attribute will be used as weight while fitting
   attr(h, 'addSPconstraint') <- 1e6
   h
+}
+
+#' @export
+setUpCluster <- function(x, ...) UseMethod('setUpCluster')
+setUpCluster.default <- function(x, ...) 'setUpCluster not implemented for this object'
+#' @export
+setUpCluster <- function(x, ncores) {
+  x$cluster <- makeCluster(ncores)
+  x
+}
+
+#' @export
+destroyCluster <- function(x, ...) UseMethod('destroyCluster')
+destroyCluster.default <- function(x, ...) 'destroyCluster not implemented for this object'
+#' @export
+destroyCluster <- function(x, ncores) {
+  if(!is.null(x$cluster)) {
+    flog.debug('Stopping cluster\n')
+    parallel::stopCluster(x$cluster)
+  }
+  x$cluster <- NULL
+  x
 }
 
 #' @export
@@ -189,11 +211,19 @@ getDoF <- function(x, gDeg = 2) {
 getSpectra <- function(x, ...) UseMethod('getSpectra')
 #' @export
 getSpectra.default <- function(x) 'getSpectra not defined in current object'
+#' @param x a HQCDP object, already configured
+#' @param ... additional parameters which will be passed
+#' down while computing the spectrum
 #' @export
 getSpectra.HQCDP <- function(x, ...) {
+  f <- function(t) list(t = t, spectra = lapply(x$kernels, function(k)
+                                  do.call(k$findKernel, list(.t =t, ...))))
   # now compute every kernel for each value of t and the parameters passed
-  lapply(getNeededTVals(x), function(t)
-                              list(t = t,
-                                   spectra = lapply(x$kernels, function(k)
-                                     do.call(k$findKernel, list(.t =t, ...)))))
+  # this is the most expensive part of the computation and its parallelizable
+  # so we use parLapply. Notice that we are already using mclapply in each of the
+  # kernel computations so this is the most we can go while nesting parallel computations
+  if(!is.null(x$cluster))
+    parLapply(x$cluster, getNeededTVals(x), f)
+  else
+    lapply(getNeededTVals(x), f)
 }

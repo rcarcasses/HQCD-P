@@ -1,23 +1,27 @@
 #' @export
-cacheQ <- TRUE
+cacheEnv <- new.env()
+assign('cacheQ', FALSE, envir = cacheEnv)
+assign('use', NULL, envir = cacheEnv)
 
 #' @export
 startRedis <- function(host = 'localhost', port = 6379) {
-  cacheQ <-TRUE
+  assign('cacheQ', TRUE, envir = cacheEnv)
+  assign('use', 'redis', envir = cacheEnv)
   cat('connecting to redis...')
   rredis::redisConnect(host = host, port = port, nodelay = FALSE)
   cat('DONE\n')
 }
 
 #' @export
-stopRedis <- function() {
-  system('docker stop redis')
+cacheInternally <- function() {
+  assign('cacheQ', TRUE, envir = cacheEnv)
+  assign('use', 'internal', envir = cacheEnv)
 }
 
 #' @export
 cache <- function(f, ...) {
   funName <- as.character(substitute(f))
-  if(!cacheQ) {
+  if(!get('cacheQ', envir = cacheEnv)) {
     flog.debug(paste('[RedisCache] function ', funName, ' won\'t be cached, caching is disabled'))
     return(f)
   }
@@ -52,6 +56,7 @@ cache <- function(f, ...) {
     val
   }
 }
+
 #' Clears all the cached values
 #' @export
 clearFunCache <- function(funName) {

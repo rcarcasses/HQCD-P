@@ -18,3 +18,31 @@ test_that('kernelUnit can be computed for different values of t', {
   expect_lt(abs(kVal[[2]]$js - 1.26), 1e-2)
   expect_lt(abs(kVal[[3]]$js - 1.09), 1e-2)
 })
+
+test_that('Parallel computations can be done (Incomplete)', {
+  t <- function(J, n) {
+    args <- as.list(c(J = J))
+    u2j  <- do.call(UJgTest, args)
+    s <- computeSpectrum(z, u2j, n)
+    list(t = s$energies[[n]], wf = s$wf[[n]], u2j = u2j, energies = s$energies)
+  }
+
+  .t <- 0
+  kernelName <- 'test'
+  tvec <- function(J, n) sapply(J, function(j) t(j, n)$t)
+  Js <- seq(0.2, 2, len = 20)
+  getIntercept <- function(n) {
+    tspline <- function(j) tvec(j, n) - .t
+    roots <- uniroot.all(tspline, c(0.2, 2.2), n = 6)
+    if(length(roots) > 0)
+      js <- max(roots)
+    else
+      js <- 0
+
+    tresult <- t(js, n)
+    list(js = js, wf = tresult$wf, u2j = tresult$u2j, name = paste0(kernelName, '.', n))
+  }
+
+  intercepts <- mclapply(1:3, getIntercept)
+  expect_equal(unlist(lapply(intercepts, `[[`, 'js')), c(1.16911807113316, 1.08376877103049, 0.965954406166295))
+})

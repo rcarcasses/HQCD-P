@@ -17,43 +17,20 @@
 #' @import minpack.lm
 
 #' @export
-init <- function(chebPoints = 400, useRedis = TRUE, numCores = NULL) {
+init <- function(chebPoints = 400, useRedis = FALSE, numCores = NULL) {
   flog.debug("[HQCD-P] Initializing")
   if(useRedis)
     startRedis()
 
   solve(iHQCD())
   # set the method we want to use to compute the eigenvalues
-  schrodinger::setSchroMethod('cheb', chebPoints);
-}
-
-# we have to define the value to something otherwise the <<- won't work
-cl <- NULL
-.onLoad <- function(lib, pkg) {
-  cores <- if(Sys.getenv('USE_CORES') == '') {
-    # Calculate the number of cores, left one for the system
-    detectCores() - 1
-  } else {
-    # use the value in the USE_CORES system environment variable
-    # as the amount of desired cores
-    as.integer(Sys.getenv('USE_CORES'))
-  }
-
-  cat('Number of cores available:', cores, '\n')
-  # Initiate cluster, all the variables available to all nodes
-  cl <<- makeCluster(cores)
+  schrodinger::chebSetN(chebPoints);
 }
 
 #' @export
 dumpList <- function(l) {
   paste(mapply(function(n, v) paste(n,'=', v), names(l), l), collapse = ', ')
 }
-
-on.exit({
-  cat('Stopping cluster\n')
-  if(!is.null(cl))
-  parallel::stopCluster(cl)
-})
 
 #' @export
 copyEnv <- function(from, to, names=ls(from, all.names=TRUE)) {
