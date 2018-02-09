@@ -17,6 +17,8 @@ setUpCluster.default <- function(x, ...) 'setUpCluster not implemented for this 
 #' @export
 setUpCluster <- function(x, ncores) {
   x$cluster <- makeCluster(ncores)
+  # we need to put the ihqcd information available in the cluster
+  clusterExport(x$cluster, names(solve(iHQCD())))
   x
 }
 
@@ -211,11 +213,20 @@ getDoF <- function(x, gDeg = 2) {
 getSpectra <- function(x, ...) UseMethod('getSpectra')
 #' @export
 getSpectra.default <- function(x) 'getSpectra not defined in current object'
+#' Get the spectra of a configured HQCDP object
 #' @param x a HQCDP object, already configured
 #' @param ... additional parameters which will be passed
 #' down while computing the spectrum
 #' @export
 getSpectra.HQCDP <- function(x, ...) {
+  cores <- if(Sys.getenv('USE_CORES') == '') {
+    # Calculate the number of cores, left one for the system
+    detectCores() - 1
+  } else {
+    # use the value in the USE_CORES system environment variable
+    # as the amount of desired cores
+    as.integer(Sys.getenv('USE_CORES'))
+  }
   f <- function(t) list(t = t, spectra = lapply(x$kernels, function(k)
                                   do.call(k$findKernel, list(.t =t, ...))))
   # now compute every kernel for each value of t and the parameters passed
@@ -225,5 +236,5 @@ getSpectra.HQCDP <- function(x, ...) {
   if(!is.null(x$cluster))
     parLapply(x$cluster, getNeededTVals(x), f)
   else
-    lapply(getNeededTVals(x), f)
+    mclapply(getNeededTVals(x), f, mc.cores = cores)
 }

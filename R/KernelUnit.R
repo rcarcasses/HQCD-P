@@ -42,7 +42,7 @@ kernelUnit <- function(potential, numReg = 3, kernelName = '', comment = '', opt
     # use mcapply to parallelize the computation
     # The current implementation of schrodinger package
     # does not work with mclapply in mac
-    lapplyType <- if(Sys.info()['sysname'] == 'Linux') mclapply else lapply
+    lapplyType <- lapply #if(Sys.info()['sysname'] == 'Linux') mclapply else lapply
     s <- lapplyType(1:numReg, getIntercept)
 
     # normalize the wave function

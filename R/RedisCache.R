@@ -1,7 +1,9 @@
 #' @export
 cacheEnv <- new.env()
-assign('cacheQ', FALSE, envir = cacheEnv)
-assign('use', NULL, envir = cacheEnv)
+assign('cacheQ', TRUE, envir = cacheEnv)
+assign('use', 'inmemory', envir = cacheEnv)
+assign('cacheValues', list(), envir = cacheEnv)
+assign('maxInMemoryEntries', 1e3, envir = cacheEnv)
 
 #' @export
 startRedis <- function(host = 'localhost', port = 6379) {
@@ -40,20 +42,32 @@ cache <- function(f, ...) {
     key <- paste0(format(Filter(is.numeric, arguments), digits = 16), collapse = ',')
     key <- paste0(key, '-', funName, '-', extraKey, collapse = '')
 
-    # cat('key is ', key, '\n')
-    val <- rredis::redisGet(key)  # check if it has been already computed
-    if(!is.null(val))
-      return(val)
+    if(get('use', envir = cacheEnv) == 'redis') {
+      # cat('key is ', key, '\n')
+      val <- rredis::redisGet(key)  # check if it has been already computed
+      if(!is.null(val))
+        return(val)
+      #otherwise compute the value, store and return it
+      val <- do.call(f, arguments)
+      if(!is.null(val)){
+        set <- paste0('fset-', funName)
+        rredis::redisSAdd(set, key)    # all the functions keys are stored in a set
+        rredis::redisSet(key, val)
+      }
+      val
+    } else {
+      # use in memory cache
+      cacheValues <- get('cacheValues', envir = cacheEnv)
+      if(is.null(cacheValues[[key]])) {
+        cacheValues[[key]] <- do.call(f, arguments)
+        # if cached values are too big remove the older entries
+        if(length(cacheValues) > get('maxInMemoryEntries', envir = cacheEnv))
+          cacheValues[[1]] <- NULL
+      }
 
-    #otherwise compute the value, store and return it
-    val <- do.call(f, arguments)
-    if(!is.null(val)){
-      set <- paste0('fset-', funName)
-      rredis::redisSAdd(set, key)    # all the functions keys are stored in a set
-      rredis::redisSet(key, val)
+      assign('cacheValues', cacheValues, envir = cacheEnv)
+      cacheValues[[key]]
     }
-
-    val
   }
 }
 

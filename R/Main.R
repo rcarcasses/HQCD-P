@@ -17,20 +17,50 @@
 #' @import minpack.lm
 
 #' @export
-init <- function(chebPoints = 400, useRedis = FALSE, numCores = NULL) {
+init <- function(chebPoints = 400, useCache = TRUE, useRedis = FALSE) {
   flog.debug("[HQCD-P] Initializing")
+  if(useCache)
+    assign('cacheQ', TRUE, envir = cacheEnv)
+
   if(useRedis)
     startRedis()
 
+  # pre-compute the solutions needed
+  # they will be cached
+  solve(iHQCD(), A0 = 5, h = 0.001, zmax = 20)
   solve(iHQCD())
   # set the method we want to use to compute the eigenvalues
   schrodinger::chebSetN(chebPoints);
+}
+
+# we have to define the value to something otherwise the <<- won't work
+cl <- NULL
+.onLoadOld <- function(lib, pkg) {
+  cores <- if(Sys.getenv('USE_CORES') == '') {
+    # Calculate the number of cores, left one for the system
+    detectCores() - 1
+  } else {
+    # use the value in the USE_CORES system environment variable
+    # as the amount of desired cores
+    as.integer(Sys.getenv('USE_CORES'))
+  }
+
+  cat('Number of cores available:', cores, '\n')
+  # Initiate cluster, all the variables available to all nodes
+  cl <<- makeCluster(cores)
 }
 
 #' @export
 dumpList <- function(l) {
   paste(mapply(function(n, v) paste(n,'=', v), names(l), l), collapse = ', ')
 }
+
+on.exit({
+  if(!is.null(cl)) {
+    flog.debug('Stopping cluster\n')
+    parallel::stopCluster(cl)
+  }
+})
 
 #' @export
 copyEnv <- function(from, to, names=ls(from, all.names=TRUE)) {

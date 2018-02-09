@@ -1,6 +1,5 @@
 # these are the non-normalizable modes
-#' @export
-getU1NNMode <- cache(function(Q2 = 3.5, alpha = 0) {
+getU1NNModeRaw <- function(Q2 = 3.5, alpha = 0) {
   flog.debug(paste('finding mode Q2', Q2, 'alpha', alpha))
   # first we need to compute ihqcd with bigger precision
   # set the constants in the IHQCD package
@@ -46,4 +45,6 @@ getU1NNMode <- cache(function(Q2 = 3.5, alpha = 0) {
   solve(ihqcd, A0 = originalPars$A0, h = originalPars$h, zmax = originalPars$zmax)
 
   list(fQ = fQ, fQ2 = fQ2, dfQ2 = dfQ2, factor = factor)
-})
+}
+#' @export
+getU1NNMode <- cache(getU1NNModeRaw)
