@@ -13,7 +13,7 @@ kernelUnit <- function(potential, numReg = 3, kernelName = '', comment = '', opt
   # the .t name is to prevent partial matching with extra arguments passed
   # (please prevent users to use variable names starting with .!)
   findKernelFun <- function(.t = 0, ...) {
-    flog.debug(paste('finding kernel for t =', .t, ' pars:', do.call(paste, as.list(format(list(...), digits = 3)))))
+    flog.trace(paste('finding kernel for t =', .t, ' pars:', do.call(paste, as.list(format(list(...), digits = 3)))))
     # extra parameters may come, just ignore them
     fArgs <- getPotentialArgs(potential, ...)
     start.time <- Sys.time()

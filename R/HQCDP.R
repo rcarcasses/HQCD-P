@@ -16,7 +16,7 @@ setUpCluster <- function(x, ...) UseMethod('setUpCluster')
 setUpCluster.default <- function(x, ...) 'setUpCluster not implemented for this object'
 #' @export
 setUpCluster <- function(x, ncores) {
-  x$cluster <- makeCluster(ncores)
+  x$cluster <- makeCluster(ncores, outfile = 'cluster.log')
   # we need to put the ihqcd information available in the cluster
   clusterExport(x$cluster, names(solve(iHQCD())))
   x
@@ -79,6 +79,7 @@ rss.HQCDP <- function(x, ...) {
     return()
   }
   # first we need to compute the spectra of the kernels
+	# this is a parallelized call
   spectra <- getSpectra(x, ...)
   # now we find all the fns for each one of the processes
   allProcFns <- lapply(x$processes, getFns, spectra = spectra)
@@ -130,7 +131,7 @@ getBestGs.HQCDP <- function(x, allProcFns) {
   startGs <- get('startGs', envir = bestEvalEnv)
   # if is the fist time just put something there
   if(is.null(startGs))
-    startGs <- rep(1, len = 2 * sum(unlist(lapply(allProcFns, length))))
+    startGs <- rep(1, len = 2 * sum(unlist(lapply(x$kernels, '[[', 'numReg'))))
 
   grad <- function(allGs) {
     gs <- gs.as.data.frame(allGs)
@@ -169,6 +170,7 @@ fit.HQCDP <- function(x, allPars = NULL) {
     valWeighted <- completeVal$valWeighted
     DoF <- getDoF(x)
     chi2 <- val / DoF
+		flog.debug('                        chi2 = %s', round(chi2, 3))
     # store the partial results in the best eval tracker
     saveStep(chi2, val, pars)
     valWeighted
@@ -209,6 +211,18 @@ getDoF <- function(x, gDeg = 2) {
   fitParams <- fitParams + length(getKernelPars(x))
   expPoints - fitParams
 }
+
+# store the number of cores for this computation
+cores <- if(Sys.getenv('USE_CORES') == '') {
+	# Calculate the number of cores, left one for the system
+	detectCores() - 1
+} else {
+	# use the value in the USE_CORES system environment variable
+	# as the amount of desired cores
+	as.integer(Sys.getenv('USE_CORES'))
+}
+
+flog.debug('Using %s cores', cores)
 #' @export
 getSpectra <- function(x, ...) UseMethod('getSpectra')
 #' @export
@@ -219,16 +233,15 @@ getSpectra.default <- function(x) 'getSpectra not defined in current object'
 #' down while computing the spectrum
 #' @export
 getSpectra.HQCDP <- function(x, ...) {
-  cores <- if(Sys.getenv('USE_CORES') == '') {
-    # Calculate the number of cores, left one for the system
-    detectCores() - 1
-  } else {
-    # use the value in the USE_CORES system environment variable
-    # as the amount of desired cores
-    as.integer(Sys.getenv('USE_CORES'))
-  }
-  f <- function(t) list(t = t, spectra = lapply(x$kernels, function(k)
+	f <- function(t) {
+		# we need to initialize the computation on each node
+		init()
+		val <- list(t = t, spectra = lapply(x$kernels, function(k)
                                   do.call(k$findKernel, list(.t =t, ...))))
+		# close the redis connection opened while calling init()
+		rredis::redisClose()
+		val
+	}
   # now compute every kernel for each value of t and the parameters passed
   # this is the most expensive part of the computation and its parallelizable
   # so we use parLapply. Notice that we are already using mclapply in each of the

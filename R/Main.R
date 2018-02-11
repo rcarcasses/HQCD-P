@@ -17,8 +17,8 @@
 #' @import minpack.lm
 
 #' @export
-init <- function(chebPoints = 400, useCache = TRUE, useRedis = FALSE) {
-  flog.debug("[HQCD-P] Initializing")
+init <- function(chebPoints = 400, useCache = TRUE, useRedis = TRUE) {
+  flog.trace("[HQCD-P] Initializing .")
   if(useCache)
     assign('cacheQ', TRUE, envir = cacheEnv)
 

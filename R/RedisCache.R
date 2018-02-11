@@ -9,14 +9,14 @@ assign('maxInMemoryEntries', 1e3, envir = cacheEnv)
 startRedis <- function(host = 'localhost', port = 6379) {
   assign('cacheQ', TRUE, envir = cacheEnv)
   assign('use', 'redis', envir = cacheEnv)
-  cat('connecting to redis...')
+  flog.trace('connecting to redis...')
   rredis::redisConnect(host = host, port = port, nodelay = FALSE)
-  cat('DONE\n')
+  flog.trace('DONE\n')
 }
 
 #' @export
 cacheInternally <- function() {
-  assign('cacheQ', TRUE, envir = cacheEnv)
+  assign('cacheQ', FALSE, envir = cacheEnv)
   assign('use', 'internal', envir = cacheEnv)
 }
 
@@ -57,7 +57,6 @@ cache <- function(f, ...) {
       val
     } else {
       # use in memory cache
-      cacheValues <- get('cacheValues', envir = cacheEnv)
       if(is.null(cacheValues[[key]])) {
         cacheValues[[key]] <- do.call(f, arguments)
         # if cached values are too big remove the older entries
