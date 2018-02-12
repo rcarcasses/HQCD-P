@@ -71,7 +71,8 @@ print.HQCDP <- function(x) {
 #' This computes the sum of the rss for all the processes configured.
 #' This is the function to minimize in the optimization procedure.
 #' @export
-rss.HQCDP <- function(x, ...) {
+rss.HQCDP <- function(x, pars, allGs = NULL, startGs = NULL) {
+	#cat('\n allGs', allGs, ' startGs', startGs, '\n')
   # warn the user that there are configurations
   # that are still required
   if(length(x$processes) == 0 || length(x$kernels) == 0) {
@@ -80,13 +81,21 @@ rss.HQCDP <- function(x, ...) {
   }
   # first we need to compute the spectra of the kernels
 	# this is a parallelized call
-  spectra <- getSpectra(x, ...)
+  spectra <- getSpectra(x, pars)
   # now we find all the fns for each one of the processes
   allProcFns <- lapply(x$processes, getFns, spectra = spectra)
-  # now we proceed to the gs submanifold optimization
-  bestGs <- getBestGs(x, allProcFns)
-  val <- bestGs$value
-  #val <- sum(unlist(lapply(x$processes, rss, spectra = spectra)))
+	gs <- NULL
+	# if allGs is set then just evaluate the function 
+	val <- if(!is.null(allGs)) {
+		gs <- allGs
+		evalRSSInGs(x, allProcFns, allGs)
+	}
+	else {
+		# else find the best gs by going through the gs submanifold optimization
+		bestGs <- getBestGs(x, allProcFns, startGs)
+		gs     <- unlist(bestGs$gs) 
+		bestGs$value
+	}
   # add SP constraint here
   valWeighted <- 0
   if(!is.null(attr(x, 'addSPconstraint'))) {
@@ -99,7 +108,7 @@ rss.HQCDP <- function(x, ...) {
   if(is.null(attr(x, 'complete')))
     val
   else
-    list(val = val, valWeighted = valWeighted, gs = bestGs$gs)
+    list(val = val, valWeighted = valWeighted, gs = gs)
 }
 
 #' Given an ProcessObservable or HQCDP object and its associated fns already computed
@@ -114,73 +123,76 @@ getBestGs.default <- function(x) paste('getBestGs has to be implemented for this
 #' Given a pre computed processes fns find the best values for the gs
 #' @return an optim object
 #' @export
-getBestGs.HQCDP <- function(x, allProcFns) {
+getBestGs.HQCDP <- function(x, allProcFns, startGs) {
   # first we need to define an function depending only of the gs
   # to be optimized
-  fn <- function(allGs) {
-    # build a dataframe of gs, which is what the predict function of the ProcessObservable
-    # is expecting, from the allGs passed
-    # pay attention to the number of columns
-    gs <- gs.as.data.frame(allGs)
-    # find the rss for each process for the given values of gs and fns
-    sum(unlist(mapply(function(proc, procFns) {
-			# remove some possible NA from the fns and put some large number
-			if(any(is.na(procFns))) {
-				flog.warn('There were NA values for this evaluation')
-				1e30
-			}
-			else
-				rss(proc, fns = procFns, gs = gs)
-    }, x$processes, allProcFns)))
-  }
-  # now use some good starting point for this optimization
-  startGs <- get('startGs', envir = bestEvalEnv)
-	flog.debug(paste('getBestGs: startGs =', do.call(paste, as.list(format(startGs, digits = 4)))))
+	fn <- function(parAllGs) evalRSSInGs(x, allProcFns, parAllGs)
   # if is the fist time just put something there
   if(is.null(startGs))
     startGs <- rep(1, len = 2 * sum(unlist(lapply(x$kernels, '[[', 'numReg'))))
-
+	# define the global gradient function
   grad <- function(allGs) {
     gs <- gs.as.data.frame(allGs)
     rowSums(as.data.frame(mapply(function(proc, procFns) {
       gradRSSGs(proc, fns = procFns, gs = gs)
     }, x$processes, allProcFns)))
   }
-  # TODO: chain optimizations (?)
-  op <- optim(startGs, gr = grad, fn = fn, method = 'BFGS', hessian = FALSE)
+  op <- optim(startGs, gr = grad, fn = fn, method = 'BFGS', hessian = FALSE, control = list(maxit = 1000))
   # store the best gs found so they can be used as a starting point of the next call
-  assign('startGs', op$par, envir = bestEvalEnv)
+	flog.debug(paste('bestGs  =', do.call(paste, as.list(format(op$par, digits = 4))), ' in', op$counts[1], ' steps'))
   # add the property gs with the dataframe format
   op$gs <- gs.as.data.frame(op$par)
   op
 }
 
 gs.as.data.frame <- function(allGs) as.data.frame(matrix(allGs, ncol = 2))
+# given all processes fns and a vector of gs compute the rss sum
+evalRSSInGs <- function(x, allProcFns,  allGs) {
+	# build a dataframe of gs, which is what the predict function of the ProcessObservable
+	# is expecting, from the allGs passed
+	# pay attention to the number of columns: is related to the g(t) order expansion
+	gs <- gs.as.data.frame(allGs)
+	# find the rss for each process for the given values of gs and fns
+	sum(unlist(mapply(function(proc, procFns) {
+		# remove some possible NA from the fns and put some large number
+		if(any(is.na(procFns))) {
+			flog.warn('There were NA values for this evaluation')
+			1e30
+		}
+		else
+			rss(proc, fns = procFns, gs = gs)
+	}, x$processes, allProcFns)))
+}
 
 #' @export
 fit <- function(x, ...) UseMethod('fit')
 #' @export
-fit.HQCDP <- function(x, allPars = NULL, method = 'Nelder-Mead') {
+fit.HQCDP <- function(x, allPars = NULL, initGs = NULL, method = 'Nelder-Mead') {
 	flog.debug('Using method %s', method)
+  DoF <- getDoF(x)
+	flog.debug(' --- DoF %s', DoF)
   # here we declare that we want the full output of the rss function for instance
   attr(x, 'complete') <- TRUE
   # get all the parameters to fit if required
   if(is.null(allPars))
     allPars <- getKernelPars(x)
   # reset the bestEvalEnv
-  resetBestEval(allPars)
+  resetEvalTracker(allPars)
   # the function to internally called by optim
   fn <- function(pars) {
     names(pars) <- names(allPars)
-    rssArgs     <- as.list(c(list(x), pars))
-    completeVal <- do.call(rss, rssArgs)
-    val         <- completeVal$val
+		# fn arguments, allGs set only the first time, then use last gs as starting point
+		# this is just to allow reproducibility of known results at the first ru
+    lastEval    <- get('lastEval', envir = bestEvalEnv)
+    completeVal <- rss(x, pars, allGs = if(is.null(lastEval$gs)) initGs else NULL, startGs = lastEval$gs)
+		val         <- completeVal$val
     valWeighted <- completeVal$valWeighted
-    DoF <- getDoF(x)
-    chi2 <- val / DoF
-		flog.debug('                        chi2 = %s', round(chi2, 3))
+    gs          <- completeVal$gs
+    chi2        <- val / DoF
+    flog.debug('          pars =', do.call(paste, as.list(round(pars, 6))), '\n')
+		flog.debug('          chi2 = %s', round(chi2, 3))
     # store the partial results in the best eval tracker
-    saveStep(chi2, val, pars)
+    saveStep(chi2, val, pars, gs)
 		# optimize the log better
     log(valWeighted)
   }
@@ -191,7 +203,9 @@ fit.HQCDP <- function(x, allPars = NULL, method = 'Nelder-Mead') {
     bestEval <- get('bestEval', envir = bestEvalEnv)
     lastBestChi2 <- bestEval$chi2
     startPars <- bestEval$pars
-    op <- optim(startPars, fn = fn, hessian = FALSE, method = method)
+    op <- optim(startPars, 
+								fn = fn, 
+								hessian = FALSE, method = method)
     bestEval <- get('bestEval', envir = bestEvalEnv)
     newBestChi2 <- bestEval$chi2
     if(abs(newBestChi2 - lastBestChi2) < 1e-3) # the new iteration wasn't better than the one before
@@ -241,12 +255,12 @@ getSpectra.default <- function(x) 'getSpectra not defined in current object'
 #' @param ... additional parameters which will be passed
 #' down while computing the spectrum
 #' @export
-getSpectra.HQCDP <- function(x, ...) {
+getSpectra.HQCDP <- function(x, pars) {
 	f <- function(t) {
 		# we need to initialize the computation on each node
 		init()
 		val <- list(t = t, spectra = lapply(x$kernels, function(k)
-                                  do.call(k$findKernel, list(.t =t, ...))))
+                                  do.call(k$findKernel, as.list(c(.t =t, pars)))))
 		# close the redis connection opened while calling init()
 		rredis::redisClose()
 		val
