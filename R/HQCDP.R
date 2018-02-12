@@ -124,11 +124,18 @@ getBestGs.HQCDP <- function(x, allProcFns) {
     gs <- gs.as.data.frame(allGs)
     # find the rss for each process for the given values of gs and fns
     sum(unlist(mapply(function(proc, procFns) {
-      rss(proc, fns = procFns, gs = gs)
+			# remove some possible NA from the fns and put some large number
+			if(any(is.na(procFns))) {
+				flog.warn('There were NA values for this evaluation')
+				1e30
+			}
+			else
+				rss(proc, fns = procFns, gs = gs)
     }, x$processes, allProcFns)))
   }
   # now use some good starting point for this optimization
   startGs <- get('startGs', envir = bestEvalEnv)
+	flog.debug(paste('getBestGs: startGs =', do.call(paste, as.list(format(startGs, digits = 4)))))
   # if is the fist time just put something there
   if(is.null(startGs))
     startGs <- rep(1, len = 2 * sum(unlist(lapply(x$kernels, '[[', 'numReg'))))
@@ -153,7 +160,8 @@ gs.as.data.frame <- function(allGs) as.data.frame(matrix(allGs, ncol = 2))
 #' @export
 fit <- function(x, ...) UseMethod('fit')
 #' @export
-fit.HQCDP <- function(x, allPars = NULL) {
+fit.HQCDP <- function(x, allPars = NULL, method = 'Nelder-Mead') {
+	flog.debug('Using method %s', method)
   # here we declare that we want the full output of the rss function for instance
   attr(x, 'complete') <- TRUE
   # get all the parameters to fit if required
@@ -173,7 +181,8 @@ fit.HQCDP <- function(x, allPars = NULL) {
 		flog.debug('                        chi2 = %s', round(chi2, 3))
     # store the partial results in the best eval tracker
     saveStep(chi2, val, pars)
-    valWeighted
+		# optimize the log better
+    log(valWeighted)
   }
 
   i <- 1
@@ -182,7 +191,7 @@ fit.HQCDP <- function(x, allPars = NULL) {
     bestEval <- get('bestEval', envir = bestEvalEnv)
     lastBestChi2 <- bestEval$chi2
     startPars <- bestEval$pars
-    op <- optim(startPars, fn = fn, hessian = FALSE)
+    op <- optim(startPars, fn = fn, hessian = FALSE, method = method)
     bestEval <- get('bestEval', envir = bestEvalEnv)
     newBestChi2 <- bestEval$chi2
     if(abs(newBestChi2 - lastBestChi2) < 1e-3) # the new iteration wasn't better than the one before
