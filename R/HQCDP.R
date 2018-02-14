@@ -137,7 +137,9 @@ getBestGs.HQCDP <- function(x, allProcFns, startGs) {
       gradRSSGs(proc, fns = procFns, gs = gs)
     }, x$processes, allProcFns)))
   }
-  op <- optim(startGs, gr = grad, fn = fn, method = 'BFGS', hessian = FALSE, control = list(maxit = 1000))
+  op <- optim(startGs,
+						 	#gr = grad,
+						 	fn = fn, method = 'BFGS', hessian = FALSE, control = list(maxit = 1000))
   # store the best gs found so they can be used as a starting point of the next call
 	flog.debug(paste('bestGs  =', do.call(paste, as.list(format(op$par, digits = 4))), ' in', op$counts[1], ' steps'))
   # add the property gs with the dataframe format
@@ -189,7 +191,7 @@ fit.HQCDP <- function(x, allPars = NULL, initGs = NULL, method = 'Nelder-Mead') 
     valWeighted <- completeVal$valWeighted
     gs          <- completeVal$gs
     chi2        <- val / DoF
-    flog.debug('          pars =', do.call(paste, as.list(round(pars, 6))), '\n')
+    flog.debug('          pars = %s', do.call(paste, as.list(round(pars, 6))))
 		flog.debug('          chi2 = %s', round(chi2, 3))
     # store the partial results in the best eval tracker
     saveStep(chi2, val, pars, gs)
