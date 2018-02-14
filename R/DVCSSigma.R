@@ -1,10 +1,6 @@
 #' @export
-DVCSSigma <- function() ProcessObservable('DVCSSigma')
+DVCSSigma <- function() Sigma('DVCSSigma')
 
-#' @export
-expVal.DVCSSigma <- function(dvcs) dvcs$data$sigma
-#' @export
-expErr.DVCSSigma <- function(dvcs) dvcs$data$deltaSigma
-#' @export
-expKinematics.DVCSSigma <- function(dvcs) dvcs$data[c('Q2', 'W')]
-
+getExternalU1wf.DVCSSigma <- function(dvcs, Q2 = Q2, ...) {
+  getU1NNMode(Q2 = Q2)$fQ
+}
