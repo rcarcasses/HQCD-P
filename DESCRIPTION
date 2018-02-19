@@ -10,7 +10,7 @@ Description: This package contains all the numerical computations related to the
 License: MIT
 LazyData: TRUE
 Encoding: UTF-8
-RoxygenNote: 6.0.1
+RoxygenNote: 5.0.1
 Depends:
     futile.logger,
     bvpSolve,

@@ -8,6 +8,7 @@ HQCDP <- function() {
   # add the constraint for the intercept of the soft pomeron
   # the value of this attribute will be used as weight while fitting
   attr(h, 'addSPconstraint') <- 1e6
+  attr(h, 'gtOrder')         <- 2
   h
 }
 
@@ -55,6 +56,7 @@ addProcessObservable <- function(x, ...) UseMethod('addProcessObservable')
 addProcessObservable.default <- function(x, ...) 'calling addProcessObservable in the wrong object'
 #' @export
 addProcessObservable.HQCDP <- function(h, x) {
+  attr(x, 'gtOrder') <- attr(h, 'gtOrder')
   if(is.element('ProcessObservable', class(x)))
     h$processes <- append(h$processes, list(x))
   else
@@ -85,7 +87,7 @@ rss.HQCDP <- function(x, pars, allGs = NULL, startGs = NULL) {
   # now we find all the fns for each one of the processes
   allProcFns <- lapply(x$processes, getFns, spectra = spectra)
 	gs <- NULL
-	# if allGs is set then just evaluate the function 
+	# if allGs is set then just evaluate the function
 	val <- if(!is.null(allGs)) {
 		gs <- allGs
 		evalRSSInGs(x, allProcFns, allGs)
@@ -93,7 +95,7 @@ rss.HQCDP <- function(x, pars, allGs = NULL, startGs = NULL) {
 	else {
 		# else find the best gs by going through the gs submanifold optimization
 		bestGs <- getBestGs(x, allProcFns, startGs)
-		gs     <- unlist(bestGs$gs) 
+		gs     <- unlist(bestGs$gs)
 		bestGs$value
 	}
   # add SP constraint here
@@ -132,7 +134,7 @@ getBestGs.HQCDP <- function(x, allProcFns, startGs) {
     startGs <- rep(1, len = 2 * sum(unlist(lapply(x$kernels, '[[', 'numReg'))))
 	# define the global gradient function
   grad <- function(allGs) {
-    gs <- gs.as.data.frame(allGs)
+    gs <- gs.as.data.frame(x, allGs)
     rowSums(as.data.frame(mapply(function(proc, procFns) {
       gradRSSGs(proc, fns = procFns, gs = gs)
     }, x$processes, allProcFns)))
@@ -143,17 +145,20 @@ getBestGs.HQCDP <- function(x, allProcFns, startGs) {
   # store the best gs found so they can be used as a starting point of the next call
 	flog.debug(paste('bestGs  =', do.call(paste, as.list(format(op$par, digits = 4))), ' in', op$counts[1], ' steps'))
   # add the property gs with the dataframe format
-  op$gs <- gs.as.data.frame(op$par)
+  op$gs <- gs.as.data.frame(x, op$par)
   op
 }
 
-gs.as.data.frame <- function(allGs) as.data.frame(matrix(allGs, ncol = 2))
+gs.as.data.frame <- function(x, allGs) {
+  as.data.frame(matrix(allGs, ncol = attr(x, 'gtOrder') + 1))
+}
+
 # given all processes fns and a vector of gs compute the rss sum
 evalRSSInGs <- function(x, allProcFns,  allGs) {
 	# build a dataframe of gs, which is what the predict function of the ProcessObservable
 	# is expecting, from the allGs passed
 	# pay attention to the number of columns: is related to the g(t) order expansion
-	gs <- gs.as.data.frame(allGs)
+	gs <- gs.as.data.frame(x, allGs)
 	# find the rss for each process for the given values of gs and fns
 	sum(unlist(mapply(function(proc, procFns) {
 		# remove some possible NA from the fns and put some large number
@@ -205,8 +210,8 @@ fit.HQCDP <- function(x, allPars = NULL, initGs = NULL, method = 'Nelder-Mead') 
     bestEval <- get('bestEval', envir = bestEvalEnv)
     lastBestChi2 <- bestEval$chi2
     startPars <- bestEval$pars
-    op <- optim(startPars, 
-								fn = fn, 
+    op <- optim(startPars,
+								fn = fn,
 								hessian = FALSE, method = method)
     bestEval <- get('bestEval', envir = bestEvalEnv)
     newBestChi2 <- bestEval$chi2
@@ -275,4 +280,15 @@ getSpectra.HQCDP <- function(x, pars) {
     parLapply(x$cluster, getNeededTVals(x), f)
   else
     mclapply(getNeededTVals(x), f, mc.cores = cores)
+}
+
+#' @export
+convertRawSpectra <- function(rawSpectra, numRegs) {
+  # mark the slots, output is like
+  # [1] 1 1 2 2 2 3
+  slots <- unlist(lapply(1:length(numRegs), function(i) rep_len(i, numRegs[i])))
+  lapply(1:length(numRegs), function(i) {
+    positions <- i == slots
+    rawSpectra[positions]
+  })
 }

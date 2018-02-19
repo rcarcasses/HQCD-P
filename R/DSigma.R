@@ -18,10 +18,12 @@ getNeededTVals.DSigma <- function(x) unique(expKinematics(x)$t)
 #' @param spectra a collection of spectrum of different kernels which can have different amount of Reggeons, etc.
 #' @export
 predict.DSigma <- function(dsigma, fns, gs, points, ...) {
+  gtOrder <- attr(dsigma, 'gtOrder')
   gts <- apply(gs, 1, function(row) {
-    g0 <- row[1]
-    g1 <- row[2]
-    g0 + g1 * points$t
+    #g0 <- row[1]
+    #g1 <- row[2]
+    #g0 + g1 * points$t
+    rowSums(row * points$t^(0:gtOrder))
   })
   # compute the amplitude
   amplitude <- rowSums(fns * gts, na.rm = TRUE)

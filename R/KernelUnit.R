@@ -6,14 +6,10 @@
 #' @param optimPars Indicate which parameters can be optimized for this kernel
 #' @export
 kernelUnit <- function(potential, numReg = 3, kernelName = '', comment = '', optimPars = c()) {
-  lastKernel <- NULL
-  time.taken <- NULL
-
-  # the arguments here should be consistent with the potPars passed
   # the .t name is to prevent partial matching with extra arguments passed
   # (please prevent users to use variable names starting with .!)
-  findKernelFun <- function(.t = 0, ...) {
-    flog.trace(paste('finding kernel for t =', .t, ' pars:', do.call(paste, as.list(format(list(...), digits = 3)))))
+  findReggeonDataFun <- function(.t = 0, n = 1, ...) {
+    flog.trace(paste('finding reggeon ', n, ' for t =', .t, ' pars:', do.call(paste, as.list(format(list(...), digits = 3)))))
     # extra parameters may come, just ignore them
     fArgs <- getPotentialArgs(potential, ...)
     start.time <- Sys.time()
@@ -26,43 +22,33 @@ kernelUnit <- function(potential, numReg = 3, kernelName = '', comment = '', opt
     tvec <- function(J, n) sapply(J, function(j) t(j, n)$t)
 
     # define the get intecept function
-    Js <- seq(0.2, 2, len = 20)
-    getIntercept <- function(n) {
-      tspline <- function(j) tvec(j, n) - .t
-      roots <- uniroot.all(tspline, c(0.2, 2.2), n = 6)
-      if(length(roots) > 0)
-        js <- max(roots)
-      else
-        js <- 0
+    tfun <- function(j) tvec(j, n) - .t
+    roots <- uniroot.all(tfun, c(0.2, 2.2), n = 6)
+    if(length(roots) > 0)
+      js <- max(roots)
+    else
+      js <- 0
 
-      tresult <- t(js, n)
-      list(js = js, wf = tresult$wf, u2j = tresult$u2j, name = paste0(kernelName, '.', n))
-    }
-
-    # use mcapply to parallelize the computation
-    # The current implementation of schrodinger package
-    # does not work with mclapply in mac
-    lapplyType <- lapply #if(Sys.info()['sysname'] == 'Linux') mclapply else lapply
-    s <- lapplyType(1:numReg, getIntercept)
-
+    s <- t(js, n)
+    # create an interval around the js found
+    intJs <- seq(js - 0.1, js + 0.1, len = 9)
+    # now find numerically J(t)
+    Jfun <- splinefun(t(intJs, n), intJs)
+    # now find the derivative at the value of js found
+    dJdt <- Jfun(.t, deriv = 1)
     # normalize the wave function
-    lapply(1:numReg, function(i){
-      wffun <- splinefun(s[[i]]$wf$x, s[[i]]$wf$y^2)
-      c <- integrate(wffun, s[[i]]$wf$x[1], s[[i]]$wf$x[length(s[[i]]$wf$x)])$value
-      s[[i]]$wf$y <<- (s[[i]]$wf$y[10] / abs(s[[i]]$wf$y[10])) * s[[i]]$wf$y / sqrt(c)
-    })
+    wffun  <- splinefun(s$wf$x, s$wf$y^2)
+    c      <- integrate(wffun, s$wf$x[1], s$wf$x[length(s$wf$x)])$value
+    s$wf$y <- (s$wf$y[10] / abs(s$wf$y[10])) * s$wf$y / sqrt(c)
+    # return a list with the data
+    list(js = js, dJdt = dJdt, wf = s$wf, u2j = s$u2j, name = paste0(kernelName, '.', n))
+  }
 
-    end.time <- Sys.time()
-    time.taken <<- end.time - start.time
-
-    # we also want to compute the spectral data to compare with the glueball spectrum (or mesons)
-    # so far we need only to compare with the first two levels
-    gs  <- lapply(2 * (1:3), function(J) t(J, 2))
-    tr1 <- lapply(gs, function(v) v$energies[[1]])
-    tr2 <- lapply(gs, function(v) v$energies[[2]])
-
-    lastKernel <<- as.list(c(s, list(tr1 = tr1, tr2 = tr2)))
-    lastKernel
+  findKernelFun <- function(.t = 0, n = 1, ...) {
+    # use parallelization if possible
+    lapplyType <- if(Sys.info()['sysname'] == 'Linux') mclapply else lapply
+    s <- lapplyType(1:numReg, findReggeonDataFun, .t, n, ...)
+    s
   }
 
   findKernel <- cache(findKernelFun, kernelName)
@@ -71,9 +57,7 @@ kernelUnit <- function(potential, numReg = 3, kernelName = '', comment = '', opt
             potential = potential,
             comment = comment,
             optimPars = optimPars,
-            numReg = numReg,
-            getLast = function() lastKernel,
-            getTimeTaken = function() time.taken)
+            numReg = numReg)
   class(k) <- append(class(k), 'kernelUnit')
   k
 }
