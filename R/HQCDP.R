@@ -56,7 +56,6 @@ addProcessObservable <- function(x, ...) UseMethod('addProcessObservable')
 addProcessObservable.default <- function(x, ...) 'calling addProcessObservable in the wrong object'
 #' @export
 addProcessObservable.HQCDP <- function(h, x) {
-  attr(x, 'gtOrder') <- attr(h, 'gtOrder')
   if(is.element('ProcessObservable', class(x)))
     h$processes <- append(h$processes, list(x))
   else

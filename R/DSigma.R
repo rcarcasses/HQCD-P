@@ -18,12 +18,12 @@ getNeededTVals.DSigma <- function(x) unique(expKinematics(x)$t)
 #' @param spectra a collection of spectrum of different kernels which can have different amount of Reggeons, etc.
 #' @export
 predict.DSigma <- function(dsigma, fns, gs, points, ...) {
-  gtOrder <- attr(dsigma, 'gtOrder')
+  # compute g(t) for each corresponding fn, this return a dataframe
+  # were each column is the value (a vector) of g(t) for the given values
+  # of t and the n column is the g(t) of the n fn in the fns dataframe
+  # see the test file for some explanation 'tests/testthat/test_DSigma.R'
   gts <- apply(gs, 1, function(row) {
-    #g0 <- row[1]
-    #g1 <- row[2]
-    #g0 + g1 * points$t
-    rowSums(row * points$t^(0:gtOrder))
+    rowSums(t(row * t(outer(t, 0:(length(gs) - 1), `^`))))
   })
   # compute the amplitude
   amplitude <- rowSums(fns * gts, na.rm = TRUE)
@@ -75,10 +75,12 @@ getExternalU1wf.default <- function(x, ...) 'getExternalU1wf have to be implemen
 
 gradG.DSigma <- function(dsigma, fns, gs) {
   points <- expKinematics(dsigma)
+  gtOrder <- length(gs)
   gts <- apply(gs, 1, function(row) {
-    g0 <- row[1]
-    g1 <- row[2]
-    g0 + g1 * points$t
+    #g0 <- row[1]
+    #g1 <- row[2]
+    #g0 + g1 * points$t
+    rowSums(row * points$t^(0:gtOrder))
   })
   # keep in mind that * is not matrix multiplication
   df  <- as.data.frame(2 * Re (as.matrix(fns) * rowSums(Conj(as.matrix(fns)) * gts)))

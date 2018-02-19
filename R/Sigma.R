@@ -39,3 +39,10 @@ predict.Sigma <- function(sig, fns, gs, points, ...) {
   integral$value
 }
 
+#' @export
+expVal.Sigma <- function(s) s$data$sigma
+#' @export
+expErr.Sigma <- function(s) s$data$deltaSigma
+#' @export
+expKinematics.Sigma <- function(s) s$data[c('W', 'Q2')]
+
