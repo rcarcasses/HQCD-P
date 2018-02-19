@@ -20,7 +20,6 @@ kernelUnit <- function(potential, numReg = 3, kernelName = '', comment = '', opt
     }
 
     tvec <- function(J, n) sapply(J, function(j) t(j, n)$t)
-
     # define the get intecept function
     tfun <- function(j) tvec(j, n) - .t
     roots <- uniroot.all(tfun, c(0.2, 2.2), n = 6)

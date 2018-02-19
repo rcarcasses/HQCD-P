@@ -117,6 +117,7 @@ DparallelPsi <- function(wf, J) {
     )
 }
 
+# DEPRECATED
 gradG.F2 <- function(obs, fns, gs) {
   # derivatives respect of g1 are zero
   cbind(fns, as.data.frame(matrix(0, ncol = length(fns), nrow = length(fns[[1]]))))

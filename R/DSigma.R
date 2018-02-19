@@ -33,6 +33,7 @@ predict.DSigma <- function(dsigma, fns, gs, points, ...) {
   (1 / W^4) * abs(amplitude)^2
 }
 
+#' Get fns times dJdt
 #' @export
 getFns.DSigma <- function(dsigma, points, spectra) {
   fnNames <- unlist(lapply(spectra[[1]]$spectra,
@@ -52,7 +53,7 @@ getFns.DSigma <- function(dsigma, points, spectra) {
       # iterate over each Reggeon for the given spectrum
       # remember, the tr1 and tr2 are not data about the reggeons
       lapply(s[names(s) == ''], function(spec) {
-        fN(dsigma, W, Q2, spec$js, spec$wf)
+        spec$dJdt * fN(dsigma, W, Q2, spec$js, spec$wf)
       })
     }), recursive = TRUE)
     names(r) <- fnNames
@@ -73,14 +74,12 @@ getExternalU1wf <- function(x, ...) UseMethod('getExternalU1wf')
 
 getExternalU1wf.default <- function(x, ...) 'getExternalU1wf have to be implemented for this process'
 
+# DEPRECATED
 gradG.DSigma <- function(dsigma, fns, gs) {
   points <- expKinematics(dsigma)
   gtOrder <- length(gs)
   gts <- apply(gs, 1, function(row) {
-    #g0 <- row[1]
-    #g1 <- row[2]
-    #g0 + g1 * points$t
-    rowSums(row * points$t^(0:gtOrder))
+    rowSums(t(row * t(outer(t, 0:(length(gs) - 1), `^`))))
   })
   # keep in mind that * is not matrix multiplication
   df  <- as.data.frame(2 * Re (as.matrix(fns) * rowSums(Conj(as.matrix(fns)) * gts)))
