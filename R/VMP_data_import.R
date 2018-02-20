@@ -131,7 +131,7 @@ loadData.VMPSigma <- function(vmp) {
   sigma       <- c(sigma,  c(2.3,  2.5,  3.9,  4.4,  7.6))
   deltaSigma  <- c(deltaSigma,  c(sqrt(0.3**2+0.2**2),  sqrt(0.4**2+0.2**2),  sqrt(0.6**2+0.3**2),  sqrt(0.8**2+0.5**2),  sqrt(3.2**2+0.6**2)))
 
-  data.frame(vmName, m,  W,  Q2,  sigma,  deltaSigma)
+  data.frame(vmName, m, Q2, W, sigma, deltaSigma)
 }
 #' @export
 loadData.VMPDSigma  <- function(vmp) {
@@ -252,7 +252,7 @@ loadData.VMPDSigma  <- function(vmp) {
   dsigma       <- c(dsigma,c(8.24,10.7,3.89,3.96,2.32,0.702,0.349))
   deltaDSigma  <- c(deltaDSigma,c(sqrt(1.14**2+1.09**2),sqrt(1.4**2+1.3**2),sqrt(0.85**2+0.59**2),sqrt(0.80**2+0.56**2),sqrt(0.47**2+0.39**2),sqrt(0.296**2+0.188**2),sqrt(0.278**2+0.160**2)))
 
-  data.frame(vmName, m,  W,  Q2,  t = -t,  dsigma,  deltaDSigma)
+  data.frame(vmName, m, Q2, W, t = -t, dsigma, deltaDSigma)
 }
 #' @export
 loadData.VMPDSigmaTT <- loadData.VMPDSigma

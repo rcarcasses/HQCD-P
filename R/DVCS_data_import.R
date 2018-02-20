@@ -60,7 +60,7 @@ loadData.DVCSSigma <- function(dvcs) {
   sigma       <- c(sigma, c(3.06, 3.54, 4.93, 5.16, 5.62))
   deltaSigma  <- c(deltaSigma, c(sqrt(0.18**2+0.25**2), sqrt(0.29**2+0.34**2), sqrt(0.39**2+0.52**2), sqrt(0.51**2+0.74**2), sqrt(1.34**2+1.19**2)))
 
-  data.frame(W,  Q2,  sigma,  deltaSigma)
+  data.frame(Q2, W, sigma, deltaSigma)
 }
 #' @export
 loadData.DVCSDSigma <- function(dvcs) {
@@ -172,7 +172,7 @@ loadData.DVCSDSigma <- function(dvcs) {
   dsigma       <- c(dsigma, c(11., 3.71, 1.18, 0.24))
   deltaDSigma  <- c(deltaDSigma, c(sqrt(0.85**2+2.23**2), sqrt(0.31**2+0.49**2), sqrt(0.13**2+0.16**2), sqrt(0.03**2+0.04**2)))
 
-  data.frame(W,  Q2,  t = -t,  dsigma,  deltaDSigma)
+  data.frame(Q2, W, t = -t, dsigma, deltaDSigma)
 }
 
 
