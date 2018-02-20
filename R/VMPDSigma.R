@@ -3,7 +3,7 @@ VMPDSigma <- function(vmName) {
   obs <- DSigma('VMPDSigma')
   attr(obs, 'vmName') <- vmName
   # filter experimental data by Vector Meson type
-  obs$data <- subset(obs$data, vmName = vmName)
+  obs$data <- obs$data[obs$data$vmName == vmName,]
   obs
 }
 
