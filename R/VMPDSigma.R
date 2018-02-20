@@ -7,12 +7,6 @@ VMPDSigma <- function(vmName) {
   obs
 }
 
-getExternalU1wf.VMPDSigma <- function(vmp, Q2 = Q2, ...) {
-  vmName <- attr(vmp, 'vmName')
-  #TODO: find the right expression
-  getU1NNMode(Q2 = Q2)$fQ
-}
-
 predict.VMPDSigma <- function(vmp, fns, gs, points, ...) {
   # compute g(t) for each corresponding fn, this return a dataframe
   # were each column is the value (a vector) of g(t) for the given values

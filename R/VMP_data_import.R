@@ -4,7 +4,6 @@ m_Jpsi   <- 3.096916
 m_rho0   <- 0.77549
 m_phi    <- 1.019445
 m_omega  <- 0.78265
-
 #' @export
 loadData.VMPSigma <- function(vmp) {
   # This function creates vectors with the values of m,   W,   Q2,   sigma and deltaSigma
@@ -134,7 +133,6 @@ loadData.VMPSigma <- function(vmp) {
 
   data.frame(vmName, m,  W,  Q2,  sigma,  deltaSigma)
 }
-
 #' @export
 loadData.VMPDSigma  <- function(vmp) {
   # This function creates vectors with the values of m,   W,   Q2,   t,   dsigma and deltaDSigma
@@ -256,3 +254,12 @@ loadData.VMPDSigma  <- function(vmp) {
 
   data.frame(vmName, m,  W,  Q2,  t = -t,  dsigma,  deltaDSigma)
 }
+#' @export
+loadData.VMPDSigmaTT <- loadData.VMPDSigma
+#' @export
+loadData.VMPDSigmaLL <- loadData.VMPDSigma
+
+#' @export
+loadData.VMPSigmaTT <- loadData.VMPSigma
+#' @export
+loadData.VMPSigmaLL <- loadData.VMPSigma

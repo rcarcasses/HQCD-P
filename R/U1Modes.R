@@ -17,16 +17,16 @@ postcompute <- function(pre) {
   solve(pre$ihqcd, A0 = pre$originalPars$A0, h = pre$originalPars$h, zmax = pre$originalPars$zmax)
 }
 
-precompute <- function(Q2, alpha) {
+precompute <- function(alpha) {
   ihqcd <- iHQCD()
   solve(ihqcd, A0 = A0, h = 0.001, zmax = 20)
-  Asfun         <- splinefun(z, As)
-  Asder1fun     <- splinefun(z, Asder1)
-  Asder2fun     <- splinefun(z, Asder2)
-  Asder3fun     <- splinefun(z, Asder3)
-  Phider1fun    <- splinefun(z, Phider1)
-  fact0fun      <- splinefun(z, (1 - 2 * exp(-2 * As) * alpha * Asder2) / (1 - 2 * exp(-2 * As) * alpha * Asder1^2))
-  fact1fun      <- splinefun(z, exp(2 * As) - 2 * alpha * Asder2)
+  Asfun        <- splinefun(z, As)
+  Asder1fun    <- splinefun(z, Asder1)
+  Asder2fun    <- splinefun(z, Asder2)
+  Asder3fun    <- splinefun(z, Asder3)
+  Phider1fun   <- splinefun(z, Phider1)
+  fact0fun     <- splinefun(z, (1 - 2 * exp(-2 * As) * alpha * Asder2) / (1 - 2 * exp(-2 * As) * alpha * Asder1^2))
+  fact1fun     <- splinefun(z, exp(2 * As) - 2 * alpha * Asder2)
   originalPars <- list(A0 = A0, h = h, zmax = zmax)
   list(ihqcd = ihqcd, originalPars = originalPars , env = environment())
 }
@@ -37,7 +37,7 @@ getU1NNModeRaw <- function(Q2 = 3.5, alpha = 0) {
   # first we need to compute ihqcd with bigger precision
   # set the constants in the IHQCD package
   # here a large zmax is used since we have been experiencing some boundary effect
-  pre <- precompute(Q2, alpha)
+  pre <- precompute(Q2)
   # this is useful for the non minimal coupling case
   # now we need to define the differential equation for the U(1) field modes
   odeFun <- odeFun1
@@ -65,12 +65,19 @@ getFQs <- function(Q2, m) {
 }
 
 # these are the normalizable modes
-getU1NormalizableModeRaw <- function(zf = 5, Q2 = 3.5, alpha = 0) {
-  flog.debug(paste('finding mode Q2', Q2, 'alpha', alpha))
+getU1NormalizableModeRaw <- function(zf = 5, mass = 3.5, alpha = 0) {
+  # TODO: actually compute this
+  zf  <- 2.4048 / mass
+  sol <- splinefun(z, (sqrt(2) / (2.4048 * besselJ(2.4048, 1)))
+                   * mass * z * besselJ(mass * z, 1))
+  # remember that space where the field dual to the meson dies at zf
+  return(list(fQ = Vectorize(function(x) if(x > zf) 0 else sol(x))))
+
+  flog.debug(paste('finding mode mass', mass, 'alpha', alpha))
   # first we need to compute ihqcd with bigger precision
   # set the constants in the IHQCD package
   # here a large zmax is used since we have been experiencing some boundary effect
-  pre <- precompute(Q2, alpha)
+  pre <- precompute(alpha)
   # this is useful for the non minimal coupling case
   # now we need to define the differential equation for the U(1) field modes
   odeFun <- odeFun1

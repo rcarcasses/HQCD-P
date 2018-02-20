@@ -18,6 +18,16 @@ getNeededTVals.DSigma <- function(x) unique(expKinematics(x)$t)
 #' @param spectra a collection of spectrum of different kernels which can have different amount of Reggeons, etc.
 #' @export
 predict.DSigma <- function(dsigma, fns, gs, points, ...) {
+  # compute the amplitude
+  amplitude <- getAmplitude(dsigma, fns, gs, points, ...)
+  # get the Ws
+  W <- points$W
+  # return the differential cross sections
+  (1 / W^4) * abs(amplitude)^2
+}
+
+getAmplitude <- function(x, ...) UseMethod('getAmplitude')
+getAmplitude.DSigma <- function(dsigma, fns, gs, points, ...) {
   # compute g(t) for each corresponding fn, this return a dataframe
   # were each column is the value (a vector) of g(t) for the given values
   # of t and the n column is the g(t) of the n fn in the fns dataframe
@@ -25,12 +35,7 @@ predict.DSigma <- function(dsigma, fns, gs, points, ...) {
   gts <- apply(gs, 1, function(row) {
     rowSums(t(row * t(outer(t, 0:(length(gs) - 1), `^`))))
   })
-  # compute the amplitude
-  amplitude <- rowSums(fns * gts, na.rm = TRUE)
-  # get the Ws
-  W <- points$W
-  # return the differential cross sections
-  (1 / W^4) * abs(amplitude)^2
+  rowSums(fns * gts, na.rm = TRUE)
 }
 
 #' Get fns times dJdt
@@ -42,8 +47,8 @@ getFns.DSigma <- function(dsigma, points, spectra) {
                                            function(spec) paste0('fn.', spec$name)))))
   df <- data.frame(row.names = fnNames)
   as.data.frame(t(apply(points, 1, function(row) {
-    W  <- row[1]
-    Q2 <- row[2]
+    Q2 <- row[1]
+    W  <- row[2]
     t  <- row[3]
     # get the spectra of all kernels for a given value of t
     spectraForT <- Filter(function(s) s$t == t, spectra)[[1]]$spectra
@@ -63,29 +68,16 @@ getFns.DSigma <- function(dsigma, points, spectra) {
 
 fN.DSigma <- function(dsigma, W, Q2, J, wf) {
   t1fun <- splinefun(z, exp((-J + 1.5) * As))
-  t2fun <- getExternalU1wf(dsigma, Q2 = Q2)
+  t2fun <- getExternalStateFactor(dsigma, Q2 = Q2)
   t3fun <- splinefun(wf$x, wf$y)
   integral <- integrate(function(x)  t1fun(x) * t2fun(x) * t3fun(x), z[1], z[length(z)], stop.on.error = FALSE)
   # return the full thing needed for the amplitude
   (1 - 1i/ tan(pi * J / 2)) * W^(2*J) *integral$value
 }
 
-getExternalU1wf <- function(x, ...) UseMethod('getExternalU1wf')
+getExternalStateFactor <- function(x, ...) UseMethod('getExternalStateFactor')
 
-getExternalU1wf.default <- function(x, ...) 'getExternalU1wf have to be implemented for this process'
-
-# DEPRECATED
-gradG.DSigma <- function(dsigma, fns, gs) {
-  points <- expKinematics(dsigma)
-  gtOrder <- length(gs)
-  gts <- apply(gs, 1, function(row) {
-    rowSums(t(row * t(outer(t, 0:(length(gs) - 1), `^`))))
-  })
-  # keep in mind that * is not matrix multiplication
-  df  <- as.data.frame(2 * Re (as.matrix(fns) * rowSums(Conj(as.matrix(fns)) * gts)))
-  dft <- df * points$t
-  cbind(df, dft)
-}
+getExternalStateFactor.default <- function(x, ...) 'getExternalStateFactor have to be implemented for this process'
 
 #' @export
 expVal.DSigma <- function(dsigma) dsigma$data$dsigma

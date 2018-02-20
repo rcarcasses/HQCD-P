@@ -8,31 +8,33 @@
 kernelUnit <- function(potential, numReg = 3, kernelName = '', comment = '', optimPars = c()) {
   # the .t name is to prevent partial matching with extra arguments passed
   # (please prevent users to use variable names starting with .!)
-  findReggeonDataFun <- function(.t = 0, n = 1, ...) {
+  findReggeonDataFun <- function(n = 1, .t = 0, ...) {
     flog.trace(paste('finding reggeon ', n, ' for t =', .t, ' pars:', do.call(paste, as.list(format(list(...), digits = 3)))))
     # extra parameters may come, just ignore them
     fArgs <- getPotentialArgs(potential, ...)
     start.time <- Sys.time()
-    t <- function(J, n) {
+    t <- function(J, fullAns = FALSE) {
       u2j  <- do.call(UJgTest, as.list(c(J = J, fArgs)))
       s <- computeSpectrum(z, u2j, n)
-      list(t = s$energies[[n]], wf = s$wf[[n]], u2j = u2j, energies = s$energies)
+      if(fullAns)
+        list(t = s$energies[[n]], wf = s$wf[[n]], u2j = u2j, energies = s$energies)
+      else
+        s$energies[[n]]
     }
 
-    tvec <- function(J, n) sapply(J, function(j) t(j, n)$t)
     # define the get intecept function
-    tfun <- function(j) tvec(j, n) - .t
-    roots <- uniroot.all(tfun, c(0.2, 2.2), n = 6)
+    tvec <- Vectorize(function(J) t(J) - .t)
+    roots <- uniroot.all(tvec, c(0.2, 2.2), n = 6)
     if(length(roots) > 0)
       js <- max(roots)
     else
       js <- 0
-
-    s <- t(js, n)
+    # now get the full answer
+    s <- t(js, TRUE)
     # create an interval around the js found
     intJs <- seq(js - 0.1, js + 0.1, len = 9)
     # now find numerically J(t)
-    Jfun <- splinefun(t(intJs, n), intJs)
+    Jfun <- splinefun(tvec(intJs), intJs)
     # now find the derivative at the value of js found
     dJdt <- Jfun(.t, deriv = 1)
     # normalize the wave function
@@ -43,16 +45,17 @@ kernelUnit <- function(potential, numReg = 3, kernelName = '', comment = '', opt
     list(js = js, dJdt = dJdt, wf = s$wf, u2j = s$u2j, name = paste0(kernelName, '.', n))
   }
 
-  findKernelFun <- function(.t = 0, n = 1, ...) {
+  findReggeonData <- cache(findReggeonDataFun, kernelName)
+
+  # find the complete kernel
+  findKernel <- function(.t = 0, ...) {
     # use parallelization if possible
     lapplyType <- if(Sys.info()['sysname'] == 'Linux') mclapply else lapply
-    s <- lapplyType(1:numReg, findReggeonDataFun, .t, n, ...)
-    s
+    lapplyType(1:numReg, findReggeonDataFun, .t, ...)
   }
 
-  findKernel <- cache(findKernelFun, kernelName)
-
   k <- list(findKernel = findKernel,
+            findReggeonData = findReggeonData,
             potential = potential,
             comment = comment,
             optimPars = optimPars,
