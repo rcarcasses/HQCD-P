@@ -71,7 +71,8 @@ getU1NormalizableModeRaw <- function(zf = 5, mass = 3.5, alpha = 0) {
   sol <- splinefun(z, (sqrt(2) / (2.4048 * besselJ(2.4048, 1)))
                    * mass * z * besselJ(mass * z, 1))
   # remember that space where the field dual to the meson dies at zf
-  return(list(fQ = Vectorize(function(x) if(x > zf) 0 else sol(x))))
+  return(list(fQ = Vectorize(function(x) if(x > zf) 0 else sol(x)),
+              dfQ = Vectorize(function(x) if(x > zf) 0 else sol(x, deriv = 1))))
 
   flog.debug(paste('finding mode mass', mass, 'alpha', alpha))
   # first we need to compute ihqcd with bigger precision
