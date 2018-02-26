@@ -4,6 +4,12 @@
     list(c(dy1, dy2))
   }
 
+  odeFun1NormalizableModes <- function(x, y, pars) {
+    dy2 <- -mass * mass * y[1] - (Asder1fun(x) - Phider1fun(x)) * y[2]
+    dy1 <- y[2]
+    list(c(dy1, dy2))
+  }
+
   odeFun2 <- function(x, y, pars) {
     # remark: we are using Q2=q^2 and not the usual -q^2 since we are using the GR metric convention for eta
     dy2 <- Q2 * y[1] * fact0fun(x) - (Asder1fun(x) - Phider1fun(x)
@@ -64,16 +70,22 @@ getFQs <- function(Q2, m) {
   list(fQ = fQ, fQ2 = fQ2, dfQ2 = dfQ2, factor = factor)
 }
 
+getFQNormalizableModes <- function(mass, m) {
+  # also compute some useful combinations
+  fQ      <- splinefun(m$x, m$y)
+  fQ2     <- splinefun(m$x, m$y^2)
+  dfQ     <- splinefun(m$x, m$dy)
+  dfQ2    <- splinefun(m$x, m$dy^2)
+  factor  <- splinefun(m$x, m$y^2 + (1/mass^2) * m$dy^2)
+  list(fQ = fQ, fQ2 = fQ2, dfQ2 = dfQ2, factor = factor)
+}
+
 # these are the normalizable modes
 getU1NormalizableModeRaw <- function(zf = 5, mass = 3.5, alpha = 0) {
+  zUV <- exp(-A0)
   # TODO: actually compute this
-  zf  <- 2.4048 / mass
-  sol <- splinefun(z, (sqrt(2) / (2.4048 * besselJ(2.4048, 1)))
-                   * mass * z * besselJ(mass * z, 1))
-  # remember that space where the field dual to the meson dies at zf
-  return(list(fQ = Vectorize(function(x) if(x > zf) 0 else sol(x)),
-              dfQ = Vectorize(function(x) if(x > zf) 0 else sol(x, deriv = 1))))
-
+  y0AdS  <- mass * zUV * besselJ(mass * zUV, 1)
+  dy0AdS <- mass * mass * zUV * besselJ(mass * zUV, 0)
   flog.debug(paste('finding mode mass', mass, 'alpha', alpha))
   # first we need to compute ihqcd with bigger precision
   # set the constants in the IHQCD package
@@ -81,17 +93,20 @@ getU1NormalizableModeRaw <- function(zf = 5, mass = 3.5, alpha = 0) {
   pre <- precompute(alpha)
   # this is useful for the non minimal coupling case
   # now we need to define the differential equation for the U(1) field modes
-  odeFun <- odeFun1
+  odeFun <- odeFun1NormalizableModes
+
+  # TODO - CHECK THAT IF ODEFUN2 NEEDS TO BE MODIFIED
   if (abs(alpha) > 0)
     odeFun <- odeFun2
 
   # pass all the variables inside the environment of this function
   environment(odeFun) <- pre$env
   # get the solution as a data frame
-  m <- as.data.frame(bvpcol(yini = c(y = 0, dy = NA), x = z[z < zf], func = odeFun, yend = c(NA, 0), nmax = 100000, atol = 1e-9))
-  mode <- getFQs(Q2, m)
+  m <- as.data.frame(bvpcol(yini = c(y = y0AdS, dy = dy0AdS), x = z, func = odeFun, yend = c(NA, 0), nmax = 100000, atol = 1e-9))
+  mode <- getFQNormalizableModes(mass, m)
   # roll back global changes
   postcompute(pre)
+  # This solution does not have the correct normalization
   mode
 }
 
