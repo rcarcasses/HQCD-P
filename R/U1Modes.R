@@ -108,8 +108,9 @@ getU1NormalizableModeRaw <- function(mass = 1.0, alpha = 0) {
   # We do that by imposing df = 0 at some zf
   f <- splinefun(m$time, m$y1)
   # We now the value of zf that satisfied the BC condition
-  zf <- uniroot(f = function(x) f(x,deriv = 1),
-                lower = m$time[1], upper = m$time[length(m$time)])$root
+  df <- splinefun(m$time, m$y2)
+  zf <- min(uniroot.all(df,
+                lower = m$time[1], upper = 2.4048 * 1.5/ mass))
   z    <- m$time[m$time < zf]
   y1   <- m$y1[m$time < zf]
   y2   <- m$y2[m$time < zf]
