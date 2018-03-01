@@ -58,6 +58,22 @@ test_that('getBestGs is working properly', {
   expect_equal(rss1 * rss2 / rss3^2, 1)
 })
 
+test_that('Results of the NMC paper are obtained', {
+  k <- kernelUnit(potential = UJgTest,
+          numReg = 4,
+          comment = 'Leading twist gluon sector, NMC case',
+          kernelName = 'gluon',
+          optimPars = c(invls = 5.91662420, a = -4.50176652, b = -0.63141639, c = 0.82567207, d = -0.01441428))
+  s <- k$findKernel()
+  spectra <- list(list(t = 1, spectra = list(s)), list(t = 0, spectra = list(s)))
+  f2 <- F2()
+  # add the non minimal coupling alpha value
+  attr(f2, 'alpha') <- -0.0672
+  fns <- getFns(f2, spectra = spectra)
+  rss1 <- rss(f2, fns = fns)
+  chi2 <- rss1 / (length(expVal(f2)) - 8 - 5)
+
+})
 
 test_that('getNeededTVals works properly', {
   f2  <- F2()

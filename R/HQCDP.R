@@ -2,15 +2,14 @@
 #' It allow to define a model with many kernels that can be
 #' tested again a configurable list of experimental obsevables
 #' @export
-HQCDP <- function(NMC = FALSE) {
+HQCDP <- function(alpha = 0) {
   h <- list(processes = list(), kernels = list(), cluster = NULL)
   class(h) <- c('HQCDP', class(h))  # pay attention to the class name
   # add the constraint for the intercept of the soft pomeron
   # the value of this attribute will be used as weight while fitting
   attr(h, 'addSPconstraint') <- 1e6
   attr(h, 'gtOrder')         <- 2
-  attr(h, 'alpha')           <- 0
-
+  attr(h, 'alpha')           <- alpha
   h
 }
 

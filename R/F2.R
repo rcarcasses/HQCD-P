@@ -14,6 +14,7 @@ getNeededTVals.F2 <- function(f2) c(0)
 #' @param ... Additional arguments will be ignored.
 #' @export
 predict.F2 <- function(f2, fns, gs, ...) {
+  flog.trace('Calling predict.F2')
   # if we are passing the full gs then use only the g(t=0) part
   if(is.data.frame(gs))
     gs <- gs[,1]
@@ -50,40 +51,38 @@ getBestGs.F2 <- function(f2, fns) {
 #' and the next ones are the values of fns for each one of the kernels
 #' @export
 getFns.F2 <- function(f2, points, spectra) {
+  alpha <- attr(f2, 'alpha')
+  flog.trace('Calling getFns.F2, alpha %s', alpha)
   spectraForTZero <- Filter(function(s) s$t == 0, spectra)[[1]]$spectra
-  reducer <- function(alpha = 0)
+  reducer <- function(fNfun,  alpha = 0, extra = '')
     # iterate over each kernel's spectrum
     Reduce(function(acc, s) {
       # iterate over each Reggeon for the given spectrum
       # remember, the tr1 and tr2 are not data about the reggeons
       val0  <- cbind(acc, Reduce(function(accspec, spec) {
         fn <- apply(points, 1, function(row) {
-          Q2 <- row[1]
-          x  <- row[2]
-          if(alpha == 0)
-            fN(f2, Q2, x, spec$js, spec$wf)
-          else
-            fNNMC(f2, Q2, x, spec$js, spec$wf, alpha)
+          row <- as.list(row)
+          fNfun(f2, row$Q2, row$x, spec$js, spec$wf, alpha)
         })
         val <- as.data.frame(cbind(accspec, fn))
-        colnames(val)[length(val)] <- if(alpha == 0) spec$name else paste0(spec$name, '.NMC')
+        colnames(val)[length(val)] <- paste0(spec$name, extra)
         val
       }, s, init = c()))
       val0
   }, spectraForTZero, init = c(NA))
 
-  df <- reducer()
-  if(attr(f2, 'alpha') != 0)
-    df <- cbind(df, reducer(attr(f2, 'alpha')))
+  df <- reducer(fN, alpha)
+  if(alpha != 0)
+    df <- cbind(df, reducer(fNNMC, alpha, '.NMC'))
 
   # remove the unneeded columns and return the result
   df[-which(names(df) == 'acc')]
 }
 
 #' @export
-fN.F2 <- function(f2, Q2, x, J, wf) {
+fN.F2 <- function(f2, Q2, x, J, wf, alpha) {
   t1fun <- splinefun(z, exp((-J + 1.5) * As))
-  t2fun <- getU1NNMode(Q2 = Q2, alpha = 0)$factor # this is a spline fun
+  t2fun <- getU1NNMode(Q2 = Q2, alpha = alpha)$factor # this is a spline fun
   t3fun <- splinefun(wf$x, wf$y)
   integral <- integrate(function(x) t1fun(x) * t2fun(x) * t3fun(x), z[1], z[length(z)], stop.on.error = FALSE)
   x^(1 - J) * Q2^J * integral$value
@@ -141,3 +140,23 @@ expVal.F2 <- function(f2) f2$data$F2
 expErr.F2 <- function(f2) f2$data$err
 #' @export
 expKinematics.F2 <- function(f2) as.data.frame(f2$data[c('Q2', 'x')])
+
+# this function attempts to reconstruct the wavefunctions from the raw data
+reconstruct <- function(f2, js = c(1.3, 1.09)) {
+  # get the data
+  data <- f2$data
+  # get all the different values of Q2, once
+  Q2s <- unique(data$Q2)
+  lapply(Q2s, function(Q2) {
+    # get the data of this Q2
+    dataForQ2 <- data[data$Q2 == Q2,]
+    # create the data which will be linearly fitted
+    lmData <- Reduce(function(acc, J) {
+      cbind(acc, apply(dataForQ2, 1, function(row) {
+        x <- as.list(row)$x
+        x^J
+      }))
+    }, js, init = c())
+
+  })
+}
