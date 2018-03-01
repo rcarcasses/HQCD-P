@@ -25,6 +25,7 @@ postcompute <- function(pre) {
 
 precompute <- function(Q2, alpha) {
   ihqcd <- iHQCD()
+  originalPars <- list(A0 = A0, h = h, zmax = zmax)
   solve(ihqcd, A0 = A0, h = 0.001, zmax = 20)
   Asfun        <- splinefun(z, As)
   Asder1fun    <- splinefun(z, Asder1)
@@ -33,7 +34,6 @@ precompute <- function(Q2, alpha) {
   Phider1fun   <- splinefun(z, Phider1)
   fact0fun     <- splinefun(z, (1 - 2 * exp(-2 * As) * alpha * Asder2) / (1 - 2 * exp(-2 * As) * alpha * Asder1^2))
   fact1fun     <- splinefun(z, exp(2 * As) - 2 * alpha * Asder2)
-  originalPars <- list(A0 = A0, h = h, zmax = zmax)
   list(ihqcd = ihqcd, originalPars = originalPars , env = environment())
 }
 
