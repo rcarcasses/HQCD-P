@@ -51,7 +51,7 @@ kernelUnit <- function(potential, numReg = 3, kernelName = '', comment = '', opt
   findKernel <- function(.t = 0, ...) {
     # use parallelization if possible
     lapplyType <- if(Sys.info()['sysname'] == 'Linux') mclapply else lapply
-    lapplyType(1:numReg, findReggeonDataFun, .t, ...)
+    lapplyType(1:numReg, findReggeonData, .t, ...)
   }
 
   k <- list(findKernel = findKernel,

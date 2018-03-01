@@ -51,23 +51,33 @@ getBestGs.F2 <- function(f2, fns) {
 #' @export
 getFns.F2 <- function(f2, points, spectra) {
   spectraForTZero <- Filter(function(s) s$t == 0, spectra)[[1]]$spectra
-  newColumns <- data.frame(Q2 = points$Q2, x = points$x)
-  # iterate over each kernel's spectrum
-  lapply(spectraForTZero, function(s) {
-    # iterate over each Reggeon for the given spectrum
-    # remember, the tr1 and tr2 are not data about the reggeons
-    lapply(s[names(s) == ''], function(spec) {
-      fn <- apply(points, 1, function(row) {
-        Q2 <- row[1]
-        x  <- row[2]
-        fN(f2, Q2, x, spec$js, spec$wf)
-      })
-      fnNamed <- list()
-      fnNamed[[spec$name]] <- fn
-      newColumns <<- cbind(newColumns, fnNamed)
-    })
-  })
-  newColumns[-match(c('Q2', 'x'), names(points))]  # remove the Q2 and x columns
+  reducer <- function(alpha = 0)
+    # iterate over each kernel's spectrum
+    Reduce(function(acc, s) {
+      # iterate over each Reggeon for the given spectrum
+      # remember, the tr1 and tr2 are not data about the reggeons
+      val0  <- cbind(acc, Reduce(function(accspec, spec) {
+        fn <- apply(points, 1, function(row) {
+          Q2 <- row[1]
+          x  <- row[2]
+          if(alpha == 0)
+            fN(f2, Q2, x, spec$js, spec$wf)
+          else
+            fNNMC(f2, Q2, x, spec$js, spec$wf, alpha)
+        })
+        val <- as.data.frame(cbind(accspec, fn))
+        colnames(val)[length(val)] <- if(alpha == 0) spec$name else paste0(spec$name, '.NMC')
+        val
+      }, s, init = c()))
+      val0
+  }, spectraForTZero, init = c(NA))
+
+  df <- reducer()
+  if(attr(f2, 'alpha') != 0)
+    df <- cbind(df, reducer(attr(f2, 'alpha')))
+
+  # remove the unneeded columns and return the result
+  df[-which(names(df) == 'acc')]
 }
 
 #' @export
@@ -79,7 +89,7 @@ fN.F2 <- function(f2, Q2, x, J, wf) {
   x^(1 - J) * Q2^J * integral$value
 }
 
-fNNMC.F2 <- function(Q2, x, J, wf, alpha = 0) {
+fNNMC.F2 <- function(f2, Q2, x, J, wf, alpha) {
   mode  <- getU1NNMode(Q2 = Q2, alpha)
   fQ2   <- mode$fQ2
   dfQ2  <- mode$dfQ2
@@ -92,10 +102,11 @@ fNNMC.F2 <- function(Q2, x, J, wf, alpha = 0) {
   t3fun   <- splinefun(z, (dfQ2(z) / Q2) * DparallelPsi(wf, J))
   integral <- integrate(function(x) t1fun(x) * (t2fun(x) + t3fun(x)), z[1], z[length(z)], stop.on.error = FALSE)
   # cat('int ', integral$value, '\n')
-  integral$value
+  x^(1 - J) * Q2^J * integral$value
 }
 
-# compute Dperp psi
+#' compute Dperp acting on psi
+#' @export
 DperpPsi <- function(wf) {
   wffun <- splinefun(wf$x, wf$y)
   wfder1 <- wffun(z, deriv = 1)
@@ -104,7 +115,8 @@ DperpPsi <- function(wf) {
     (Asder1 * Phider1 - 1.5 * Asder1^2) * wffun(z) + Asder1 * wfder1
   )
 }
-# compute Dparallel psi
+#' compute Dparallel acting on psi
+#' @export
 DparallelPsi <- function(wf, J) {
   wffun <- splinefun(wf$x, wf$y)
   wfder1 <- wffun(z, deriv = 1)

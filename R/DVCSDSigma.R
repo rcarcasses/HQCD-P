@@ -5,6 +5,7 @@ getExternalStateFactor.DVCSDSigma <- function(dvcs, Q2 = Q2, ...) {
   getU1NNMode(Q2 = Q2)$fQ
 }
 
+#' predict the values
 #' @param dsigma the object over which the prediction will happend
 #' @param points the data points over which dsigma/dt will be predicted.
 #' This should be a data frame with the same structure as the one returned

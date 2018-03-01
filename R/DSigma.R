@@ -25,8 +25,7 @@ getAmplitude.DSigma <- function(dsigma, fns, gs, points, ...) {
 getFns.DSigma <- function(dsigma, points, spectra) {
   fnNames <- unlist(lapply(spectra[[1]]$spectra,
                            function(s)
-                             unlist(lapply(s[names(s) == ''],
-                                           function(spec) paste0('fn.', spec$name)))))
+                             unlist(lapply(s, function(spec) paste0('fn.', spec$name)))))
   df <- data.frame(row.names = fnNames)
   as.data.frame(t(apply(points, 1, function(row) {
     Q2 <- row[1]
@@ -38,8 +37,7 @@ getFns.DSigma <- function(dsigma, points, spectra) {
     r <- unlist(lapply(spectraForT, function(s) {
       # s: spectrum of a single kernel, have many reggeons
       # iterate over each Reggeon for the given spectrum
-      # remember, the tr1 and tr2 are not data about the reggeons
-      lapply(s[names(s) == ''], function(spec) {
+      lapply(s, function(spec) {
         spec$dJdt * fN(dsigma, W, Q2, spec$js, spec$wf)
       })
     }), recursive = TRUE)

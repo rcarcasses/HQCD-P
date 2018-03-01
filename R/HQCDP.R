@@ -2,13 +2,15 @@
 #' It allow to define a model with many kernels that can be
 #' tested again a configurable list of experimental obsevables
 #' @export
-HQCDP <- function() {
+HQCDP <- function(NMC = FALSE) {
   h <- list(processes = list(), kernels = list(), cluster = NULL)
   class(h) <- c('HQCDP', class(h))  # pay attention to the class name
   # add the constraint for the intercept of the soft pomeron
   # the value of this attribute will be used as weight while fitting
   attr(h, 'addSPconstraint') <- 1e6
   attr(h, 'gtOrder')         <- 2
+  attr(h, 'alpha')           <- 0
+
   h
 }
 
@@ -56,6 +58,8 @@ addProcessObservable <- function(x, ...) UseMethod('addProcessObservable')
 addProcessObservable.default <- function(x, ...) 'calling addProcessObservable in the wrong object'
 #' @export
 addProcessObservable.HQCDP <- function(h, x) {
+  # insert the non minimal coupling attribute in the child processes
+  attr(x, 'alpha') <- attr(h, 'alpha')
   if(is.element('ProcessObservable', class(x)))
     h$processes <- append(h$processes, list(x))
   else

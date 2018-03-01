@@ -4,6 +4,7 @@ ProcessObservable <- function(className) {
   data <- loadData(obs)
   obs <- c(obs, list(data = data))
   class(obs) <- append(class(obs), c('ProcessObservable', className))
+  attr(obs, 'alpha') <- 0
   obs
 }
 

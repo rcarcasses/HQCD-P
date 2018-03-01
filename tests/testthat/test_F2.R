@@ -9,7 +9,7 @@ test_that('Fns are computed', {
   f2  <- F2()
   # pay attention to the structure of the spectra object
   spectra <- list(list(t = 1, spectra = list(s)), list(t = 0, spectra = list(s, s, s)))
-  fns <- getFns(f2, data.frame(Q2 = c(1.2), x = c(1e-4)), spectra)
+  fns <- getFns(f2, spectra = spectra)
   expect_equal(length(fns), 9)
 })
 
