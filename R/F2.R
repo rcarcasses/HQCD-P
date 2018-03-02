@@ -59,15 +59,20 @@ getFns.F2 <- function(f2, points, spectra) {
     Reduce(function(acc, s) {
       # iterate over each Reggeon for the given spectrum
       # remember, the tr1 and tr2 are not data about the reggeons
-      val0  <- cbind(acc, Reduce(function(accspec, spec) {
+      cbind(acc, Reduce(function(accspec, spec) {
         fn <- unlist(mclapply(apply(points, 1, as.list), function(row) {
-          fNfun(f2, row$Q2, row$x, spec$js, spec$wf, alpha)
-        }))
+          cat('calling fn with point', unlist(row), '\n')
+          # we need to initialize the computation on each node
+          init()
+          val <- fNfun(f2, row$Q2, row$x, spec$js, spec$wf, alpha)
+          # close the redis connection opened while calling init()
+          rredis::redisClose()
+          val
+        }, mc.cores = cores))
         val <- as.data.frame(cbind(accspec, fn))
         colnames(val)[length(val)] <- paste0(spec$name, extra)
         val
       }, s, init = c()))
-      val0
   }, spectraForTZero, init = c(NA))
 
   df <- reducer(fN, alpha)

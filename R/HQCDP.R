@@ -8,7 +8,7 @@ HQCDP <- function(alpha = 0) {
   # add the constraint for the intercept of the soft pomeron
   # the value of this attribute will be used as weight while fitting
   attr(h, 'addSPconstraint') <- 1e6
-  attr(h, 'gtOrder')         <- 2
+  attr(h, 'gtOrder')         <- 1
   attr(h, 'alpha')           <- alpha
   h
 }
@@ -131,9 +131,12 @@ getBestGs.HQCDP <- function(x, allProcFns, startGs) {
   # first we need to define an function depending only of the gs
   # to be optimized
 	fn <- function(parAllGs) evalRSSInGs(x, allProcFns, parAllGs)
+	numGs <- (attr(x, 'gtOrder') + 1) * sum(unlist(lapply(x$kernels, '[[', 'numReg')))
+	if(attr(x, 'alpha') != 0)
+	  numGs <- 2 * numGs
   # if is the fist time just put something there
   if(is.null(startGs))
-    startGs <- rep(1, len = (attr(x, 'gtOrder') + 1) * sum(unlist(lapply(x$kernels, '[[', 'numReg'))))
+    startGs <- rep(1, len = numGs)
 	# define the global gradient function
   grad <- function(allGs) {
     gs <- gs.as.data.frame(x, allGs)
