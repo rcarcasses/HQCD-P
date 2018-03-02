@@ -60,10 +60,9 @@ getFns.F2 <- function(f2, points, spectra) {
       # iterate over each Reggeon for the given spectrum
       # remember, the tr1 and tr2 are not data about the reggeons
       val0  <- cbind(acc, Reduce(function(accspec, spec) {
-        fn <- apply(points, 1, function(row) {
-          row <- as.list(row)
+        fn <- unlist(mclapply(apply(points, 1, as.list), function(row) {
           fNfun(f2, row$Q2, row$x, spec$js, spec$wf, alpha)
-        })
+        }))
         val <- as.data.frame(cbind(accspec, fn))
         colnames(val)[length(val)] <- paste0(spec$name, extra)
         val
@@ -142,21 +141,38 @@ expErr.F2 <- function(f2) f2$data$err
 expKinematics.F2 <- function(f2) as.data.frame(f2$data[c('Q2', 'x')])
 
 # this function attempts to reconstruct the wavefunctions from the raw data
-reconstruct <- function(f2, js = c(1.3, 1.09)) {
+reconstruct.F2 <- function(f2, js = c(1.3, 1.09)) {
   # get the data
-  data <- f2$data
+  data <- cbind(list(F2 = expVal(f2)), expKinematics(f2), list(err = expErr(f2)))
   # get all the different values of Q2, once
   Q2s <- unique(data$Q2)
-  lapply(Q2s, function(Q2) {
-    # get the data of this Q2
-    dataForQ2 <- data[data$Q2 == Q2,]
-    # create the data which will be linearly fitted
-    lmData <- Reduce(function(acc, J) {
-      cbind(acc, apply(dataForQ2, 1, function(row) {
-        x <- as.list(row)$x
-        x^J
-      }))
-    }, js, init = c())
+  Filter(function(q) !any(is.na(q)),
+    lapply(Q2s, function(Q2) {
+      # get the data of this Q2
+      dataForQ2 <- data[data$Q2 == Q2,]
+      # create the data which will be linearly fitted
+      lmData <- cbind(list(F2 = dataForQ2$F2), as.data.frame(Reduce(function(acc, J) {
+        # create the name of the column
+        prop <- paste0('js', J)
+        # assign the values
+        acc[[prop]] <- apply(dataForQ2, 1, function(row) {
+          x <- as.list(row)$x
+          x^(1 - J)
+        })
+        # remove the names to prevent misbehaving
+        names(acc[[prop]]) <- NULL
+        acc
+      }, js, init = list())))
+      fit <- lm(F2 ~ . - 1, data = lmData, weights = dataForQ2$err^(-2))
+      c(list(Q2 = Q2, rss = sum(fit$residuals^2)), fit$coefficients)
+    }))
+}
 
-  })
+getBestExponents.F2 <- function(f2) {
+  fOptim <- function(pars) {
+    val <- sum(unlist(lapply(reconstruct.F2(f2, pars), `[[`, 'rss')))
+    cat('pars', pars, ' value', val, '\n')
+    val
+  }
+  optim(c(1.3, 1.1), fOptim)
 }
