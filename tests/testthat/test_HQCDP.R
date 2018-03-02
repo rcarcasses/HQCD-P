@@ -82,18 +82,21 @@ test_that('The computations of each one of the Reggeon\'s data is assembled prop
   r6 <- list(js = 6, wf = 7)
   s1 <- list(r1, r2)
   s2 <- list(r3, r4, r5)
-  s3 <- list(r6)
+  s3 <- list(r6, r1)
+  s4 <- list(r2, r3, r4)
   # the spectra have to be a list of results returned by k$findKernel()
   # with as many entries as kernels are considered, here we mimic 2
-  spectra <- list(s1, s2, s3)
+  spectra <- list(list(t = 0, spectra = list(s1, s2)), list(t = 1, spectra = list(s3, s4)))
   # now suppose that we compute this using the findReggeonData function, desirable
   # for parallel computing, we need to assemble the results with the same structure
-  rawSpectra  <- list(r1, r2, r3, r4, r5, r6)
+  rawSpectra  <- list(r1, r2, r3, r4, r5,
+                      r6, r1, r2, r3, r4)
   # we need to pack the rawSpectra into pieces of length numReg
   # which are the amount of reggeons of each kernel
   # notice that in this example the first kernel have two reggeon, the second 3
   # and the last 1
-  numRegs <- c(2, 3, 1)
-  builtSpectra <- convertRawSpectra(rawSpectra, numRegs)
+  ts <- c(0, 1)
+  numRegs <- c(2, 3)
+  builtSpectra <- convertRawSpectra(rawSpectra, numRegs, ts)
   expect_true(identical(builtSpectra, spectra))
 })

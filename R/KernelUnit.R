@@ -58,6 +58,7 @@ kernelUnit <- function(potential, numReg = 3, kernelName = '', comment = '', opt
             findReggeonData = findReggeonData,
             potential = potential,
             comment = comment,
+            name = kernelName,
             optimPars = optimPars,
             numReg = numReg)
   class(k) <- append(class(k), 'kernelUnit')

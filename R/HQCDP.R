@@ -75,7 +75,7 @@ print.HQCDP <- function(x) {
 #' This computes the sum of the rss for all the processes configured.
 #' This is the function to minimize in the optimization procedure.
 #' @export
-rss.HQCDP <- function(x, pars, allGs = NULL, startGs = NULL) {
+rss.HQCDP <- function(x, pars = NULL, allGs = NULL, startGs = NULL) {
 	#cat('\n allGs', allGs, ' startGs', startGs, '\n')
   # warn the user that there are configurations
   # that are still required
@@ -133,7 +133,7 @@ getBestGs.HQCDP <- function(x, allProcFns, startGs) {
 	fn <- function(parAllGs) evalRSSInGs(x, allProcFns, parAllGs)
   # if is the fist time just put something there
   if(is.null(startGs))
-    startGs <- rep(1, len = 2 * sum(unlist(lapply(x$kernels, '[[', 'numReg'))))
+    startGs <- rep(1, len = (attr(x, 'gtOrder') + 1) * sum(unlist(lapply(x$kernels, '[[', 'numReg'))))
 	# define the global gradient function
   grad <- function(allGs) {
     gs <- gs.as.data.frame(x, allGs)
@@ -264,33 +264,56 @@ getSpectra.default <- function(x) 'getSpectra not defined in current object'
 #' @param ... additional parameters which will be passed
 #' down while computing the spectrum
 #' @export
-getSpectra.HQCDP <- function(x, pars) {
-	f <- function(t) {
-		# we need to initialize the computation on each node
-		init()
-		val <- list(t = t, spectra = lapply(x$kernels, function(k)
-                                  do.call(k$findKernel, as.list(c(.t =t, pars)))))
-		# close the redis connection opened while calling init()
-		rredis::redisClose()
-		val
-	}
+getSpectra.HQCDP <- function(x, pars = NULL) {
+	ts <- getNeededTVals(x)
+	numRegs <- unlist(lapply(x$kernels, function(k) k$numReg))
+	# unwrap the computation of each one of the Reggeon data for each one of the kernels
+	unwrappedFunCalls <- Reduce(function(acct, t) {
+  	as.list(c(acct,
+  	  Reduce(function(acc, k) {
+    	  as.list(c(acc,
+    	    lapply(1:k$numReg, function(n) {
+    	      kArgs <- c(list(n = n, .t = t), pars)
+    	      # return the function to be called
+    	      function(i) {
+              # we need to initialize the computation on each node
+              init()
+              val <- do.call(k$findReggeonData, kArgs)
+              # close the redis connection opened while calling init()
+              rredis::redisClose()
+              val
+            }
+    	    }))
+    	  )
+  	  }, x$kernels, init = list()))
+  	)
+	}, ts, init = list())
+
   # now compute every kernel for each value of t and the parameters passed
   # this is the most expensive part of the computation and its parallelizable
   # so we use parLapply. Notice that we are already using mclapply in each of the
   # kernel computations so this is the most we can go while nesting parallel computations
-  if(!is.null(x$cluster))
-    parLapply(x$cluster, getNeededTVals(x), f)
-  else
-    mclapply(getNeededTVals(x), f, mc.cores = cores)
+  convertRawSpectra(
+    if(!is.null(x$cluster))
+      parLapply(x$cluster, ts, f)
+    else
+      mclapply(unwrappedFunCalls, function(f) f(), mc.cores = cores)
+  , numRegs, ts)
 }
 
 #' @export
-convertRawSpectra <- function(rawSpectra, numRegs) {
-  # mark the slots, output is like
-  # [1] 1 1 2 2 2 3
-  slots <- unlist(lapply(1:length(numRegs), function(i) rep_len(i, numRegs[i])))
-  lapply(1:length(numRegs), function(i) {
-    positions <- i == slots
-    rawSpectra[positions]
+convertRawSpectra <- function(rawSpectra, numRegs, ts) {
+  tBlockSize <- length(rawSpectra) / length(ts)
+  lapply(1:length(ts), function(i) {
+    t     <- ts[i]
+    stRaw <- rawSpectra[(1:tBlockSize) + (i - 1) * tBlockSize]
+    # mark the slots, output is like
+    # [1] 1 1 2 2 2 3
+    slots <- unlist(lapply(1:length(numRegs), function(n) rep_len(n, numRegs[n])))
+    st <- lapply(1:length(numRegs), function(n) {
+      positions <- n == slots
+      stRaw[positions]
+    })
+    list(t = t, spectra = st)
   })
 }
