@@ -16,7 +16,7 @@ Sigma <- function(procName, tmin, tmax) {
 #' @export
 enhanceDataWithTs <- function(sigma, data) {
   ts <- getNeededTVals(sigma)
-  as.data.frame(Reduce(function(acc, r) {
+  as.data.frame(lapply(as.data.frame(Reduce(function(acc, r) {
     val <- rbind(acc, r)
     rownames(val) <- NULL
     val
@@ -25,12 +25,11 @@ enhanceDataWithTs <- function(sigma, data) {
           function(row)
             lapply(ts, function(t) c(list(t = t), row))),
     recursive = FALSE)
-  ), row.names = NULL)
+  )), `mode<-`, 'numeric'))
 }
-
 # Here we need to take the t values from t = -1 to t = 0
 #' @export
-getNeededTVals.Sigma <- function(x) seq(attr(x, 'tmin'), attr(x, 'tmax'), len = 10)
+getNeededTVals.Sigma <- function(x) seq(attr(x, 'tmin'), attr(x, 'tmax'), len = 11)
 
 #' Predicts the values of F2 for the points passed
 #' @param sigma the object over which the prediction will happend
@@ -53,10 +52,9 @@ predict.Sigma <- function(sig, fns, gs, points, ...) {
     # get the dsigma data computed for the value of Q2 and W, etc...
     # in the present block
     ds <- dsigma[1:length(ts) + (i - 1) * length(ts)]
-
     # we now need to compute the cross section as the integral over [-1,0] of dsigma
-    dsFun <- splinfun(ts, dsigma)
-    integral <- integrate(function(x)  dsFun(x), attr(x, 'tmin'), attr(x, 'tmax'), stop.on.error = FALSE)
+    dsFun <- splinefun(ts, ds)
+    integral <- integrate(dsFun, attr(sig, 'tmin'), attr(sig, 'tmax'), stop.on.error = FALSE)
     integral$value
   }))
   sigma

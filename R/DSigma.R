@@ -15,7 +15,7 @@ getAmplitude.DSigma <- function(dsigma, fns, gs, points, ...) {
   # of t and the n column is the g(t) of the n fn in the fns dataframe
   # see the test file for some explanation 'tests/testthat/test_DSigma.R'
   gts <- apply(gs, 1, function(row) {
-    rowSums(t(row * t(outer(t, 0:(length(gs) - 1), `^`))))
+    rowSums(t(row * t(outer(points$t, 0:(length(gs) - 1), `^`))))
   })
   rowSums(fns * gts, na.rm = TRUE)
 }
