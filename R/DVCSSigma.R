@@ -1,6 +1,4 @@
 #' @export
-DVCSSigma <- function() Sigma('DVCSSigma')
+DVCSSigma <- function() Sigma('DVCS', tmin = -1.0, tmax = 0.0)
 
-getExternalU1wf.DVCSSigma <- function(dvcs, Q2 = Q2, ...) {
-  getU1NNMode(Q2 = Q2)$fQ
-}
+getExternalStateFactor.DVCSSigma <- getExternalStateFactor.DVCSDSigma

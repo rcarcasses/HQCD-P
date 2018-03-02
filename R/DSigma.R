@@ -1,6 +1,6 @@
 DSigma <- function(procName) {
   # add the generic DSigma class
-  obs <- ProcessObservable(procName)
+  obs <- ProcessObservable(paste0(procName, 'DSigma'))
   class(obs) <- append(class(obs), 'DSigma', after = length(class(obs)) - 1)
   obs
 }
@@ -22,15 +22,16 @@ getAmplitude.DSigma <- function(dsigma, fns, gs, points, ...) {
 
 #' Get fns times dJdt
 #' @export
-getFns.DSigma <- function(dsigma, points, spectra) {
+getFns.DSigma <- function(dsigma, spectra, points) {
   fnNames <- unlist(lapply(spectra[[1]]$spectra,
                            function(s)
                              unlist(lapply(s, function(spec) paste0('fn.', spec$name)))))
   df <- data.frame(row.names = fnNames)
   as.data.frame(t(apply(points, 1, function(row) {
-    Q2 <- row[1]
-    W  <- row[2]
-    t  <- row[3]
+    row <- as.list(row)
+    Q2 <- row$Q2
+    W  <- row$W
+    t  <- row$t
     # get the spectra of all kernels for a given value of t
     spectraForT <- Filter(function(s) s$t == t, spectra)[[1]]$spectra
     # iterate over each kernel's spectrum

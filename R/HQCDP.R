@@ -280,10 +280,10 @@ getSpectra.HQCDP <- function(x, pars = NULL) {
     	      # return the function to be called
     	      function(i) {
               # we need to initialize the computation on each node
-              init()
+              #init()
               val <- do.call(k$findReggeonData, kArgs)
               # close the redis connection opened while calling init()
-              rredis::redisClose()
+              #rredis::redisClose()
               val
             }
     	    }))
@@ -297,10 +297,10 @@ getSpectra.HQCDP <- function(x, pars = NULL) {
   # so we use parLapply. Notice that we are already using mclapply in each of the
   # kernel computations so this is the most we can go while nesting parallel computations
   convertRawSpectra(
-    if(!is.null(x$cluster))
-      parLapply(x$cluster, ts, f)
-    else
+    if(Sys.info()['sysname'] == 'Linux')
       mclapply(unwrappedFunCalls, function(f) f(), mc.cores = cores)
+    else
+      lapply(unwrappedFunCalls, function(f) f())
   , numRegs, ts)
 }
 

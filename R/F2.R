@@ -50,7 +50,7 @@ getBestGs.F2 <- function(f2, fns) {
 #' @return A data frame where the first columns are the points passed
 #' and the next ones are the values of fns for each one of the kernels
 #' @export
-getFns.F2 <- function(f2, points, spectra) {
+getFns.F2 <- function(f2, spectra, points) {
   alpha <- attr(f2, 'alpha')
   flog.trace('Calling getFns.F2, alpha %s', alpha)
   spectraForTZero <- Filter(function(s) s$t == 0, spectra)[[1]]$spectra
