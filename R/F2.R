@@ -64,10 +64,7 @@ getFns.F2 <- function(f2, spectra, points) {
           cat('calling fn with point', unlist(row), '\n')
           # we need to initialize the computation on each node
           init()
-          val <- fNfun(f2, row$Q2, row$x, spec$js, spec$wf, alpha)
-          # close the redis connection opened while calling init()
-          rredis::redisClose()
-          val
+          fNfun(f2, row$Q2, row$x, spec$js, spec$wf, alpha)
         }, mc.cores = cores))
         val <- as.data.frame(cbind(accspec, fn))
         colnames(val)[length(val)] <- paste0(spec$name, extra)
