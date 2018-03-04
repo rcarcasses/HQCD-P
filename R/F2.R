@@ -14,7 +14,7 @@ getNeededTVals.F2 <- function(f2) c(0)
 #' @param ... Additional arguments will be ignored.
 #' @export
 predict.F2 <- function(f2, fns, gs, ...) {
-  flog.trace('Calling predict.F2')
+  #flog.trace('Calling predict.F2')
   # if we are passing the full gs then use only the g(t=0) part
   if(is.data.frame(gs))
     gs <- gs[,1]
