@@ -19,11 +19,7 @@
 #' @export
 init <- function(chebPoints = 400, useCache = TRUE, useRedis = TRUE) {
   flog.trace("[HQCD-P] Initializing .")
-  if(useCache)
-    assign('cacheQ', TRUE, envir = cacheEnv)
-
-  if(useRedis)
-    startRedis()
+  setCache(useCache, if(useRedis) 'redis' else 'internal')
 
   # pre-compute the solutions needed
   # they will be cached

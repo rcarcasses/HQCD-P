@@ -7,17 +7,13 @@ assign('maxInMemoryEntries', 1e3, envir = cacheEnv)
 
 #' @export
 startRedis <- function(host = 'localhost', port = 6379) {
-  assign('cacheQ', TRUE, envir = cacheEnv)
-  assign('use', 'redis', envir = cacheEnv)
-  flog.trace('connecting to redis...')
   rredis::redisConnect(host = host, port = port, nodelay = FALSE)
-  flog.trace('DONE\n')
 }
 
 #' @export
-cacheInternally <- function() {
-  assign('cacheQ', FALSE, envir = cacheEnv)
-  assign('use', 'internal', envir = cacheEnv)
+setCache <- function(cacheQ = TRUE, use = 'redis') {
+  assign('cacheQ', cacheQ, envir = cacheEnv)
+  assign('use', use, envir = cacheEnv)
 }
 
 #' @export
@@ -43,6 +39,7 @@ cache <- function(f, ...) {
     key <- paste0(key, '-', funName, '-', extraKey, collapse = '')
 
     if(get('use', envir = cacheEnv) == 'redis') {
+      startRedis()
       # cat('key is ', key, '\n')
       val <- rredis::redisGet(key)  # check if it has been already computed
       if(!is.null(val))
@@ -54,6 +51,7 @@ cache <- function(f, ...) {
         rredis::redisSAdd(set, key)    # all the functions keys are stored in a set
         rredis::redisSet(key, val)
       }
+      rredis::redisClose()
       val
     } else {
       # use in memory cache
@@ -73,6 +71,7 @@ cache <- function(f, ...) {
 #' Clears all the cached values
 #' @export
 clearFunCache <- function(funName) {
+  startRedis()
   if(is.function(funName))
     funName <- as.character(substitute(funName))
 
@@ -82,10 +81,13 @@ clearFunCache <- function(funName) {
     rredis::redisDelete(k)
 
   rredis::redisDelete(s)  # remove all the keys
+  rredis::redisClose()
 }
 
 #' Clears all the cached values
 #' @export
 clearCache <- function() {
-  rredis::redisFlushAll();
+  startRedis()
+  rredis::redisFlushAll()
+  rredis::redisClose()
 }

@@ -280,11 +280,8 @@ getSpectra.HQCDP <- function(x, pars = NULL) {
     	      # return the function to be called
     	      function(i) {
               # we need to initialize the computation on each node
-              #init()
-              val <- do.call(k$findReggeonData, kArgs)
-              # close the redis connection opened while calling init()
-              #rredis::redisClose()
-              val
+              init()
+              do.call(k$findReggeonData, kArgs)
             }
     	    }))
     	  )
