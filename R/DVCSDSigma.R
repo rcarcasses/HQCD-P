@@ -40,7 +40,8 @@ plot.DVCSDSigma <- function(dvcss, predicted, numGraphs = 3) {
          las = 1,
          xlim = c(0, 1),
          ylim = c(0.02, 50),
-         xlab = '-t', ylab = expression(d * sigma / dt), xaxt = 'n', yaxt = 'n')
+         xlab = '-t', ylab = expression(d * sigma / dt),
+         xaxt = 'n', yaxt = 'n')
     hTicks <- seq(0, 1, len = 6)
     vTicks <- c(0.1, 1, 10)
     abline(v = hTicks, h = vTicks, col = 'gray90', lty = 3)
@@ -67,9 +68,8 @@ plot.DVCSDSigma <- function(dvcss, predicted, numGraphs = 3) {
           # plot the errors
           arrows(-t, dsigma - deltaDSigma, -t, dsigma + deltaDSigma, length = 0.02 * j, angle = 90, code = 3, col = col)
           # find the predicted values and plot them
-          predictedQ2andW <- predicted[predicted$Q2 == Q2[1] && predicted$W == W[1],]
-          lines(-predictedQ2andW$t, predictedQ2andW$predicted,
-                col = col, type = 'o')
+          predictedQ2andW <- predicted[predicted$Q2 == Q2[1] & predicted$W == W[1],]
+          lines(-predictedQ2andW$t, predictedQ2andW$predicted)
         })
         legendItems[[length(legendItems) + 1]] <<- list(pch = pch, col = col, W = W, Q2 = Q2)
         # get the predicted values for the given values of W and Q2
@@ -79,7 +79,7 @@ plot.DVCSDSigma <- function(dvcss, predicted, numGraphs = 3) {
     })
     # add the legend
     txt <- sapply(legendItems, function(item) as.expression(substitute(Q^2 == Q2 ~~ 'W' == W, item)))
-    legend(0.6, 100, txt, pch = sapply(legendItems, `[[`, 'pch'), col = sapply(legendItems, `[[`, 'col'), bty = 'o', y.intersp = 0.3, cex = 0.8, box.lwd = 0, box.col = "white",bg = "white")
+    legend(0.6, 30, txt, pch = sapply(legendItems, `[[`, 'pch'), col = sapply(legendItems, `[[`, 'col'), bty = 'o', y.intersp = 0.3, cex = 0.8, box.lwd = 0, box.col = "white",bg = "white")
   }))
   invisible(par())
 }
