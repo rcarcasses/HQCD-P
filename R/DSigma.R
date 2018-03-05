@@ -39,7 +39,7 @@ getFns.DSigma <- function(dsigma, spectra, points) {
       # s: spectrum of a single kernel, have many reggeons
       # iterate over each Reggeon for the given spectrum
       lapply(s, function(spec) {
-        spec$dJdt * fN(dsigma, W, Q2, spec$js, spec$wf)
+        fN(dsigma, W, Q2, spec$js, spec$wf)
       })
     }), recursive = TRUE)
     names(r) <- fnNames

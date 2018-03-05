@@ -61,7 +61,6 @@ getFns.F2 <- function(f2, spectra, points) {
       # remember, the tr1 and tr2 are not data about the reggeons
       cbind(acc, Reduce(function(accspec, spec) {
         fn <- unlist(mclapply(apply(points, 1, as.list), function(row) {
-          #cat('calling fn with point', unlist(row), '\n')
           # we need to initialize the computation on each node
           init()
           fNfun(f2, row$Q2, row$x, spec$js, spec$wf, alpha)
