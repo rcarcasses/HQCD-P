@@ -82,3 +82,19 @@ expVal.DSigma <- function(dsigma) dsigma$data$dsigma
 expErr.DSigma <- function(dsigma) dsigma$data$deltaDSigma
 #' @export
 expKinematics.DSigma <- function(dsigma) dsigma$data[c('Q2', 'W', 't')]
+
+#' @export
+enlargeDataWithTs.DSigma <- function(dsigma, ts = seq(-1, 0, len = 11)) {
+  # get all the different combinations of Q2s and Ws
+  QsAndWs <- unique(dsigma$data[,c('Q2', 'W')])
+  as.data.frame(lapply(as.data.frame(Reduce(function(acc, r) {
+    val <- rbind(acc, r)
+    rownames(val) <- NULL
+    val
+  },unlist(
+    apply(QsAndWs, 1,
+          function(row)
+            lapply(ts, function(t) c(list(t = t), row))),
+    recursive = FALSE)
+  )), `mode<-`, 'numeric'))
+}

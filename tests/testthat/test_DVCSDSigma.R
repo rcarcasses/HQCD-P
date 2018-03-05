@@ -39,19 +39,26 @@ test_that('Fns are being computed', {
 
 test_that('Plot works', {
   k     <- kernelUnit(UJgTest, kernelName = 'g', numReg = 4)
-  dvcss  <- DVCSDSigma()
-  # some dummy spectra
-  spectra <- lapply(getNeededTVals(dvcss),
-                    function(t) list(t = t,
-                                    spectra = list(k$findKernel(.t = t,
-                                                                invls = 5.707847,
-                                                                a = -4.368889,
-                                                                b = 0.614573,
-                                                                c = 0.765144,                                                                              d = 0.000614))))
+  dvcsds  <- DVCSDSigma()
+  points <- rbind(enlargeDataWithTs(dvcsds, ts = seq(-1, 0, len = 31)),
+                  expKinematics(dvcsds))
+  # spectra
+  spectra <- lapply(unique(points$t),
+                    function(t)
+                      list(t = t,
+                           spectra = list(k$findKernel(
+                              .t = t,
+                              invls = 5.707847,
+                              a = -4.368889,
+                              b = 0.614573,
+                              c = 0.765144,                                                                               d = 0.000614))))
   # get the fns for the experimental values
-  fns <- getFns(dvcss, spectra = spectra)
+  expFns <- getFns(dvcsds, spectra = spectra)
   # find the best gs
-  gs <- getBestGs(dvcss, fns = fns, numGs = 8)
-  pred <- cbind(expKinematics(dvcss), predicted = predict(dvcss, fns = fns, gs = gs))
+  gs <- getBestGs(dvcsds, fns = expFns, numGs = 8)
+  fns <- getFns(dvcsds, spectra = spectra, points = points)
+  pred <- cbind(points,
+                predicted = predict(dvcsds, fns = fns, points = points, gs = gs))
+  plot(dvcsds, predicted = pred, numGraphs = 4)
 })
 

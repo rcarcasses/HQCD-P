@@ -14,7 +14,7 @@ Sigma <- function(procName, tmin, tmax) {
 }
 
 #' @export
-enhanceDataWithTs <- function(sigma, data) {
+enlargeDataWithTs.Sigma <- function(sigma, data) {
   ts <- getNeededTVals(sigma)
   as.data.frame(lapply(as.data.frame(Reduce(function(acc, r) {
     val <- rbind(acc, r)
@@ -43,7 +43,7 @@ getNeededTVals.Sigma <- function(x) seq(attr(x, 'tmin'), attr(x, 'tmax'), len = 
 predict.Sigma <- function(sig, fns, gs, points, ...) {
   # compute all the needed differential cross-sections
   # For each value of Q2 and W we need to insert many different values of t
-  sig$dsigma$data <- enhanceDataWithTs(sig, points)
+  sig$dsigma$data <- enlargeDataWithTs(sig, points)
   dsigma <- predict(sig$dsigma, fns = fns, gs = gs, ...)
 
   ts <- getNeededTVals(sig)
@@ -68,7 +68,7 @@ getBestGs.Sigma <- function(sigma, fns, startGs = NULL) {
 #' @export
 getFns.Sigma <- function(sigma, points, spectra) {
   # return the fns for the enhanced points of the correspondent dsigma object
-  getFns(sigma$dsigma, spectra = spectra, points = enhanceDataWithTs(sigma, points))
+  getFns(sigma$dsigma, spectra = spectra, points = enlargeDataWithTs(sigma, points))
 }
 
 #' @export

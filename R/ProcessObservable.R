@@ -135,3 +135,7 @@ getJs.default <- function(x) 'getJs called in an object with no implementation'
 #' @export
 plotSpectrum <- function(x, ...) UseMethod('plotSpectrum')
 plotSpectrum.default <- function(x) 'plotSpectrum called in an object with no implementation'
+
+#' @export
+enlargeDataWithTs <- function(x, ...) UseMethod('enlargeDataWithTs')
+enlargeDataWithTs.default <- function(x, ...) 'enlargeDataWithTs called in an object with no implementation'
