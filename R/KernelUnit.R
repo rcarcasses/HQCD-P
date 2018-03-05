@@ -24,7 +24,7 @@ kernelUnit <- function(potential, numReg = 3, kernelName = '', comment = '', opt
 
     # define the get intecept function
     tvec <- Vectorize(function(J) t(J) - .t)
-    roots <- uniroot.all(tvec, c(0.2, 2.2), n = 6)
+    roots <- uniroot.all(tvec, c(0.1, 2.2), n = 6)
     if(length(roots) > 0)
       js <- max(roots)
     else
@@ -48,10 +48,13 @@ kernelUnit <- function(potential, numReg = 3, kernelName = '', comment = '', opt
   findReggeonData <- cache(findReggeonDataFun, kernelName)
 
   # find the complete kernel
-  findKernel <- function(.t = 0, ...) {
+  findKernel <- function(...) {
     # use parallelization if possible
     # lapplyType <- if(Sys.info()['sysname'] == 'Linux') mclapply else lapply
-    mclapply(1:numReg, findReggeonData, .t, ...)
+    lapply(1:numReg, function(n) {
+      #init()
+      do.call(findReggeonData, list(n = n, ...))
+    })#, mc.cores = 3)
   }
 
   k <- list(findKernel = findKernel,

@@ -60,6 +60,11 @@ predict.Sigma <- function(sig, fns, gs, points, ...) {
   sigma
 }
 
+getBestGs.Sigma <- function(sigma, fns, startGs = NULL) {
+  # return the fns for the enhanced points of the correspondent dsigma object
+  getBestGs(sigma$dsigma, fns = fns, startGs)
+}
+
 #' @export
 getFns.Sigma <- function(sigma, points, spectra) {
   # return the fns for the enhanced points of the correspondent dsigma object

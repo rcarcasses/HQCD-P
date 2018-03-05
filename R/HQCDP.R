@@ -38,7 +38,7 @@ destroyCluster <- function(x, ncores) {
 }
 
 #' @export
-getNeededTVals.HQCDP <- function(p) unique(unlist(lapply(p$processes, getNeededTVals)))
+getNeededTVals.HQCDP <- function(p) unique(c(0, unlist(lapply(p$processes, getNeededTVals))))
 
 #' @export
 addKernel <- function(x, ...) UseMethod('addKernel')
@@ -316,4 +316,9 @@ convertRawSpectra <- function(rawSpectra, numRegs, ts) {
     })
     list(t = t, spectra = st)
   })
+}
+
+#' @export
+plot.HQCDP <- function(x, ...) {
+  invisible(lapply(x$processes, plot, ...))
 }

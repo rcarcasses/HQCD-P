@@ -36,3 +36,22 @@ test_that('Fns are being computed', {
   spectra <- lapply(getNeededTVals(dvcs), function(t) list(t = t, spectra = list(s, sm)))
   fns <- getFns(dvcs, spectra = spectra)
 })
+
+test_that('Plot works', {
+  k     <- kernelUnit(UJgTest, kernelName = 'g', numReg = 4)
+  dvcss  <- DVCSDSigma()
+  # some dummy spectra
+  spectra <- lapply(getNeededTVals(dvcss),
+                    function(t) list(t = t,
+                                    spectra = list(k$findKernel(.t = t,
+                                                                invls = 5.707847,
+                                                                a = -4.368889,
+                                                                b = 0.614573,
+                                                                c = 0.765144,                                                                              d = 0.000614))))
+  # get the fns for the experimental values
+  fns <- getFns(dvcss, spectra = spectra)
+  # find the best gs
+  gs <- getBestGs(dvcss, fns = fns, numGs = 8)
+  pred <- cbind(expKinematics(dvcss), predicted = predict(dvcss, fns = fns, gs = gs))
+})
+

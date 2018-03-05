@@ -56,6 +56,22 @@ fN.DSigma <- function(dsigma, W, Q2, J, wf) {
   (1 - 1i/ tan(pi * J / 2)) * W^(2*J) *integral$value
 }
 
+#' @export
+getBestGs.DSigma <- function(dsigma, fns, numGs, startGs = NULL) {
+  # first we need to define an function depending only of the gs
+  # to be optimized
+  fn <- function(gs) rss(dsigma, fns = fns, gs = as.data.frame(matrix(gs, ncol = numGs / length(fns))))
+  # if is the fist time just put something there
+  if(is.null(startGs))
+    startGs <- rep(1, len = numGs)
+
+  op <- optim(startGs,
+              fn = fn, method = 'BFGS', hessian = FALSE, control = list(maxit = 1000))
+  # store the best gs found so they can be used as a starting point of the next call
+  flog.debug(paste('DSigma bestGs  =', do.call(paste, as.list(format(op$par, digits = 4))), ' in', op$counts[1], ' steps'))
+  as.data.frame(matrix(op$par, ncol = numGs / length(fns)))
+}
+
 getExternalStateFactor <- function(x, ...) UseMethod('getExternalStateFactor')
 
 getExternalStateFactor.default <- function(x, ...) 'getExternalStateFactor have to be implemented for this process'
