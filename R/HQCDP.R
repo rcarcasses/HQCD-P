@@ -215,13 +215,13 @@ getKernelPars <- function(x) {
   allPars[keep]
 }
 
-getDoF <- function(x, gDeg = 2) {
+getDoF <- function(x) {
   # get the experimental points per process
   expPoints <- sum(unlist(lapply(x$processes, function(p) length(expVal(p)))))
   # get the amount of fitting parameters
   # gDeg * number of Reggeons since g(t) = g0 + g1 * t +...
-  fitParams <- gDeg * sum(unlist(lapply(x$kernels, function(k) k$numReg)))
-  fitParams <- fitParams + length(getKernelPars(x))
+	numGs <- (attr(x, 'gtOrder') + 1) * sum(unlist(lapply(x$kernels, '[[', 'numReg')))
+  fitParams <- numGs + length(getKernelPars(x))
   expPoints - fitParams
 }
 
@@ -307,7 +307,7 @@ plot.HQCDP <- function(x, pars = NULL, gs = NULL) {
   # get the plot points
   plotPoints <- enlargeData(x)
   # compute the spectrum, now with the particular t values needed
-  ts <- sort(unique(unlist(lapply(ed, function(df) if(!is.null(df$t)) df$t))))
+  ts <- sort(unique(unlist(lapply(plotPoints, function(df) if(!is.null(df$t)) df$t))))
   spectra <- getSpectra(x, pars, ts)
   # get the fns for the plot points
   allProcFns <- mapply(function(proc, points)
@@ -316,9 +316,11 @@ plot.HQCDP <- function(x, pars = NULL, gs = NULL) {
   # find the predictions for the plot points for each one of the processes
   predPlotPoints <- mapply(function(proc, procFns, procPlotPoints) {
     pred <- predict(proc, points = procPlotPoints, fns = procFns, gs = gs)
-    cat('predictions found', unlist(pred), '\n')
-		cbind(procPlotPoints, data.frame(predicted = pred))
+    #cat('predictions found', unlist(pred), '\n')
+		list(cbind(procPlotPoints, data.frame(predicted = pred)))
 	}, x$processes, allProcFns, plotPoints)
-  # call the plot function on each one, don't print anything
-  invisible(mapply(plot, x$processes, predPlotPoints))
+  # call the plot function on each on
+  mapply(plot, x$processes, predPlotPoints)
+  # return invisibly the computed points, useful to speed up future plots
+  invisible(predPlotPoints)
 }

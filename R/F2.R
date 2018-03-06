@@ -189,3 +189,49 @@ enlargeData.F2 <- function(f2, ...) {
   # for each one of the 34 previous values combine them with the xvals
   Reduce(rbind, lapply(Q2s, function(Q2) data.frame(Q2 = rep(Q2, length(xvals)), x = xvals)))
 }
+
+#' @export
+plot.F2 <- function(f2, predicted) {
+  data <- cbind(expKinematics(f2), list(F2 = expVal(f2)), list(err = expErr(f2)))
+  # prepare the plot
+  plot(10, 10,
+       log = 'x',
+       las = 1,
+       xlim = c(1e-6, 1e-2),
+       ylim = c(0.1, 1.8),
+       xlab = 'x', ylab = expression(F[2]),
+       xaxt = 'n', yaxt = 'n')
+  hTicks <- seq(-6, -2, 1)
+  vTicks <- seq(0, 2, 0.5)
+  hLabels <- sapply(hTicks, function(i) as.expression(bquote(10^ .(i))))
+  abline(v = 10^hTicks, h = vTicks, col = 'gray90', lty = 3)
+  axis(1, at = 10^hTicks, labels = hLabels)
+  axis(2, at = vTicks)
+  numCols <- 4
+  i <- 1
+  cols <- sapply(seq(0.2, 0.7, len = numCols), gray)
+  # get all different Q2s
+  allQ2s <- sort(unique(f2$data$Q2))
+  invisible(lapply(allQ2s, function(Q2) {
+    # get the subset of data for the given Q2
+    dataForQ2 <- data[data$Q2 == Q2,]
+    colIndex <- mod(i, numCols) + 1
+    # draw the experimental points
+    lines(dataForQ2$x, dataForQ2$F2, type = 'p', pch = 19, col = cols[colIndex], cex = 0.7)
+    # draw the experimental error bars
+    with(dataForQ2,
+      arrows(x, F2 - err, x, F2 + err, length = 0.02, angle = 90, code = 3, col = cols[colIndex])
+    )
+    # plot the predictions
+    predictedForQ2 <- predicted[predicted$Q2 == Q2,]
+    with(predictedForQ2, {
+      lines(x, predicted, col = cols[colIndex])
+    })
+    # put the Q2 label
+    textPosX <- 0.5 * min(dataForQ2$x)
+    textPosY <- splinefun(predictedForQ2$x, predictedForQ2$predicted)(textPosX)
+    boxed.labels(textPosX, textPosY, labels = paste(Q2), col = cols[colIndex],
+                 cex = 0.8, xpad = 1.3, ypad = 1.3, border = T, bg = 'white')
+    i <<- i + 1
+  }))
+}

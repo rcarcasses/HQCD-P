@@ -5,7 +5,7 @@ DSigma <- function(procName) {
   obs
 }
 
-# Conversion factor between GeV^
+# Conversion factor between GeV^2 and mili barn units
 GEVMinus2ToNB <- 3.894*10^5
 
 #' @export

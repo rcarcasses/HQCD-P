@@ -9,7 +9,6 @@
 #' @import plotrix
 #' @import rredis
 #' @import cmaes
-#' @import scales
 #' @import tictoc
 #' @import optimx
 #' @import testthat
