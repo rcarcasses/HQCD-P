@@ -5,7 +5,11 @@
 #' @param comment Can be used to add some additional information about what this kernel represents
 #' @param optimPars Indicate which parameters can be optimized for this kernel
 #' @export
-kernelUnit <- function(potential, numReg = 3, kernelName = '', comment = '', optimPars = c()) {
+kernelUnit <- function(potential = UJgTest,
+                       numReg = 4,
+                       comment = 'Leading twist gluon sector',
+                       kernelName = 'gluon', # this has to be unique: is used to name the couplings and the kernel
+                       optimPars = c(invls = 1/0.153, a = -4.35, b = 1.41, c = 0.626, d = -0.117)) {
   # the .t name is to prevent partial matching with extra arguments passed
   # (please prevent users to use variable names starting with .!)
   findReggeonDataFun <- function(n = 1, .t = 0, ...) {

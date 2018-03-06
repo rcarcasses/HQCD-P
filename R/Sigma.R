@@ -13,8 +13,13 @@ Sigma <- function(procName, tmin, tmax) {
   obs
 }
 
+#' For these processes the enlargement process will insert
+#' ficticious values of t for each one of the kinematical entries
+#' such that the differential cross-section can be computed
 #' @export
-enlargeDataWithTs.Sigma <- function(sigma, data) {
+enlargeData.Sigma <- function(sigma, data = NULL) {
+  if(is.null(data))
+    data <- expKinematics(sigma)
   ts <- getNeededTVals(sigma)
   as.data.frame(lapply(as.data.frame(Reduce(function(acc, r) {
     val <- rbind(acc, r)
@@ -43,7 +48,7 @@ getNeededTVals.Sigma <- function(x) seq(attr(x, 'tmin'), attr(x, 'tmax'), len = 
 predict.Sigma <- function(sig, fns, gs, points, ...) {
   # compute all the needed differential cross-sections
   # For each value of Q2 and W we need to insert many different values of t
-  sig$dsigma$data <- enlargeDataWithTs(sig, points)
+  sig$dsigma$data <- enlargeData(sig, points)
   dsigma <- predict(sig$dsigma, fns = fns, gs = gs, ...)
 
   ts <- getNeededTVals(sig)
@@ -68,7 +73,7 @@ getBestGs.Sigma <- function(sigma, fns, startGs = NULL) {
 #' @export
 getFns.Sigma <- function(sigma, points, spectra) {
   # return the fns for the enhanced points of the correspondent dsigma object
-  getFns(sigma$dsigma, spectra = spectra, points = enlargeDataWithTs(sigma, points))
+  getFns(sigma$dsigma, spectra = spectra, points = enlargeData(sigma, points))
 }
 
 #' @export

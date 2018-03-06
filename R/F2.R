@@ -177,3 +177,15 @@ getBestExponents.F2 <- function(f2) {
   }
   optim(c(1.3, 1.1), fOptim)
 }
+
+#' For F2 the enlargement of the experimental data produces
+#' some extra points with different values of x for each
+#' different value of Q2
+#' @export
+enlargeData.F2 <- function(f2, ...) {
+  # interesting values of x for producing a plot, for instace.
+  xvals <- 10^seq(-6, -2, len = 50)
+  Q2s <- sort(unique(f2$data$Q2))
+  # for each one of the 34 previous values combine them with the xvals
+  Reduce(rbind, lapply(Q2s, function(Q2) data.frame(Q2 = rep(Q2, length(xvals)), x = xvals)))
+}

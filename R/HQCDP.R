@@ -3,7 +3,7 @@
 #' tested again a configurable list of experimental obsevables
 #' @export
 HQCDP <- function(alpha = 0) {
-  h <- list(processes = list(), kernels = list(), cluster = NULL)
+  h <- list(processes = list(), kernels = list())
   class(h) <- c('HQCDP', class(h))  # pay attention to the class name
   # add the constraint for the intercept of the soft pomeron
   # the value of this attribute will be used as weight while fitting
@@ -14,31 +14,9 @@ HQCDP <- function(alpha = 0) {
 }
 
 #' @export
-setUpCluster <- function(x, ...) UseMethod('setUpCluster')
-setUpCluster.default <- function(x, ...) 'setUpCluster not implemented for this object'
+getNeededTVals.HQCDP <- function(p) sort(unique(c(0, unlist(lapply(p$processes, getNeededTVals)))))
 #' @export
-setUpCluster <- function(x, ncores) {
-  x$cluster <- makeCluster(ncores, outfile = 'cluster.log')
-  # we need to put the ihqcd information available in the cluster
-  clusterExport(x$cluster, names(solve(iHQCD())))
-  x
-}
-
-#' @export
-destroyCluster <- function(x, ...) UseMethod('destroyCluster')
-destroyCluster.default <- function(x, ...) 'destroyCluster not implemented for this object'
-#' @export
-destroyCluster <- function(x, ncores) {
-  if(!is.null(x$cluster)) {
-    flog.debug('Stopping cluster\n')
-    parallel::stopCluster(x$cluster)
-  }
-  x$cluster <- NULL
-  x
-}
-
-#' @export
-getNeededTVals.HQCDP <- function(p) unique(c(0, unlist(lapply(p$processes, getNeededTVals))))
+enlargeData.HQCDP <- function(p) lapply(p$processes, enlargeData)
 
 #' @export
 addKernel <- function(x, ...) UseMethod('addKernel')
@@ -267,8 +245,10 @@ getSpectra.default <- function(x) 'getSpectra not defined in current object'
 #' @param ... additional parameters which will be passed
 #' down while computing the spectrum
 #' @export
-getSpectra.HQCDP <- function(x, pars = NULL) {
-	ts <- getNeededTVals(x)
+getSpectra.HQCDP <- function(x, pars = NULL, ts = NULL) {
+  if(is.null(ts))
+	  ts <- getNeededTVals(x)
+
 	numRegs <- unlist(lapply(x$kernels, function(k) k$numReg))
 	# unwrap the computation of each one of the Reggeon data for each one of the kernels
 	unwrappedFunCalls <- Reduce(function(acct, t) {
@@ -319,6 +299,26 @@ convertRawSpectra <- function(rawSpectra, numRegs, ts) {
 }
 
 #' @export
-plot.HQCDP <- function(x, ...) {
-  invisible(lapply(x$processes, plot, ...))
+plot.HQCDP <- function(x, pars = NULL, gs = NULL) {
+  # we need to compute the spectra for an enlarged set of t values
+  # convert gs to a data frame, if required
+  if(!is.data.frame(gs))
+    gs <- gs.as.data.frame(x, gs)
+  # get the plot points
+  plotPoints <- enlargeData(x)
+  # compute the spectrum, now with the particular t values needed
+  ts <- sort(unique(unlist(lapply(ed, function(df) if(!is.null(df$t)) df$t))))
+  spectra <- getSpectra(x, pars, ts)
+  # get the fns for the plot points
+  allProcFns <- mapply(function(proc, points)
+                        list(getFns(proc, spectra = spectra, points = points))
+                , x$processes, plotPoints)
+  # find the predictions for the plot points for each one of the processes
+  predPlotPoints <- mapply(function(proc, procFns, procPlotPoints) {
+    pred <- predict(proc, points = procPlotPoints, fns = procFns, gs = gs)
+    cat('predictions found', unlist(pred), '\n')
+		cbind(procPlotPoints, data.frame(predicted = pred))
+	}, x$processes, allProcFns, plotPoints)
+  # call the plot function on each one, don't print anything
+  invisible(mapply(plot, x$processes, predPlotPoints))
 }

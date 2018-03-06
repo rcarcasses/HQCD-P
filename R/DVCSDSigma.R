@@ -24,7 +24,7 @@ predict.DVCSDSigma <- function(dsigma, fns, gs, points, ...) {
 }
 
 #' @export
-plot.DVCSDSigma <- function(dvcss, predicted, numGraphs = 3) {
+plot.DVCSDSigma <- function(dvcss, predicted, numGraphs = 4) {
   plot.new()
   par(mfrow = c(2, 2), las = 1)
   # get all different Q2s
