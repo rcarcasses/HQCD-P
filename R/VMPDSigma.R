@@ -15,5 +15,5 @@ predict.VMPDSigma <- function(vmp, fns, gs, points, ...) {
   # get the Ws
   W <- points$W
   # return the differential cross sections
-  (1 / W^4) * (2*abs(amplitudett)^2 + abs(amplitudell)^2) / 3
+  GEVMinus2ToNB * (1 / W^4) * (2*abs(amplitudett)^2 + abs(amplitudell)^2) / 3
 }

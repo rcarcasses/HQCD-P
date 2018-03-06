@@ -5,6 +5,9 @@ DSigma <- function(procName) {
   obs
 }
 
+# Conversion factor between GeV^
+GEVMinus2ToNB <- 3.894*10^5
+
 #' @export
 getNeededTVals.DSigma <- function(x) unique(expKinematics(x)$t)
 
