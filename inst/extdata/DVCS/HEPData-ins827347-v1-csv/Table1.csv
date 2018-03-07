@@ -1,0 +1,20 @@
+#: table_doi: 10.17182/hepdata.54512.v1/t1
+#: name: Table 1
+#: description: The DVCS cross section as a function of Q**2.
+
+#: data_file: Table1.yaml
+#: keyword reactions: E- P --> E- GAMMA P | E+ P --> E+ GAMMA P | GAMMA* P --> GAMMA P
+#: keyword observables: SIG
+#: keyword plabs: ,
+#: keyword phrases: Exclusive | Integrated Cross Section | Cross Section | Photoproduction | Electron production
+#: keyword cmenergies: 30.0-140.0
+#: ABS(T) [GEV**2],,,< 1
+#: RE,,,GAMMA* P --> GAMMA P
+#: W [GEV],,,82 (BIN=30 TO 140)
+#: SQRT(S) [GeV],,,30.0-140.0
+'Q**2 [GEV**2]','Q**2 [GEV**2] LOW','Q**2 [GEV**2] HIGH','SIG [NB]','stat +','stat -','sys +','sys -'
+8.75,6.5,10.0,3.87,0.15,-0.15,0.41,-0.41
+15.5,10.0,20.0,1.46,0.07,-0.07,0.18,-0.18
+25.0,20.0,30.0,0.55,0.07,-0.07,0.08,-0.08
+55.0,30.0,80.0,0.16,0.02,-0.02,0.03,-0.03
+

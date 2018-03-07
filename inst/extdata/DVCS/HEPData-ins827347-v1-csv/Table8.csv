@@ -1,0 +1,19 @@
+#: table_doi: 10.17182/hepdata.54512.v1/t8
+#: name: Table 8
+#: description: Value of the power of the fit to the W distribution of the form W**POWER in three Q**2 regions.
+
+#: data_file: Table8.yaml
+#: keyword reactions: E- P --> E- GAMMA P | E+ P --> E+ GAMMA P | GAMMA* P --> GAMMA P
+#: keyword observables: POWER
+#: keyword plabs: ,
+#: keyword phrases: Exclusive | Photoproduction | Electron production
+#: keyword cmenergies: 30.0-140.0
+#: ABS(T) [GEV**2],< 1
+#: RE,GAMMA* P --> GAMMA P
+#: W [GEV],30 TO 140
+#: SQRT(S) [GeV],30.0-140.0
+'Q**2 [GEV**2]','POWER(NAME=W,YN=SIG)','stat +','stat -','sys +','sys -'
+8.0,0.61,0.1,-0.1,0.15,-0.15
+15.5,0.61,0.13,-0.13,0.15,-0.15
+25.0,0.9,0.36,-0.36,0.27,-0.27
+
