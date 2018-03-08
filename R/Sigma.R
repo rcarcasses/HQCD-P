@@ -52,13 +52,15 @@ predict.Sigma <- function(sig, fns, gs, points, ...) {
   dsigma <- predict(sig$dsigma, fns = fns, gs = gs, ...)
 
   ts <- getNeededTVals(sig)
-  blockSize <- length(points) / length(ts)
-  sigma <- unlist(lapply(1:blockSize, function(i) {
+  numBlocks <- length(expVal(sig))
+  #flog.trace('[Sigma] number of t blocks %s', numBlocks)
+  sigma <- unlist(lapply(1:numBlocks, function(i) {
     # get the dsigma data computed for the value of Q2 and W, etc...
     # in the present block
     ds <- dsigma[1:length(ts) + (i - 1) * length(ts)]
     # we now need to compute the cross section as the integral over [-1,0] of dsigma
     dsFun <- splinefun(ts, ds)
+    #flog.trace('[Sigma] computing integral from %s to %s', attr(sig, 'tmin'), attr(sig, 'tmax'))
     integral <- integrate(dsFun, attr(sig, 'tmin'), attr(sig, 'tmax'), stop.on.error = FALSE)
     integral$value
   }))
