@@ -52,7 +52,7 @@ getBestGs.F2 <- function(f2, fns) {
 #' @export
 getFns.F2 <- function(f2, spectra, points) {
   alpha <- attr(f2, 'alpha')
-  flog.trace('Calling getFns.F2, alpha %s', alpha)
+  #flog.trace('Calling getFns.F2, alpha %s', alpha)
   spectraForTZero <- Filter(function(s) s$t == 0, spectra)[[1]]$spectra
   reducer <- function(fNfun,  alpha = 0, extra = '')
     # iterate over each kernel's spectrum

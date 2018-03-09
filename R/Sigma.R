@@ -50,9 +50,8 @@ predict.Sigma <- function(sig, fns, gs, points, ...) {
   # For each value of Q2 and W we need to insert many different values of t
   sig$dsigma$data <- enlargeKinematicsWithTs(sig, points)
   dsigma <- predict(sig$dsigma, fns = fns, gs = gs, ...)
-
   ts <- getNeededTVals(sig)
-  numBlocks <- length(expVal(sig))
+  numBlocks <- length(points[[1]])
   #flog.trace('[Sigma] number of t blocks %s', numBlocks)
   sigma <- unlist(lapply(1:numBlocks, function(i) {
     # get the dsigma data computed for the value of Q2 and W, etc...
