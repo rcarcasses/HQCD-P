@@ -24,15 +24,15 @@ predict.DVCSDSigma <- function(dsigma, fns, gs, points, ...) {
 }
 
 #' @export
-plot.DVCSDSigma <- function(dvcss, predicted, numGraphs = 4) {
+plot.DVCSDSigma <- function(dvcsds, predicted, numGraphs = 4) {
   plot.new()
   par(mfrow = c(2, 2), las = 1)
   # get all different Q2s
-  allQ2s <- sort(unique(dvcss$data$Q2))
+  allQ2s <- sort(unique(dvcsds$data$Q2))
   # do as many plot as demanded
   invisible(lapply(1:numGraphs, function(n) {
     Q2s <- allQ2s[sapply(0:(length(allQ2s) - 1), mod, numGraphs) + 1 == n]
-    data <- dvcss$data[dvcss$data$Q2 %in% Q2s,]
+    data <- dvcsds$data[dvcsds$data$Q2 %in% Q2s,]
     values <- data$dsigma
     # prepare the plot
     plot(0,
