@@ -29,8 +29,7 @@ getFns.DSigma <- function(dsigma, spectra, points) {
   fnNames <- unlist(lapply(spectra[[1]]$spectra,
                            function(s)
                              unlist(lapply(s, function(spec) paste0('fn.', spec$name)))))
-  df <- data.frame(row.names = fnNames)
-  as.data.frame(t(apply(points, 1, function(row) {
+  df <- as.data.frame(Reduce(rbind, mclapply(apply(points, 1, as.list), function(row) {
     row <- as.list(row)
     Q2 <- row$Q2
     W  <- row$W
@@ -38,19 +37,21 @@ getFns.DSigma <- function(dsigma, spectra, points) {
     # get the spectra of all kernels for a given value of t
     spectraForT <- Filter(function(s) s$t == t, spectra)[[1]]$spectra
     # iterate over each kernel's spectrum
-    r <- unlist(mclapply(spectraForT, function(s) {
-      init()
+    r <- unlist(lapply(spectraForT, function(s) {
       # s: spectrum of a single kernel, have many reggeons
       # iterate over each Reggeon for the given spectrum
       lapply(s, function(spec) {
         fN(dsigma, W, Q2, spec$js, spec$wf)
       })
-    }, mc.cores = cores), recursive = TRUE)
+    }), recursive = TRUE)
     names(r) <- fnNames
     r
-  })))
+  }, mc.cores = cores)))
+  attr(df, 'row.names') <- 1:length(df[[1]])
+  df
 }
 
+#' @export
 fN.DSigma <- function(dsigma, W, Q2, J, wf) {
   t1fun <- splinefun(z, exp((-J + 1.5) * As))
   t2fun <- getExternalStateFactor(dsigma, Q2 = Q2)
