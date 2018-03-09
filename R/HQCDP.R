@@ -271,8 +271,6 @@ getSpectra.HQCDP <- function(x, pars = NULL, ts = NULL) {
 
   # now compute every kernel for each value of t and the parameters passed
   # this is the most expensive part of the computation and its parallelizable
-  # so we use parLapply. Notice that we are already using mclapply in each of the
-  # kernel computations so this is the most we can go while nesting parallel computations
   convertRawSpectra(
     if(Sys.info()['sysname'] == 'Linux')
       mclapply(unwrappedFunCalls, function(f) f(), mc.cores = cores)
@@ -310,6 +308,7 @@ plot.HQCDP <- function(x, pars = NULL, gs = NULL, dry = FALSE) {
   ts <- sort(unique(unlist(lapply(plotPoints, function(df) if(!is.null(df$t)) df$t))))
   pb <- txtProgressBar(min = 0, max = 100, initial = 1, style = 3)
   spectra <- getSpectra(x, pars, ts)
+  cat('\n') # put the progress bar in a new line
   setTxtProgressBar(pb, 30)
   # get the fns for the plot points
   i <- 0

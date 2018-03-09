@@ -38,13 +38,14 @@ getFns.DSigma <- function(dsigma, spectra, points) {
     # get the spectra of all kernels for a given value of t
     spectraForT <- Filter(function(s) s$t == t, spectra)[[1]]$spectra
     # iterate over each kernel's spectrum
-    r <- unlist(lapply(spectraForT, function(s) {
+    r <- unlist(mclapply(spectraForT, function(s) {
+      init()
       # s: spectrum of a single kernel, have many reggeons
       # iterate over each Reggeon for the given spectrum
       lapply(s, function(spec) {
         fN(dsigma, W, Q2, spec$js, spec$wf)
       })
-    }), recursive = TRUE)
+    }, mc.cores = cores), recursive = TRUE)
     names(r) <- fnNames
     r
   })))

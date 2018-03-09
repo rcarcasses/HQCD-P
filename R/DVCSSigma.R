@@ -44,6 +44,11 @@ plot.DVCSSigma <- function(dvcss, predicted = NULL) {
       # draw the experimental error bars
       arrows(W, sigma - deltaSigma, W, sigma + deltaSigma, length = 0.02, angle = 90, code = 3, col = cols[colIndex])
     })
+    # find the predicted values and plot them
+    predictedQ2 <- predicted[predicted$Q2 == Q2,]
+    # order the entries
+    predictedQ2 <- predictedQ2[order(predictedQ2$t),]
+    lines(-predictedQ2$W, predictedQ2$predicted, col = cols[colIndex])
     i <<- i + 1
   })
 
