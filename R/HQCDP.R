@@ -305,8 +305,12 @@ plot.HQCDP <- function(x, pars = NULL, gs = NULL, dry = FALSE) {
   # get the plot points
   plotPoints <- enlargeData(x)
   # compute the spectrum, now with the particular t values needed
-  # TODO: this doesn't work well for Sigma processes, complete
-  ts <- sort(unique(unlist(lapply(plotPoints, function(df) if(!is.null(df$t)) df$t))))
+  ts <- unique(unlist(lapply(p$processes, function(proc) {
+    if('Sigma' %in% class(proc))
+      enlargeKinematicsWithTs(proc)$t
+    else
+      enlargeData(proc)$t
+  })))
   pb <- txtProgressBar(min = 0, max = 100, initial = 1, style = 3)
   spectra <- getSpectra(x, pars, ts)
   cat('\n') # put the progress bar in a new line
