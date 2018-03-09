@@ -6,7 +6,7 @@ getExternalStateFactor.DVCSSigma <- getExternalStateFactor.DVCSDSigma
 #' @export
 enlargeData.DVCSSigma <- function(dvcss, ...) {
   # interesting values of x for producing a plot, for instace.
-  Wvals <- seq(20, 155, len = 4)
+  Wvals <- seq(20, 160, len = 50)
   Q2s <- sort(unique(dvcss$data$Q2))
   # for each one of the 34 previous values combine them with the xvals
   Reduce(rbind, lapply(Q2s, function(Q2) data.frame(Q2 = rep(Q2, length(Wvals)), W = Wvals)))
