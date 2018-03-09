@@ -308,14 +308,22 @@ plot.HQCDP <- function(x, pars = NULL, gs = NULL) {
   plotPoints <- enlargeData(x)
   # compute the spectrum, now with the particular t values needed
   ts <- sort(unique(unlist(lapply(plotPoints, function(df) if(!is.null(df$t)) df$t))))
+  pb <- txtProgressBar(min = 0, max = 100, initial = 1, style = 3)
   spectra <- getSpectra(x, pars, ts)
+  setTxtProgressBar(pb, 30)
   # get the fns for the plot points
-  allProcFns <- mapply(function(proc, points)
+  i <- 0
+  allProcFns <- mapply(function(proc, points) {
+                        setTxtProgressBar(pb, 30 + 30 * i / length(x$processes))
+                        i <<- i + 1
                         list(getFns(proc, spectra = spectra, points = points))
-                , x$processes, plotPoints)
+                      }, x$processes, plotPoints)
   # find the predictions for the plot points for each one of the processes
+  i <- 0
   predPlotPoints <- mapply(function(proc, procFns, procPlotPoints) {
     pred <- predict(proc, points = procPlotPoints, fns = procFns, gs = gs)
+    setTxtProgressBar(pb, 60 + 40 * i / length(x$processes))
+    i <<- i + 1
     #cat('predictions found', unlist(pred), '\n')
 		list(cbind(procPlotPoints, data.frame(predicted = pred)))
 	}, x$processes, allProcFns, plotPoints)
