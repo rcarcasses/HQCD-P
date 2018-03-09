@@ -91,7 +91,7 @@ expKinematics.DSigma <- function(dsigma) dsigma$data[c('Q2', 'W', 't')]
 #' For these processes the enlarge data introduces many values of t for
 #' each one of the Q2 and W combinations available
 #' @export
-enlargeData.DSigma <- function(dsigma, ts = seq(-1, 0, len = 11)) {
+enlargeData.DSigma <- function(dsigma, ts = seq(-1, 0, 0.01)) {
   # get all the different combinations of Q2s and Ws
   QsAndWs <- unique(dsigma$data[,c('Q2', 'W')])
   as.data.frame(lapply(as.data.frame(Reduce(function(acc, r) {
