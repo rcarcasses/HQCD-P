@@ -34,20 +34,22 @@ addProcessObservable <- function(x, ...) UseMethod('addProcessObservable')
 #' @export
 addProcessObservable.default <- function(x, ...) 'calling addProcessObservable in the wrong object'
 #' @export
-addProcessObservable.HQCDP <- function(h, x) {
-  # insert the non minimal coupling attribute in the child processes
-  attr(x, 'alpha') <- attr(h, 'alpha')
-  if(is.element('ProcessObservable', class(x)))
-    h$processes <- append(h$processes, list(x))
-  else
-    flog.error(paste('Adding an object of unknown classes:', class(x)))
-  # return the modified HQCD object
-  h
+addProcessObservable.HQCDP <- function(p, ...) {
+  Reduce(function(h, x) {
+    # insert the non minimal coupling attribute in the child processes
+    attr(x, 'alpha') <- attr(h, 'alpha')
+    if(is.element('ProcessObservable', class(x)))
+      h$processes <- append(h$processes, list(x))
+    else
+      flog.error(paste('Adding an object of unknown classes:', class(x)))
+    # return the modified HQCD object
+    h
+  }, list(...), init = p)
 }
 
 #' @export
 print.HQCDP <- function(x) {
-  cat('HQCD processes:', length(x$processes), ' kernels:', length(x$kernels), '\n')
+  cat('HQCDP:\n * processes:', unlist(lapply(x$processes, function(proc) tail(class(proc), n = 1))), '\n * kernels:', length(x$kernels), '\n')
 }
 
 #' This computes the sum of the rss for all the processes configured.
