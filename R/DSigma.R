@@ -1,6 +1,6 @@
-DSigma <- function(procName) {
+DSigma <- function(procName, postName = '') {
   # add the generic DSigma class
-  obs <- ProcessObservable(paste0(procName, 'DSigma'))
+  obs <- ProcessObservable(paste0(procName, 'DSigma', postName))
   class(obs) <- append(class(obs), 'DSigma', after = length(class(obs)) - 1)
   obs
 }
@@ -20,7 +20,12 @@ getAmplitude.DSigma <- function(dsigma, fns, gs, points, ...) {
   gts <- apply(gs, 1, function(row) {
     rowSums(t(row * t(outer(points$t, 0:(length(gs) - 1), `^`))))
   })
-  rowSums(fns * gts, na.rm = TRUE)
+  # now we take into account any relative factor which may have to be
+  # included in this computation. For example for DIS and DVCS the following
+  # is just 1 by convention, since all the extra factors appart from g(t)
+  # coincide for both, but for vector mesons this is not the case.
+  Cfact <- getCfact(dsigma, gs)
+  Cfact * rowSums(fns * gts, na.rm = TRUE)
 }
 
 #' Get fns times dJdt

@@ -139,3 +139,10 @@ plotSpectrum.default <- function(x) 'plotSpectrum called in an object with no im
 #' @export
 enlargeData <- function(x, ...) UseMethod('enlargeData')
 enlargeData.default <- function(x, ...) 'enlargeData called in an object with no implementation'
+
+#' This function returns a number which is used to rescale the amplitude of
+#' the specific process
+#' @export
+getCfact <- function(x, ...) UseMethod('getCfact')
+#' @export
+getCfact.default <- function(x, ...) 1

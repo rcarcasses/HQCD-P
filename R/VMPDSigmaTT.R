@@ -1,6 +1,5 @@
-#' @export
 VMPDSigmaTT <- function(vmName) {
-  obs <- DSigma('VMPDSigmaTT')
+  obs <- DSigma('VMP', 'TT')
   attr(obs, 'vmName') <- vmName
   obs
 }

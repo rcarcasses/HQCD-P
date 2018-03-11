@@ -132,6 +132,7 @@ getBestGs.HQCDP <- function(x, allProcFns, startGs) {
   op
 }
 
+#' @export
 gs.as.data.frame <- function(x, allGs) {
   as.data.frame(matrix(allGs, ncol = attr(x, 'gtOrder') + 1))
 }

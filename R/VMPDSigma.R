@@ -1,6 +1,6 @@
 #' @export
 VMPDSigma <- function(vmName) {
-  obs <- DSigma('VMPDSigma')
+  obs <- DSigma('VMP')
   attr(obs, 'vmName') <- vmName
   # filter experimental data by Vector Meson type
   obs$data <- obs$data[obs$data$vmName == vmName,]
@@ -9,6 +9,7 @@ VMPDSigma <- function(vmName) {
   obs
 }
 
+#' @export
 predict.VMPDSigma <- function(vmp, fns, gs, points, ...) {
   amplitudett <- getAmplitude(vmp$tt, fns, gs, points, ...)
   amplitudell <- getAmplitude(vmp$ll, fns, gs, points, ...)
@@ -17,3 +18,12 @@ predict.VMPDSigma <- function(vmp, fns, gs, points, ...) {
   # return the differential cross sections
   (1 / (3 * 16 * pi^2)) * GEVMinus2ToNB * (1 / W^4) * (2*abs(amplitudett)^2 + abs(amplitudell)^2) / 3
 }
+
+#' @export
+getCfact.VMPDSigma <- function(vmpds, gs) {
+                        CfactName <- paste0('C', attr(vmpds, 'vmName'))
+                        if (CfactName %in% names(attributes(gs)))
+                          attr(gts, CfactName)
+                        else
+                          1
+                      }

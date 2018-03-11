@@ -1,5 +1,5 @@
 #' @export
-VMPSigma <- function() ProcessObservable('VMPSigma', tmin = -1.2, tmax = 0.0)
+VMPSigma <- function() Sigma('VMP', tmin = -1.2, tmax = 0.0)
 
 #' @export
 expVal.VMPSigma <- function(vmp) vmp$data$sigma
