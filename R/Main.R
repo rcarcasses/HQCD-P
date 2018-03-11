@@ -16,7 +16,7 @@
 #' @import minpack.lm
 
 #' @export
-init <- function(chebPoints = 400, useCache = TRUE, useRedis = TRUE) {
+init <- function(useCache = TRUE, useRedis = TRUE) {
   #flog.trace("[HQCD-P] Initializing .")
   setCache(useCache, if(useRedis) 'redis' else 'internal')
 
@@ -25,6 +25,11 @@ init <- function(chebPoints = 400, useCache = TRUE, useRedis = TRUE) {
   solve(iHQCD(), A0 = 5, h = 0.001, zmax = 20)
   solve(iHQCD())
   # set the method we want to use to compute the eigenvalues
+  chebPoints <- if(Sys.getenv('CHEB_POINTS') == '')
+  	400
+  else
+  	as.integer(Sys.getenv('CHEB_POINTS'))
+
   schrodinger::chebSetN(chebPoints);
 }
 
