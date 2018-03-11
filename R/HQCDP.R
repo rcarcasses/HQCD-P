@@ -107,44 +107,67 @@ getBestGs.default <- function(x) paste('getBestGs has to be implemented for this
 #' Given a pre computed processes fns find the best values for the gs
 #' @return an optim object
 #' @export
-getBestGs.HQCDP <- function(x, allProcFns, startGs) {
+getBestGs.HQCDP <- function(x, allProcFns, startGsAndCfacts) {
   # first we need to define an function depending only of the gs
   # to be optimized
-	fn <- function(parAllGs) evalRSSInGs(x, allProcFns, parAllGs)
-	numGs <- (attr(x, 'gtOrder') + 1) * sum(unlist(lapply(x$kernels, '[[', 'numReg')))
-	if(attr(x, 'alpha') != 0)
-	  numGs <- 2 * numGs
+	fn <- function(gsAndCfacts) {
+	  # here we receive a list with the unfolded gs and Cfacts at the tail
+	  # we need to fold it again
+  	# build a dataframe of gs, which is what the predict function of the ProcessObservable
+  	# is expecting, from the allGs passed
+  	# pay attention to the number of columns: is related to the g(t) order expansion
+  	gs <- gs.as.data.frame(x, gsAndCfacts)
+	  evalRSSInGs(x, allProcFns, parAllGs)
+	}
+	numGs <- getNumGs(x)
+
   # if is the fist time just put something there
-  if(is.null(startGs))
-    startGs <- rep(1, len = numGs)
-	# define the global gradient function
-  grad <- function(allGs) {
-    gs <- gs.as.data.frame(x, allGs)
-    rowSums(as.data.frame(mapply(function(proc, procFns) {
-      gradRSSGs(proc, fns = procFns, gs = gs)
-    }, x$processes, allProcFns)))
+  if(is.null(startGsAndCfacts)) {
+    # init all the gs
+    # add the Cfacts as correspond
+    startGsAndCfacts <- rep(1, len = (numGs + length(getCfactInProcesses(x))))
   }
-  op <- optim(startGs,
-						 	#gr = grad,
+  op <- optim(startGsAndCfacts,
 						 	fn = fn, method = 'BFGS', hessian = FALSE, control = list(maxit = 1000))
   # store the best gs found so they can be used as a starting point of the next call
-	flog.debug(paste('bestGs  =', do.call(paste, as.list(format(op$par, digits = 4))), ' in', op$counts[1], ' steps'))
+	flog.debug(paste('bestGs =', do.call(paste, as.list(format(op$par[1:numGs], digits = 4))), ' in', op$counts[1], ' steps'))
+	flog.debug(paste('bestCfacts =', do.call(paste, as.list(format(op$par[(numGs + 1):length(startGsAndCfacts)], digits = 4))), ' in', op$counts[1], ' steps'))
   # add the property gs with the dataframe format
   op$gs <- gs.as.data.frame(x, op$par)
   op
 }
 
 #' @export
-gs.as.data.frame <- function(x, allGs) {
-  as.data.frame(matrix(allGs, ncol = attr(x, 'gtOrder') + 1))
+gs.as.data.frame <- function(x, gsAndCfacts) {
+  numGs <- getNumGs(x)
+  cFactNames <- getCfactInProcesses(x)
+  if(numGs != (length(gsAndCfacts) - length(cFactNames))) {
+    flog.error('The number of passed gsAndFacts does not matches the size of the gs and cFact required')
+    return()
+  }
+
+  # get the list of processes that use Cfacts
+  allGs <- gsAndCfacts[1:numGs]
+  cFacts <- gsAndCfacts[(numGs + 1):length(gsAndCfacts)]
+  #cat('cFacts', cFacts, '\n')
+  # create the data frame with the gs
+  df <- as.data.frame(matrix(allGs, ncol = attr(x, 'gtOrder') + 1))
+  # add the cFacts as attributes
+  mapply(function(cFact, cName)
+    attr(df, cName) <<- cFact
+    , cFacts, cFactNames)
+  # return the created data frame
+  df
+}
+
+#' Gives a list of Cfacts needed for the current configuration of the HQCDP
+#' @export
+getCfactInProcesses <- function(x) {
+  unique(unlist(lapply(unlist(lapply(p$processes, function(proc) attr(proc, 'vmName'))), function(s) paste0('C', s))))
 }
 
 # given all processes fns and a vector of gs compute the rss sum
 evalRSSInGs <- function(x, allProcFns,  allGs) {
-	# build a dataframe of gs, which is what the predict function of the ProcessObservable
-	# is expecting, from the allGs passed
-	# pay attention to the number of columns: is related to the g(t) order expansion
-	gs <- gs.as.data.frame(x, allGs)
 	# find the rss for each process for the given values of gs and fns
 	sum(unlist(mapply(function(proc, procFns) {
 		# remove some possible NA from the fns and put some large number
@@ -223,9 +246,17 @@ getDoF <- function(x) {
   expPoints <- sum(unlist(lapply(x$processes, function(p) length(expVal(p)))))
   # get the amount of fitting parameters
   # gDeg * number of Reggeons since g(t) = g0 + g1 * t +...
-	numGs <- (attr(x, 'gtOrder') + 1) * sum(unlist(lapply(x$kernels, '[[', 'numReg')))
+	numGs <- getNumGs(x)
   fitParams <- numGs + length(getKernelPars(x))
   expPoints - fitParams
+}
+
+getNumGs <- function(x) {
+  numGs <- (attr(x, 'gtOrder') + 1) * sum(unlist(lapply(x$kernels, '[[', 'numReg')))
+  # duplicate the number of gs if we are considering NMC
+  if(attr(x, 'alpha') != 0)
+    numGs <- 2 * numGs
+  numGs
 }
 
 # store the number of cores for this computation
