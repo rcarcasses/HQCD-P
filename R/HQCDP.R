@@ -117,7 +117,7 @@ getBestGs.HQCDP <- function(x, allProcFns, startGsAndCfacts) {
   	# is expecting, from the allGs passed
   	# pay attention to the number of columns: is related to the g(t) order expansion
   	gs <- gs.as.data.frame(x, gsAndCfacts)
-	  evalRSSInGs(x, allProcFns, parAllGs)
+	  evalRSSInGs(x, allProcFns, gs)
 	}
 	numGs <- getNumGs(x)
 
@@ -131,7 +131,8 @@ getBestGs.HQCDP <- function(x, allProcFns, startGsAndCfacts) {
 						 	fn = fn, method = 'BFGS', hessian = FALSE, control = list(maxit = 1000))
   # store the best gs found so they can be used as a starting point of the next call
 	flog.debug(paste('bestGs =', do.call(paste, as.list(format(op$par[1:numGs], digits = 4))), ' in', op$counts[1], ' steps'))
-	flog.debug(paste('bestCfacts =', do.call(paste, as.list(format(op$par[(numGs + 1):length(startGsAndCfacts)], digits = 4))), ' in', op$counts[1], ' steps'))
+  if(numGs != length(startGsAndCfacts))
+	  flog.debug(paste('bestCfacts =', do.call(paste, as.list(format(op$par[(numGs + 1):length(startGsAndCfacts)], digits = 4))), ' in', op$counts[1], ' steps'))
   # add the property gs with the dataframe format
   op$gs <- gs.as.data.frame(x, op$par)
   op
@@ -148,14 +149,16 @@ gs.as.data.frame <- function(x, gsAndCfacts) {
 
   # get the list of processes that use Cfacts
   allGs <- gsAndCfacts[1:numGs]
-  cFacts <- gsAndCfacts[(numGs + 1):length(gsAndCfacts)]
   #cat('cFacts', cFacts, '\n')
   # create the data frame with the gs
   df <- as.data.frame(matrix(allGs, ncol = attr(x, 'gtOrder') + 1))
-  # add the cFacts as attributes
-  mapply(function(cFact, cName)
-    attr(df, cName) <<- cFact
-    , cFacts, cFactNames)
+  if(numGs != length(gsAndCfacts)) {
+    # add the cFacts as attributes
+    cFacts <- gsAndCfacts[(numGs + 1):length(gsAndCfacts)]
+    mapply(function(cFact, cName)
+      attr(df, cName) <<- cFact
+      , cFacts, cFactNames)
+  }
   # return the created data frame
   df
 }
@@ -167,7 +170,7 @@ getCfactInProcesses <- function(x) {
 }
 
 # given all processes fns and a vector of gs compute the rss sum
-evalRSSInGs <- function(x, allProcFns,  allGs) {
+evalRSSInGs <- function(x, allProcFns,  gs) {
 	# find the rss for each process for the given values of gs and fns
 	sum(unlist(mapply(function(proc, procFns) {
 		# remove some possible NA from the fns and put some large number

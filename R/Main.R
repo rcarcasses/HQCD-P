@@ -32,35 +32,10 @@ init <- function(useCache = TRUE, useRedis = TRUE) {
 
   schrodinger::chebSetN(chebPoints);
 }
-
-# we have to define the value to something otherwise the <<- won't work
-cl <- NULL
-.onLoadOld <- function(lib, pkg) {
-  cores <- if(Sys.getenv('USE_CORES') == '') {
-    # Calculate the number of cores, left one for the system
-    detectCores() - 1
-  } else {
-    # use the value in the USE_CORES system environment variable
-    # as the amount of desired cores
-    as.integer(Sys.getenv('USE_CORES'))
-  }
-
-  cat('Number of cores available:', cores, '\n')
-  # Initiate cluster, all the variables available to all nodes
-  cl <<- makeCluster(cores)
-}
-
 #' @export
 dumpList <- function(l) {
   paste(mapply(function(n, v) paste(n,'=', v), names(l), l), collapse = ', ')
 }
-
-on.exit({
-  if(!is.null(cl)) {
-    flog.debug('Stopping cluster\n')
-    parallel::stopCluster(cl)
-  }
-})
 
 #' @export
 copyEnv <- function(from, to, names=ls(from, all.names=TRUE)) {
