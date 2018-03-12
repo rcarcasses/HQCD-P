@@ -33,13 +33,19 @@ predict.F2 <- function(f2, fns, gs, ...) {
 #' In this case the dependence of F2 with the gs is linear, which
 #' makes the problem very simple.
 #' @export
-getBestGs.F2 <- function(f2, fns) {
+getBestGs.F2 <- function(f2, fns, extended = FALSE) {
   f2Data <- expVal(f2)
   w <- 1/expErr(f2)^2
   # the -1 indicate that we don't want an intercept
   fit <- lm(f2Data ~ .-1, data = cbind(f2Data, fns), weights = w)
   #cat('getBestGs.F2', fit$coefficients, '\n')
-  fit$coefficients
+  if(extended) {
+    fit$gs <- fit$coefficients
+    fit$value <- sum((fit$residuals^2) * w)
+    fit
+  }
+  else
+    fit$coefficients
 }
 
 #' This function returns a term in the sum for F2 with the
