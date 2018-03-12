@@ -128,7 +128,9 @@ getBestGs.HQCDP <- function(x, allProcFns, startGsAndCfacts) {
     startGsAndCfacts <- rep(1, len = (numGs + length(getCfactInProcesses(x))))
   }
   op <- optim(startGsAndCfacts,
-						 	fn = fn, method = 'BFGS', hessian = FALSE, control = list(maxit = 1000))
+						 	fn = fn,
+						 	# method = 'BFGS',
+						 	hessian = FALSE, control = list(maxit = 1000))
   # store the best gs found so they can be used as a starting point of the next call
 	flog.debug(paste('bestGs =', do.call(paste, as.list(format(op$par[1:numGs], digits = 4))), ' in', op$counts[1], ' steps'))
   if(numGs != length(startGsAndCfacts))
