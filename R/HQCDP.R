@@ -108,6 +108,10 @@ getBestGs.default <- function(x) paste('getBestGs has to be implemented for this
 #' @return an optim object
 #' @export
 getBestGs.HQCDP <- function(x, allProcFns, startGsAndCfacts) {
+  # if we are just fitting DIS then use the getBestGs from that process since is better
+  if(length(x$processes) == 1 && tail(class(p$processes[[1]]), 1) == 'F2')
+    return(getBestGs(p$processes[[1]], allProcFns, extended = TRUE))
+
   # first we need to define an function depending only of the gs
   # to be optimized
 	fn <- function(gsAndCfacts) {
@@ -257,7 +261,11 @@ getDoF <- function(x) {
 }
 
 getNumGs <- function(x) {
-  numGs <- (attr(x, 'gtOrder') + 1) * sum(unlist(lapply(x$kernels, '[[', 'numReg')))
+  gtOrder <- attr(x, 'gtOrder')
+  # if is only DIS then only the g0 matter
+  if(length(x$processes) == 1 && tail(class(p$processes[[1]]), 1) == 'F2')
+    gtOrder <- 0
+  numGs <- (gtOrder + 1)  * sum(unlist(lapply(x$kernels, '[[', 'numReg')))
   # duplicate the number of gs if we are considering NMC
   if(attr(x, 'alpha') != 0)
     numGs <- 2 * numGs
