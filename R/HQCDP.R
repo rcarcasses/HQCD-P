@@ -180,8 +180,8 @@ evalRSSInGs <- function(x, allProcFns,  gs) {
 	# find the rss for each process for the given values of gs and fns
 	sum(unlist(mapply(function(proc, procFns) {
 		# remove some possible NA from the fns and put some large number
-		if(any(is.na(procFns))) {
-			flog.warn('There were NA values for this evaluation')
+		if(any(!is.finite(procFns))) {
+			flog.warn('There were non finite values for this evaluation')
 			1e30
 		}
 		else
@@ -193,9 +193,9 @@ evalRSSInGs <- function(x, allProcFns,  gs) {
 fit <- function(x, ...) UseMethod('fit')
 #' @export
 fit.HQCDP <- function(x, allPars = NULL, initGs = NULL, method = 'Nelder-Mead') {
-	flog.debug('Using method %s', method)
+	flog.debug('Using method %s, number of cores: %s', method, cores)
   DoF <- getDoF(x)
-	flog.debug(' --- DoF %s', DoF)
+	flog.debug('number of degrees of freedom: %s', DoF)
   # here we declare that we want the full output of the rss function for instance
   attr(x, 'complete') <- TRUE
   # get all the parameters to fit if required
@@ -209,7 +209,15 @@ fit.HQCDP <- function(x, allPars = NULL, initGs = NULL, method = 'Nelder-Mead') 
 		# fn arguments, allGs set only the first time, then use last gs as starting point
 		# this is just to allow reproducibility of known results at the first ru
     lastEval    <- get('lastEval', envir = bestEvalEnv)
-    completeVal <- rss(x, pars, allGs = if(is.null(lastEval$gs)) initGs else NULL, startGs = lastEval$gs)
+    completeVal <- tryCatch({
+      rss(x, pars, allGs = if(is.null(lastEval$gs)) initGs else NULL, startGs = lastEval$gs)
+    }, error = function(e) {
+      flog.warn('There were errors while evaluating rss with pars %s', do.call(paste, as.list(round(pars, 6))))
+      list(success = FALSE)
+    })
+    if(is.null(completeVal$val))
+      return(1e30 * (1 + 0.05 * runif(1)))
+    # otherwise complete the computation and save it
 		val         <- completeVal$val
     valWeighted <- completeVal$valWeighted
     gs          <- completeVal$gs
@@ -282,7 +290,6 @@ cores <- if(Sys.getenv('USE_CORES') == '') {
 	as.integer(Sys.getenv('USE_CORES'))
 }
 
-flog.debug('Using %s cores', cores)
 #' @export
 getSpectra <- function(x, ...) UseMethod('getSpectra')
 #' @export
