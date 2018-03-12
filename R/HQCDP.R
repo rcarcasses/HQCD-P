@@ -109,6 +109,7 @@ getBestGs.default <- function(x) paste('getBestGs has to be implemented for this
 #' @export
 getBestGs.HQCDP <- function(x, allProcFns, startGsAndCfacts) {
   # if we are just fitting DIS then use the getBestGs from that process since is better
+  # as it is just a linear model
   if(length(x$processes) == 1 && tail(class(p$processes[[1]]), 1) == 'F2')
     return(getBestGs(p$processes[[1]], allProcFns[[1]], extended = TRUE))
 
