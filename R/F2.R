@@ -58,6 +58,8 @@ getBestGs.F2 <- function(f2, fns, extended = FALSE) {
 #' @export
 getFns.F2 <- function(f2, spectra, points) {
   alpha <- attr(f2, 'alpha')
+  # precompute the modes to speed up
+  mclapply(unique(points$Q2), getU1NNMode, alpha = alpha, mc.cores = cores)
   #flog.trace('Calling getFns.F2, alpha %s', alpha)
   spectraForTZero <- Filter(function(s) s$t == 0, spectra)[[1]]$spectra
   reducer <- function(fNfun,  alpha = 0, extra = '')

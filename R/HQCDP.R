@@ -110,7 +110,7 @@ getBestGs.default <- function(x) paste('getBestGs has to be implemented for this
 getBestGs.HQCDP <- function(x, allProcFns, startGsAndCfacts) {
   # if we are just fitting DIS then use the getBestGs from that process since is better
   if(length(x$processes) == 1 && tail(class(p$processes[[1]]), 1) == 'F2')
-    return(getBestGs(p$processes[[1]], allProcFns, extended = TRUE))
+    return(getBestGs(p$processes[[1]], allProcFns[[1]], extended = TRUE))
 
   # first we need to define an function depending only of the gs
   # to be optimized
@@ -133,7 +133,7 @@ getBestGs.HQCDP <- function(x, allProcFns, startGsAndCfacts) {
   }
   op <- optim(startGsAndCfacts,
 						 	fn = fn,
-						 	# method = 'BFGS',
+						 	method = 'BFGS',
 						 	hessian = FALSE, control = list(maxit = 1000))
   # store the best gs found so they can be used as a starting point of the next call
 	flog.debug(paste('bestGs =', do.call(paste, as.list(format(op$par[1:numGs], digits = 4))), ' in', op$counts[1], ' steps'))
