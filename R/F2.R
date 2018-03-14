@@ -107,7 +107,7 @@ fNNMC.F2 <- function(f2, Q2, x, J, wf, alpha) {
   # contribution from the transverse part
   t2fun   <- splinefun(z, fQ2(z) * DperpPsi(wf))
   # contribution from the longitudinal part
-  t3fun   <- splinefun(z, (dfQ2(z) / Q2) * DparallelPsi(wf, J))
+  t3fun   <- splinefun(z, (dfQ2(z) / Q2) * DparallelPsi(wf))
   integral <- integrate(function(x) t1fun(x) * (t2fun(x) + t3fun(x)), z[1], z[length(z)], stop.on.error = FALSE)
   factor <- 1 / (tan(pi * J / 2) * 4 * pi^2 * 1 / 137)
   factor * x^(1 - J) * Q2^J * integral$value
@@ -120,21 +120,22 @@ DperpPsi <- function(wf) {
   wfder1 <- wffun(z, deriv = 1)
   # return object
   exp(-2 * As) * (
-    (Asder1 * Phider1 - 1.5 * Asder1^2) * wffun(z) + Asder1 * wfder1
+    Asder1 * wfder1 +
+    (0.5 * Asder1^2 + Asder1 * Phider1) * wffun(z)
   )
 }
 #' compute Dparallel acting on psi
 #' @export
-DparallelPsi <- function(wf, J) {
+DparallelPsi <- function(wf) {
   wffun <- splinefun(wf$x, wf$y)
   wfder1 <- wffun(z, deriv = 1)
   wfder2 <- wffun(z, deriv = 2)
   # return object
   exp(-2 * As) * (
-    wfder2 + 2 * (Phider1 - Asder1) * wfder1 +
-     (Phider2 + (J - 2.5) * Asder2 - Asder1 * (2 * Phider1 + J - 1)
-      + Phider1^2 + 0.75 * Asder1^2) * wffun(z)
-    )
+    wfder2
+    + 2 * (Phider1 - Asder1) * wfder1
+    + (0.75 * Asder1^2 - 2 * Asder1 * Phider1 + Phider1^2 + 0.5 * Asder2 + Phider2) * wffun(z)
+  )
 }
 
 # DEPRECATED
