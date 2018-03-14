@@ -13,6 +13,11 @@ getNeededTVals.DSigma <- function(x) unique(expKinematics(x)$t)
 
 getAmplitude <- function(x, ...) UseMethod('getAmplitude')
 getAmplitude.DSigma <- function(dsigma, fns, gs, points, ...) {
+  # if it is a composed object then just call getAmplitude on each children
+  if(!is.null(dsigma$tt) && !is.null(dsigma$ll))
+    return(list(tt = getAmplitude(dsigma$tt, fns, gs, points = points, ...),
+                ll = getAmplitude(dsigma$ll, fns, gs, points = points, ...)))
+
   # compute g(t) for each corresponding fn, this return a dataframe
   # were each column is the value (a vector) of g(t) for the given values
   # of t and the n column is the g(t) of the n fn in the fns dataframe
@@ -20,7 +25,7 @@ getAmplitude.DSigma <- function(dsigma, fns, gs, points, ...) {
   gts <- apply(gs, 1, function(row) {
     rowSums(t(row * t(outer(points$t, 0:(length(gs) - 1), `^`))))
   })
-  # now we take into account any relative factor which may have to be
+  # here we take into account any relative factor which may have to be
   # included in this computation. For example for DIS and DVCS the following
   # is just 1 by convention, since all the extra factors appart from g(t)
   # coincide for both, but for vector mesons this is not the case.
@@ -31,6 +36,10 @@ getAmplitude.DSigma <- function(dsigma, fns, gs, points, ...) {
 #' Get fns times dJdt
 #' @export
 getFns.DSigma <- function(dsigma, spectra, points) {
+  # if it is a composed object then just call getFns on each children
+  if(!is.null(dsigma$tt) && !is.null(dsigma$ll))
+    return(list(tt = getFns(dsigma$tt, spectra, points = points),
+                ll = getFns(dsigma$ll, spectra, points = points)))
   fnNames <- unlist(lapply(spectra[[1]]$spectra,
                            function(s)
                              unlist(lapply(s, function(spec) paste0('fn.', spec$name)))))

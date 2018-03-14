@@ -180,12 +180,6 @@ getCfactInProcesses <- function(x) {
 evalRSSInGs <- function(x, allProcFns,  gs) {
 	# find the rss for each process for the given values of gs and fns
 	sum(unlist(mapply(function(proc, procFns) {
-		# remove some possible NA from the fns and put some large number
-		if(any(!is.finite(procFns))) {
-			flog.warn('There were non finite values for this evaluation')
-			1e30
-		}
-		else
 			rss(proc, fns = procFns, gs = gs)
 	}, x$processes, allProcFns)))
 }
