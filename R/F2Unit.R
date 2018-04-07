@@ -7,16 +7,6 @@ F2Unit<- function(potPars = 'bcde',
   if(is.null(data))
     data <- getHERAF2()
 
-  # at initialization get the data that will be needed later
-  As      <- get('As', envir = ihqcdEnv)
-  Asder1  <- get('Asder1', envir = ihqcdEnv)
-  Asder2  <- get('Asder2', envir = ihqcdEnv)
-  Phider1 <- get('Phider1', envir = ihqcdEnv)
-  Phider2 <- get('Phider2', envir = ihqcdEnv)
-  z       <- get('z', envir = ihqcdEnv)
-  A0      <- get('A0', envir = ihqcdEnv)
-  h       <- get('h', envir = ihqcdEnv)
-
   # create a kernel
   kernel <- kernelUnit(potPars, numReg, kernelName = kernelName)
 
@@ -30,6 +20,7 @@ F2Unit<- function(potPars = 'bcde',
 
   # this function set the potential for the kernel and for the Regge trajectories object
   setNewPotential <- function(f, pars) {
+    cat('setting new potential')
     kernel$setNewPotential(f, pars)
     r$setNewPotential(f, pars)
   }
@@ -349,14 +340,6 @@ F2Unit<- function(potPars = 'bcde',
     do.call(r$plotLines, list(...))
   }
 
-  plotGlueballMasses <- function() {
-    r$plotGlueballMasses()
-  }
-
-  plotMesonsMasses <- function() {
-    r$plotMesonsMasses()
-  }
-
   fi <- function(n, Q2 = NULL, ...) {
     if(is.null(Q2))
       Q2 <- Q2s
@@ -513,8 +496,6 @@ F2Unit<- function(potPars = 'bcde',
              plotRegge = plotRegge,
              plotNMC = plotNMC,
              plotReggeLines = plotReggeLines,
-             plotGlueballMasses = plotGlueballMasses,
-             plotMesonsMasses = plotMesonsMasses,
              plotSpectrum = plotSpectrum,
              plotEffectiveExponent = plotEffectiveExponent,
              fDL = fDL,
@@ -523,9 +504,21 @@ F2Unit<- function(potPars = 'bcde',
              F2A2 = F2A2,
              F2M = F2M,
              plot = plotF2)
-  class(f2) <- append(class(f2), 'F2')
+  class(f2) <- append(class(f2), 'F2Unit')
   f2
 }
 
 #' @export
-plot.F2 <- function(f2, ...) f2$plot(...)
+plot.F2Unit <- function(f2, ...) f2$plot(...)
+#' @export
+getAllFns.F2Unit <- function(f2, ...) f2$getAllFns(...)
+#' @export
+getFns.F2Unit <- function(f2, ...) f2$getFns(...)
+#' @export
+getJs.F2Unit <- function(f2, ...) f2$getJs(...)
+#' @export
+setNewPotential.F2Unit <- function(f2, ...) f2$setNewPotential(...)
+#' @export
+plotSpectrum.F2Unit <- function(f2, ...) f2$plotSpectrum(...)
+#' @export
+plotReggeLines.F2Unit <- function(f2, ...) f2$plotReggeLines(...)

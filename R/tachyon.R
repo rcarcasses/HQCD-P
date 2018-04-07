@@ -1,10 +1,6 @@
 #' @export
 tachyon <- function(x = 0) {
   tauVsA<- NULL
-  A      <- get('A', envir = ihqcdEnv)
-  Ader1  <- get('Ader1', envir = ihqcdEnv)
-  lambda <- get('lambda', envir = ihqcdEnv)
-  z      <- get('z', envir = ihqcdEnv)
   # create a function that given an A gives the correspondent lambda
   lambdaFun <- splinefun(A, lambda)
   qFun      <- splinefun(A, exp(A) / Ader1)

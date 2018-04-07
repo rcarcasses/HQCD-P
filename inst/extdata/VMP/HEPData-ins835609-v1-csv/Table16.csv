@@ -1,0 +1,19 @@
+#: table_doi: 10.17182/hepdata.56191.v1/t16
+#: name: Table 16
+#: description: W dependence of the GAMMA* P cross section for dissociative RHO0 production  for Q**2 There is an additional overall normalization uncertainty of 4.6 PCT.
+
+#: data_file: Table16.yaml
+#: keyword reactions: GAMMA* P --> RHO0 DD
+#: keyword observables: SIG
+#: keyword phrases: Exclusive | Integrated Cross Section | Cross Section | Photoproduction
+#: RE,GAMMA* P --> RHO0 DD
+#: Q**2 [GeV^2],22.5
+#: sqrts [GEV],300 + 320
+#: M(P=4) [GEV],< 5
+'W [GEV]','SIG [NB]','stat +','stat -','sys +','sys -'
+71.0,3.0,0.4,-0.4,0.3,-0.3
+97.0,2.5,0.5,-0.5,0.4,-0.4
+116.0,3.6,0.7,-0.7,0.4,-0.5
+139.0,4.6,0.8,-0.8,0.5,-0.6
+165.0,4.5,1.0,-1.0,0.5,-0.7
+

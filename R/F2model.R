@@ -32,7 +32,7 @@ F2model <- function(potPars = 'bcde',
              kernelName = kernelData$prefix,
              considerNonMinimalCoupling = considerNonMinimalCoupling)
     # configure the f2 object with the custom potential passed
-    f2$setNewPotential(kernelData$potential, kernelData$optimPars)
+    setNewPotential(f2, kernelData$potential, kernelData$optimPars)
     # add the created object to the kernelData one
     kernelData <- c(kernelData, list(f2 = f2))
     # add this kernel to the list of kernels
@@ -88,9 +88,9 @@ F2model <- function(potPars = 'bcde',
 
       # get the right function to call according whether we are considering
       # the non minimal coupling case or not
-      f <- if(considerNonMinimalCoupling) mk$f2$getAllFns else mk$f2$getFns
+      f <- if(considerNonMinimalCoupling) getAllFns else getFns
       # get the dataframe with the fns
-      mkdf <- do.call(f, mkPars)
+      mkdf <- do.call(f, c(list(mk$f2), mkPars))
       # add the computed dataframe columns to the full one
       if(is.null(df))
         df <<-mkdf
@@ -121,8 +121,8 @@ F2model <- function(potPars = 'bcde',
     lm    <- getLinearFnsFit(df)
     coeff <- lm$coefficients
     rss   <- sum((resid(lm)/data$err)^2)
-    chi2  <- rss / (length(data$F2) - length(parameters))
-    jsk   <- unlist(lapply(modelUnits, function(mk) round(mk$f2$getJs(), digits = 3)))
+    chi2  <- rss / (length(data$F2) - length(parameters)) # we need to remove
+    jsk   <- unlist(lapply(modelUnits, function(mk) round(getJs(mk$f2), digits = 3)))
     flog.debug('jsk = %s', dumpList(jsk))
     # evaluation result
     value <- list(pars = pars,
@@ -224,8 +224,7 @@ F2model <- function(potPars = 'bcde',
       tic()
       op <<- fn(method)
       exectime <- toc()
-      exectime <- exectime$toc - exectime$tic
-      flog.debug(paste('[F2model]  -::- Iteration', i, ' completed in', seconds_to_period(round(exectime / 60)), ' min, new chi2', bestEval$chi2))
+      flog.debug(paste('[F2model]  -::- Iteration', i, ' completed in', seconds_to_period(round(exectime$toc - exectime$tic)), ' min, new chi2', bestEval$chi2))
       i <<- i + 1
     }
 
@@ -353,7 +352,7 @@ F2model <- function(potPars = 'bcde',
     lapply(modelUnits, function(mk) {
       # call plotSpectrum on each kernel object with the best
       # parameters found
-      do.call(mk$f2$plotSpectrum, as.list(bestEval$pars))
+      do.call(plotSpectrum, c(list(mk$f2), bestEval$pars))
     })
     flog.info('[F2model] Spectrum for each kernel plotted')
   }
@@ -374,13 +373,12 @@ F2model <- function(potPars = 'bcde',
       do.call(mk$f2$plotReggeLines, as.list(c(showProgress = showProgress, n = mk$numReg, bestEval$pars)))
     })
 
-    # to plot the experimental/lattice spectrum of mesons/glueballs
-    # invoke the respective function in the first kernel added
+    # plot the experimental/lattice spectrum of mesons/glueballs if required so
     if(glueballs)
-      modelUnits[[1]]$f2$plotGlueballMasses()
+      drawGlueballMasses()
 
     if(mesons)
-      modelUnits[[1]]$f2$plotMesonsMasses()
+      drawMesonsMasses()
   }
 
   plotEffectiveExponent <- function() {

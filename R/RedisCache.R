@@ -1,23 +1,25 @@
 #' @export
-cacheQ <- TRUE
+cacheEnv <- new.env()
+assign('cacheQ', TRUE, envir = cacheEnv)
+assign('use', 'inmemory', envir = cacheEnv)
+assign('cacheValues', list(), envir = cacheEnv)
+assign('maxInMemoryEntries', 1e3, envir = cacheEnv)
 
 #' @export
 startRedis <- function(host = 'localhost', port = 6379) {
-  cacheQ <-TRUE
-  cat('connecting to redis...')
   rredis::redisConnect(host = host, port = port, nodelay = FALSE)
-  cat('DONE\n')
 }
 
 #' @export
-stopRedis <- function() {
-  system('docker stop redis')
+setCache <- function(cacheQ = TRUE, use = 'redis') {
+  assign('cacheQ', cacheQ, envir = cacheEnv)
+  assign('use', use, envir = cacheEnv)
 }
 
 #' @export
 cache <- function(f, ...) {
   funName <- as.character(substitute(f))
-  if(!cacheQ) {
+  if(!get('cacheQ', envir = cacheEnv)) {
     flog.debug(paste('[RedisCache] function ', funName, ' won\'t be cached, caching is disabled'))
     return(f)
   }
@@ -25,33 +27,51 @@ cache <- function(f, ...) {
   extraKey <- ''
   if(length(list(...)) > 0) {
     extraKey <- paste0(list(...), collapse = ',')
-    flog.debug(paste('[RedisCache] Using extra key *', extraKey, '* for labeling cached values for', funName))
+    if(extraKey != '')
+      flog.debug(paste('[RedisCache] Using extra key *', extraKey, '* for labeling cached values for', funName))
   }
 
   function(...) {
+    # beware of potential issues with partial argument matching
+    # see: https://stackoverflow.com/questions/15264994/prevent-partial-argument-matching
     arguments <- list(...)
     key <- paste0(format(Filter(is.numeric, arguments), digits = 16), collapse = ',')
     key <- paste0(key, '-', funName, '-', extraKey, collapse = '')
 
-    # cat('key is ', key, '\n')
-    val <- rredis::redisGet(key)  # check if it has been already computed
-    if(!is.null(val))
-      return(val)
+    if(get('use', envir = cacheEnv) == 'redis') {
+      startRedis()
+      # cat('key is ', key, '\n')
+      val <- rredis::redisGet(key)  # check if it has been already computed
+      if(!is.null(val))
+        return(val)
+      #otherwise compute the value, store and return it
+      val <- do.call(f, arguments)
+      if(!is.null(val)){
+        set <- paste0('fset-', funName)
+        rredis::redisSAdd(set, key)    # all the functions keys are stored in a set
+        rredis::redisSet(key, val)
+      }
+      rredis::redisClose()
+      val
+    } else {
+      # use in memory cache
+      if(is.null(cacheValues[[key]])) {
+        cacheValues[[key]] <- do.call(f, arguments)
+        # if cached values are too big remove the older entries
+        if(length(cacheValues) > get('maxInMemoryEntries', envir = cacheEnv))
+          cacheValues[[1]] <- NULL
+      }
 
-    #otherwise compute the value, store and return it
-    val <- do.call(f, arguments)
-    if(!is.null(val)){
-      set <- paste0('fset-', funName)
-      rredis::redisSAdd(set, key)    # all the functions keys are stored in a set
-      rredis::redisSet(key, val)
+      assign('cacheValues', cacheValues, envir = cacheEnv)
+      cacheValues[[key]]
     }
-
-    val
   }
 }
+
 #' Clears all the cached values
 #' @export
 clearFunCache <- function(funName) {
+  startRedis()
   if(is.function(funName))
     funName <- as.character(substitute(funName))
 
@@ -61,10 +81,13 @@ clearFunCache <- function(funName) {
     rredis::redisDelete(k)
 
   rredis::redisDelete(s)  # remove all the keys
+  rredis::redisClose()
 }
 
 #' Clears all the cached values
 #' @export
 clearCache <- function() {
-  rredis::redisFlushAll();
+  startRedis()
+  rredis::redisFlushAll()
+  rredis::redisClose()
 }

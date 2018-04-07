@@ -1,0 +1,121 @@
+DSigma <- function(procName, postName = '') {
+  # add the generic DSigma class
+  obs <- ProcessObservable(paste0(procName, 'DSigma', postName))
+  class(obs) <- append(class(obs), 'DSigma', after = length(class(obs)) - 1)
+  obs
+}
+
+# Conversion factor between GeV^2 and mili barn units
+GEVMinus2ToNB <- 3.894*10^5
+
+#' @export
+getNeededTVals.DSigma <- function(x) unique(expKinematics(x)$t)
+
+getAmplitude <- function(x, ...) UseMethod('getAmplitude')
+getAmplitude.DSigma <- function(dsigma, fns, gs, points, ...) {
+  # if it is a composed object then just call getAmplitude on each children
+  if(!is.null(dsigma$tt) && !is.null(dsigma$ll))
+    return(list(tt = getAmplitude(dsigma$tt, fns, gs, points = points, ...),
+                ll = getAmplitude(dsigma$ll, fns, gs, points = points, ...)))
+
+  # compute g(t) for each corresponding fn, this return a dataframe
+  # were each column is the value (a vector) of g(t) for the given values
+  # of t and the n column is the g(t) of the n fn in the fns dataframe
+  # see the test file for some explanation 'tests/testthat/test_DSigma.R'
+  gts <- apply(gs, 1, function(row) {
+    rowSums(t(row * t(outer(points$t, 0:(length(gs) - 1), `^`))))
+  })
+  # here we take into account any relative factor which may have to be
+  # included in this computation. For example for DIS and DVCS the following
+  # is just 1 by convention, since all the extra factors appart from g(t)
+  # coincide for both, but for vector mesons this is not the case.
+  Cfact <- getCfact(dsigma, gs)
+  Cfact * rowSums(fns * gts, na.rm = TRUE)
+}
+
+#' Get fns times dJdt
+#' @export
+getFns.DSigma <- function(dsigma, spectra, points) {
+  # if it is a composed object then just call getFns on each children
+  if(!is.null(dsigma$tt) && !is.null(dsigma$ll))
+    return(list(tt = getFns(dsigma$tt, spectra, points = points),
+                ll = getFns(dsigma$ll, spectra, points = points)))
+  fnNames <- unlist(lapply(spectra[[1]]$spectra,
+                           function(s)
+                             unlist(lapply(s, function(spec) paste0('fn.', spec$name)))))
+  df <- as.data.frame(Reduce(rbind, mclapply(apply(points, 1, as.list), function(row) {
+    row <- as.list(row)
+    Q2 <- row$Q2
+    W  <- row$W
+    t  <- row$t
+    # get the spectra of all kernels for a given value of t
+    spectraForT <- Filter(function(s) s$t == t, spectra)[[1]]$spectra
+    # iterate over each kernel's spectrum
+    r <- unlist(lapply(spectraForT, function(s) {
+      # s: spectrum of a single kernel, have many reggeons
+      # iterate over each Reggeon for the given spectrum
+      lapply(s, function(spec) {
+        fN(dsigma, W, Q2, spec$js, spec$wf)
+      })
+    }), recursive = TRUE)
+    names(r) <- fnNames
+    r
+  }, mc.cores = cores)))
+  attr(df, 'row.names') <- 1:length(df[[1]])
+  df
+}
+
+#' @export
+fN.DSigma <- function(dsigma, W, Q2, J, wf) {
+  t1fun <- splinefun(z, exp((-J + 1.5) * As))
+  t2fun <- getExternalStateFactor(dsigma, Q2 = Q2)
+  t3fun <- splinefun(wf$x, wf$y)
+  integral <- integrate(function(x)  t1fun(x) * t2fun(x) * t3fun(x), z[1], z[length(z)], stop.on.error = FALSE)
+  # return the full thing needed for the amplitude
+  (1 - 1i/ tan(pi * J / 2)) * W^(2*J) *integral$value
+}
+
+#' @export
+getBestGs.DSigma <- function(dsigma, fns, numGs, startGs = NULL) {
+  # first we need to define an function depending only of the gs
+  # to be optimized
+  fn <- function(gs) rss(dsigma, fns = fns, gs = as.data.frame(matrix(gs, ncol = numGs / length(fns))))
+  # if is the fist time just put something there
+  if(is.null(startGs))
+    startGs <- rep(1, len = numGs)
+
+  op <- optim(startGs,
+              fn = fn, method = 'BFGS', hessian = FALSE, control = list(maxit = 1000))
+  # store the best gs found so they can be used as a starting point of the next call
+  flog.debug(paste('DSigma bestGs  =', do.call(paste, as.list(format(op$par, digits = 4))), ' in', op$counts[1], ' steps'))
+  as.data.frame(matrix(op$par, ncol = numGs / length(fns)))
+}
+
+getExternalStateFactor <- function(x, ...) UseMethod('getExternalStateFactor')
+
+getExternalStateFactor.default <- function(x, ...) 'getExternalStateFactor have to be implemented for this process'
+
+#' @export
+expVal.DSigma <- function(dsigma) dsigma$data$dsigma
+#' @export
+expErr.DSigma <- function(dsigma) dsigma$data$deltaDSigma
+#' @export
+expKinematics.DSigma <- function(dsigma) dsigma$data[c('Q2', 'W', 't')]
+
+#' For these processes the enlarge data introduces many values of t for
+#' each one of the Q2 and W combinations available
+#' @export
+enlargeData.DSigma <- function(dsigma, ts = seq(-1, 0, 0.01)) {
+  # get all the different combinations of Q2s and Ws
+  QsAndWs <- unique(dsigma$data[,c('Q2', 'W')])
+  as.data.frame(lapply(as.data.frame(Reduce(function(acc, r) {
+    val <- rbind(acc, r)
+    rownames(val) <- NULL
+    val
+  },unlist(
+    apply(QsAndWs, 1,
+          function(row)
+            lapply(ts, function(t) c(list(t = t), row))),
+    recursive = FALSE)
+  )), `mode<-`, 'numeric'))
+}

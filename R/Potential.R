@@ -1,5 +1,5 @@
 
-#' @export
+#'
 potential <- function(model = 'bcde', addAlfonsoTerm = TRUE) {
   model <- strsplit(model, split = '')[[1]]
   terms <- c()
@@ -51,24 +51,6 @@ potential <- function(model = 'bcde', addAlfonsoTerm = TRUE) {
   cfactor    <- NULL
   dfactor    <- NULL
   efactor    <- NULL
-
-  loadAll <- function() {
-    A          <<- get('A', envir = ihqcdEnv)
-    As         <<- get('As', envir = ihqcdEnv)
-    lambda     <<- get('lambda', envir = ihqcdEnv)
-    u2         <<- get('u2', envir = ihqcdEnv)
-    z          <<- get('z', envir = ihqcdEnv)
-    dress      <<- get('dress', envir = ihqcdEnv)
-    lambdader1 <<- get('lambdader1', envir = ihqcdEnv)
-    lambdader2 <<- get('lambdader2', envir = ihqcdEnv)
-    Asder1     <<- get('Asder1', envir = ihqcdEnv)
-    Asder2     <<- get('Asder2', envir = ihqcdEnv)
-    afactor    <<- 1
-    bfactor    <<- exp(2 * A) * lambda^(5/6)
-    cfactor    <<- (lambdader2 / lambda) - (lambdader1 / lambda)^2
-    dfactor    <<- Asder2 - Asder1^2
-    efactor    <<- (lambdader1 / lambda)^2
-  }
 
   u <- function() {
     if(is.null(potentialSet)) {
@@ -268,14 +250,14 @@ potential <- function(model = 'bcde', addAlfonsoTerm = TRUE) {
   p
 }
 
-#' @export
+#'
 print.potential <- function(p, ...) print(paste('potential is:', p$u2jBody()))
-#' @export
+#'
 show.potential <- function(p) print(p)
-#' @export
+#'
 cat.potential <- function(p) print(p)
 
-#' @export
+#'
 plot.potential <- function(p, ...) {
   brokenPars <- p$breakParams(...) # distingish between potential and plot parameters
   pars <- brokenPars$pars          # assign the potential parameters
@@ -298,7 +280,7 @@ plot.potential <- function(p, ...) {
   boxed.labels(p$z[[i]], u[[i]], labels = labels, col = cl, cex = 0.7, xpad = 1, ypad = 1, border = FALSE, bg = 'white')
 }
 
-#' @export
+#'
 lines.potential <- function(p,...) {
   brokenPars <- p$breakParams(...) # distingish between potential and plot parameters
   pars <- brokenPars$pars          # assign the potential parameters

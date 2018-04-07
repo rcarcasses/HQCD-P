@@ -11,7 +11,7 @@ e0 <- 1 - jn
 Q2s <- NULL
 
 #' @export
-getHERAF2 <- function(maxX = 0.01, maxF2 = 5, maxQ2 = 1110, minQ2 = 0.1) {
+loadData.F2 <- function(f2, maxX = 0.01, maxF2 = 5, maxQ2 = 1110, minQ2 = 0.1) {
   flog.debug(paste('Loading HERA data with maxX', maxX, ' and ', minQ2, ' <= Q2 <=', maxQ2))
   # read the HERA nce+p data
   nceppPath <- system.file('extdata', 'd09-158.nce+p.txt', package = 'HQCDP')
@@ -96,9 +96,9 @@ plotHERARangeXvsQ <- function(maxX = 0.01, maxF2 = 5, maxQ2 = 1110, minQ2 = 0.1)
 
 #' @export
 loadHERA <- function(useIHQCD = TRUE, js = NULL, plotF2 = TRUE) {
-  A <- function(z) {return(-log(z / 1))}
+  A <- function(z) -log(z)
   if(useIHQCD)
-	  A <- splinefun(get('z', envir = ihqcdEnv), get('A', envir = ihqcdEnv))
+	  A <- splinefun(z, A)
 
   if(is.null(js))
     js = jn
@@ -187,8 +187,8 @@ loadHERA <- function(useIHQCD = TRUE, js = NULL, plotF2 = TRUE) {
 	cat('rss for ', js, '=', rss, '\n')
 	assign("data", data, envir = heraEnv)
 	z          <- paramVsQ2$z    # beware this is not the z of IHQCD, this is the z for each Q2, so is a different list.
-	Asfun      <- splinefun(get('z', envir = ihqcdEnv), get('As', envir = ihqcdEnv))
-	lambdafun  <- splinefun(get('z', envir = ihqcdEnv), get('lambda', envir = ihqcdEnv))
+	Asfun      <- splinefun(z, As)
+	lambdafun  <- splinefun(z, lambda)
 	ff         <- lapply(js, function(J) z^(-2 * J) * exp((-J + 0.5) * Asfun(z)) * lambdafun(z))
   # reference: F2 ~ Q2^J P13 exp((-J + 0.5) * As) exp(phi)
 	# for phi = cte ~ z^(-2J) z^(J - 0.5) ~ z^(-J - 0.5)

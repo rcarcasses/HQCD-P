@@ -1,0 +1,18 @@
+#: table_doi: 10.17182/hepdata.45318.v1/t7
+#: name: Table 7
+#: description: Slope of the T distribution as a function of W for Q**2 = 10 GeV**2.
+
+#: data_file: Table7.yaml
+#: keyword reactions: E- P --> E- GAMMA P | GAMMA* P --> GAMMA P
+#: keyword observables: SLOPE
+#: keyword phrases: Exclusive | Photoproduction | Electron production
+#: keyword cmenergies: 40.0-100.0
+#: ABS(T) [GEV**2],< 1
+#: RE,GAMMA* P --> GAMMA P
+#: Q**2 [GeV^2],10.0
+#: SQRT(S) [GeV],40.0-100.0
+'W [GEV]','SLOPE [GEV**-2]','stat +','stat -','sys +','sys -'
+40.0,5.4,0.4,-0.4,0.25,-0.25
+70.0,5.34,0.25,-0.25,0.27,-0.27
+100.0,5.48,0.31,-0.31,0.45,-0.45
+

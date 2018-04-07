@@ -1,91 +1,84 @@
-# kernelName is important when doing multikernel computations, should be unique
-# numReg indicates the number of reggions to be considered while finding the kernel
+#' A kernel unit represents a single type of pomeron kernel
+#' @param  potential A function that computes the potential and has as arguments J plus the potential parameters
+#' @param  numReg Indicates the number of reggions to be considered while finding the kernel
+#' @param  kernelName Is important when doing multikernel computations, should be unique
+#' @param comment Can be used to add some additional information about what this kernel represents
+#' @param optimPars Indicate which parameters can be optimized for this kernel
 #' @export
-kernelUnit <- function(potPars = 'b', numReg = 3, kernelName = '') {
-  p <- potential(potPars)
-
-  pot <- p$u()
-  z   <- p$z
-  lastKernel <- NULL
-  time.taken <- NULL
-
-  # set the potential to an external one
-  setNewPotential <- function(f, pars) {
-    p$setNewPotential(f, pars)
-    # update the local potential function
-    pot <<- p$u()
-  }
-
-  # the arguments here should be consistent with the potPars passed
-  findKernelFun <- function(atT = 0, ...) {
-    # flog.debug(paste('[Kernel] finding kernel for', dumpList(list(...))))
-    fArgs <- do.call(p$extractPotentialParameters, list(...))    # sometimes the coefficients are passed to this, just ignore them
+kernelUnit <- function(potential = UJgTest,
+                       numReg = 4,
+                       comment = 'Leading twist gluon sector',
+                       kernelName = 'gluon', # this has to be unique: is used to name the couplings and the kernel
+                       optimPars = c(invls = 1/0.153, a = -4.35, b = 1.41, c = 0.626, d = -0.117)) {
+  # the .t name is to prevent partial matching with extra arguments passed
+  # (please prevent users to use variable names starting with .!)
+  findReggeonDataFun <- function(n = 1, .t = 0, ...) {
+    flog.trace(paste('finding reggeon ', n, ' for t =', .t, ' pars:', do.call(paste, as.list(format(list(...), digits = 3)))))
+    # extra parameters may come, just ignore them
+    fArgs <- getPotentialArgs(potential, ...)
     start.time <- Sys.time()
-    t <- function(J, n) {
-      args <- as.list(c(J = J, fArgs))
-      u2j  <- do.call(pot, args)
-      dE   <- abs(min(u2j)) / 400;
-      # make it at least one for values that give a minimum near 0
-      dE   <- max(dE, 0.01)
-      # cat("j =", J, " d0 =", dE, "\n")
-      setPotential(z, u2j)
-      computeSpectrum(n, dE)
-      energies <- getEnergies()
-      wf <- getWavefunctions()[[n]]
-      list(t = energies[[n]], wf = wf, u2j = u2j, energies = energies)
+    t <- function(J, fullAns = FALSE) {
+      u2j  <- do.call(UJgTest, as.list(c(J = J, fArgs)))
+      s <- computeSpectrum(z, u2j, n)
+      if(fullAns)
+        list(t = s$energies[[n]], wf = s$wf[[n]], u2j = u2j, energies = s$energies)
+      else
+        s$energies[[n]]
     }
-
-    tvec <- function(J, n) sapply(J, function(j) t(j, n)$t)
 
     # define the get intecept function
-    Js <- seq(0.2, 2, len = 20)
-    getIntercept <- function(n) {
-      tspline <- function(j) tvec(j, n) - atT
-      roots <- uniroot.all(tspline, c(0.2, 2.2), n = 6)
-      if(length(roots) > 0)
-        js <- max(roots)
-      else
-        js <- 0
-
-      tresult <- t(js, n)
-      list(js = js, wf = tresult$wf, u2j = tresult$u2j)
-    }
-
-    if(!is.null(cl))
-      s <- lapply(1:numReg, getIntercept)
+    tvec <- Vectorize(function(J) t(J) - .t)
+    roots <- uniroot.all(tvec, c(0.1, 2.2), n = 6)
+    if(length(roots) > 0)
+      js <- max(roots)
     else
-      s <- parLapply(cl, 1:numReg, getIntercept)
-
+      js <- 0
+    # now get the full answer
+    s <- t(js, TRUE)
+    # create an interval around the js found
+    intJs <- seq(js - 0.1, js + 0.1, len = 9)
+    # now find numerically J(t)
+    Jfun <- splinefun(tvec(intJs), intJs)
+    # now find the derivative at the value of js found
+    dJdt <- Jfun(.t, deriv = 1)
     # normalize the wave function
-    lapply(1:numReg, function(i){
-      # cat(paste('j', i, sep = ''),'= ', s$js, '     ')
-      wffun <- splinefun(s[[i]]$wf$x, s[[i]]$wf$y^2)
-      c <- integrate(wffun, s[[i]]$wf$x[1], s[[i]]$wf$x[length(s[[i]]$wf$x)])$value
-      s[[i]]$wf$y <<- (s[[i]]$wf$y[10] / abs(s[[i]]$wf$y[10])) * s[[i]]$wf$y / sqrt(c)
-    })
-
-    end.time <- Sys.time()
-    time.taken <<- end.time - start.time
-
-    # we also want to compute the spectral data to compare with the glueball spectrum (or mesons)
-    # so far we need only to compare with the first two levels
-    gs  <- lapply(2 * (1:3), function(J) t(J, 2))
-    tr1 <- lapply(gs, function(v) v$energies[[1]])
-    tr2 <- lapply(gs, function(v) v$energies[[2]])
-
-    lastKernel <<- as.list(c(s, list(tr1 = tr1, tr2 = tr2)))
-    lastKernel
+    wffun  <- splinefun(s$wf$x, s$wf$y^2)
+    c      <- integrate(wffun, s$wf$x[1], s$wf$x[length(s$wf$x)])$value
+    s$wf$y <- (s$wf$y[10] / abs(s$wf$y[10])) * s$wf$y / sqrt(c)
+    # return a list with the data
+    list(js = js, dJdt = dJdt, wf = s$wf, u2j = s$u2j, name = paste0(kernelName, '.', n))
   }
 
-  findKernel <- cache(findKernelFun, kernelName)
-  extractPotentialParameters <- function(...) do.call(p$extractPotentialParameters, list(...))
+  findReggeonData <- cache(findReggeonDataFun, kernelName)
+
+  # find the complete kernel
+  findKernel <- function(...) {
+    # use parallelization if possible
+    # lapplyType <- if(Sys.info()['sysname'] == 'Linux') mclapply else lapply
+    lapply(1:numReg, function(n) {
+      #init()
+      do.call(findReggeonData, list(n = n, ...))
+    })#, mc.cores = 3)
+  }
 
   k <- list(findKernel = findKernel,
-            potential = p,
-            setNewPotential = setNewPotential,
-            extractPotentialParameters = extractPotentialParameters,
-            getLast = function() lastKernel,
-            getTimeTaken = function() time.taken)
+            findReggeonData = findReggeonData,
+            potential = potential,
+            comment = comment,
+            name = kernelName,
+            optimPars = optimPars,
+            numReg = numReg)
   class(k) <- append(class(k), 'kernelUnit')
   k
+}
+
+#' @export
+getPotentialArgs <- function(pot, ...) {
+  fArgs <- list(...)
+  fDef  <- formalArgs(pot)
+  fDef  <- fDef[-match('J', fDef)]  # J is not a parameter
+  fArgs <- fArgs[fDef]
+  # remove the null values
+  fArgs <- Filter(Negate(is.null), fArgs)
+  fArgs
 }
