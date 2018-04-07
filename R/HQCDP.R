@@ -2,13 +2,13 @@
 #' It allow to define a model with many kernels that can be
 #' tested again a configurable list of experimental obsevables
 #' @export
-HQCDP <- function(alpha = 0) {
+HQCDP <- function(alpha = 0, gtOrder = 1) {
   h <- list(processes = list(), kernels = list())
   class(h) <- c('HQCDP', class(h))  # pay attention to the class name
   # add the constraint for the intercept of the soft pomeron
   # the value of this attribute will be used as weight while fitting
   attr(h, 'addSPconstraint') <- 1e6
-  attr(h, 'gtOrder')         <- 1
+  attr(h, 'gtOrder')         <- gtOrder
   attr(h, 'alpha')           <- alpha
   h
 }
@@ -263,10 +263,11 @@ getDoF <- function(x) {
   expPoints - fitParams
 }
 
+#' @export
 getNumGs <- function(x) {
   gtOrder <- attr(x, 'gtOrder')
   # if is only DIS then only the g0 matter
-  if(length(x$processes) == 1 && tail(class(p$processes[[1]]), 1) == 'F2')
+  if(length(x$processes) == 1 && tail(class(x$processes[[1]]), 1) == 'F2')
     gtOrder <- 0
   numGs <- (gtOrder + 1)  * sum(unlist(lapply(x$kernels, '[[', 'numReg')))
   # duplicate the number of gs if we are considering NMC

@@ -1,5 +1,5 @@
 #' @export
-Sigma <- function(procName, tmin, tmax) {
+Sigma <- function(procName, tmin, tmax, ...) {
   # add the generic DSigma class
   obs <- ProcessObservable(paste0(procName, 'Sigma'))
   class(obs) <- append(class(obs), 'Sigma', after = 2)
@@ -9,7 +9,7 @@ Sigma <- function(procName, tmin, tmax) {
   # enhance artificially the data including N values of t for
   # each entry point. These will be required for the computation
   # of the integral
-  obs$dsigma <- DSigma(procName)
+  obs$dsigma <- DSigma(procName, ...)
   obs
 }
 

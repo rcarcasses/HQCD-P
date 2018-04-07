@@ -81,6 +81,10 @@ getFQNormalizableModes <- function(mass, m) {
 # these are the normalizable modes
 getU1NormalizableModeRaw <- function(mass = 1.0, alpha = 0) {
   flog.debug(paste('finding mode mass', mass, 'alpha', alpha))
+  # TODO: use the right normalizable modes
+  zstar <- 2.4048 / mass
+  zz <- z[z < zstar]
+  return(getFQNormalizableModes(mass, list(z = zz, f = (sqrt(2) / (2.4048 * besselJ(2.4048, 1))) * mass * zz * besselJ(mass * zz, 1))))
   # first we need to compute ihqcd with bigger precision
   # set the constants in the IHQCD package
   # here a large zmax is used since we have been experiencing some boundary effect

@@ -109,7 +109,7 @@ fNNMC.F2 <- function(f2, Q2, x, J, wf, alpha) {
   # contribution from the longitudinal part
   t3fun   <- splinefun(z, (dfQ2(z) / Q2) * DparallelPsi(wf))
   integral <- integrate(function(x) t1fun(x) * (t2fun(x) + t3fun(x)), z[1], z[length(z)], stop.on.error = FALSE)
-  factor <- 1 / (tan(pi * J / 2) * 4 * pi^2 * 1 / 137)
+  factor <- -1 / (tan(pi * J / 2) * 4 * pi^2 * 1 / 137)
   factor * x^(1 - J) * Q2^J * integral$value
 }
 
@@ -238,8 +238,9 @@ plot.F2 <- function(f2, predicted) {
       lines(x, predicted, col = cols[colIndex])
     })
     # put the Q2 label
-    textPosX <- 0.35 * min(dataForQ2$x)
+    textPosX <- 0.5 * min(dataForQ2$x)
     textPosY <- splinefun(predictedForQ2$x, predictedForQ2$predicted)(textPosX)
+    textPosX <- 1.1 * textPosX
     boxed.labels(textPosX, textPosY, labels = paste(Q2), col = cols[colIndex],
                  cex = 0.8, xpad = 1.3, ypad = 1.3, border = FALSE, bg = 'white', xlog = TRUE)
     i <<- i + 1
