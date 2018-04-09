@@ -24,7 +24,7 @@ plot.DVCSSigma <- function(dvcss, predicted = NULL) {
        las = 1,
        xlim = c(30, 165),
        ylim = c(0.07, 40),
-       xlab = 'W', ylab = expression(sigma),
+       xlab = 'W', ylab = expression(sigma[t]),
        xaxt = 'n', yaxt = 'n')
   hTicks <- 10^(-1:1)
   vTicks <- c(60, 100, 140)
@@ -48,7 +48,14 @@ plot.DVCSSigma <- function(dvcss, predicted = NULL) {
     predictedQ2 <- predicted[predicted$Q2 == Q2,]
     # order the entries
     predictedQ2 <- predictedQ2[order(predictedQ2$W),]
+    # plot the predicted lines
     lines(predictedQ2$W, predictedQ2$predicted, col = cols[colIndex])
+    # put the values of Q2 in each line
+    textPosX <- c(60, 120, 140, 160)[i %% 4 + 1]
+    textPosY <- splinefun(predictedQ2$W, predictedQ2$predicted)(textPosX)
+    #textPosX <- 1.1 * textPosX
+    boxed.labels(textPosX, textPosY, labels = paste(Q2), col = cols[colIndex],
+                 cex = 0.8, xpad = 1.3, ypad = 1.3, border = FALSE, bg = 'white', ylog = TRUE)
     i <<- i + 1
   })
 
