@@ -77,6 +77,8 @@ rss.HQCDP <- function(x, pars = NULL, allGs = NULL, startGs = NULL) {
 		    gs.as.data.frame(p, allGs)
 
 		evalRSSInGs(x, allProcFns, gs)
+		# store as a vector (not as dataframe)
+		gs <- unlist(gs)
 	}
 	else {
 		# else find the best gs by going through the gs submanifold optimization
