@@ -212,6 +212,7 @@ fit.HQCDP <- function(x, allPars = NULL, initGs = NULL, method = 'Nelder-Mead') 
       rss(x, pars, allGs = if(is.null(lastEval$gs)) initGs else NULL, startGs = lastEval$gs)
     }, error = function(e) {
       flog.warn('There were errors while evaluating rss with pars %s', do.call(paste, as.list(round(pars, 6))))
+      message(e)
       list(success = FALSE)
     })
     if(is.null(completeVal$val))
