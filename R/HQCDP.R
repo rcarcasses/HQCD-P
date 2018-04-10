@@ -71,10 +71,10 @@ rss.HQCDP <- function(x, pars = NULL, allGs = NULL, startGs = NULL) {
 	gs <- NULL
 	# if allGs is set then just evaluate the function
 	val <- if(!is.null(allGs)) {
-		gs <- if(is.data.frame(allGs))
-		    allGs
-		  else
-		    gs.as.data.frame(p, allGs)
+		gs <- if(!is.data.frame(allGs))
+      	    gs.as.data.frame(x, allGs)
+      	  else
+      	    allGs
 
 		evalRSSInGs(x, allProcFns, gs)
 		# store as a vector (not as dataframe)
