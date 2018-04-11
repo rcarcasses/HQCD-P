@@ -210,15 +210,12 @@ fit.HQCDP <- function(x, allPars = NULL, initGs = NULL, method = 'Nelder-Mead') 
 		# fn arguments, allGs set only the first time, then use last gs as starting point
 		# this is just to allow reproducibility of known results at the first ru
     lastEval    <- get('lastEval', envir = bestEvalEnv)
-    completeVal <- tryCatch({
+    completeVal <- tryStack(
       rss(x, pars, allGs = if(is.null(lastEval$gs)) initGs else NULL, startGs = lastEval$gs)
-    }, error = function(e) {
-      flog.warn('There were errors while evaluating rss with pars %s', do.call(paste, as.list(round(pars, 6))))
-      message(e)
-      list(success = FALSE)
-    })
-    if(is.null(completeVal$val))
-      return(1e30 * (1 + 0.05 * runif(1)))
+    )
+    # if the computation ends with an error a string is returned with its description
+    if(is.character(completeVal))
+      return(1e10 * (1 + 0.05 * runif(1)))
     # otherwise complete the computation and save it
 		val         <- completeVal$val
     valWeighted <- completeVal$valWeighted

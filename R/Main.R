@@ -89,6 +89,22 @@ detachAllPackages <- function() {
   if (length(package.list)>0)  for (package in package.list) detach(package, character.only=TRUE)
 }
 # detachAllPackages()
+# see https://stackoverflow.com/questions/15282471/get-stack-trace-on-trycatched-error-in-r
+tryStack <- function(expr, silent=FALSE) {
+  tryenv <- new.env()
+  out <- try(withCallingHandlers(expr, error = function(e)
+  {
+    stack <- sys.calls()
+    stack <- stack[-(2:7)]
+    stack <- head(stack, -2)
+    stack <- sapply(stack, deparse)
+    if(!silent && isTRUE(getOption("show.error.messages")))
+      cat("This is the error stack: ", stack, sep="\n")
+    assign("stackmsg", value=paste(stack,collapse="\n"), envir=tryenv)
+  }), silent=silent)
+  if(inherits(out, "try-error")) out[2] <- tryenv$stackmsg
+  out
+}
 
 # Some test function (actually the one being used in the 1704.08280 paper)
 #' @export
