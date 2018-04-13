@@ -1,4 +1,5 @@
 # this function helps to load external solutions and data
+#' @export
 #' @param entity It can be a solution for A,Phi or a normalizable mode, etc.
 #' @param baseDir The base directory from which the files will be look for
 #' @param afterLoad A function that can be used to further format the imported data
@@ -23,7 +24,7 @@ loadExt <- function(entity, baseDir = '', afterLoad = function(x) x) {
 # check if exist a file with name 'entity.extension', if it does,
 # then call handler to load its data, else returns NULL
 loadExtType <- function(entity, baseDir, extension, handler, ...) {
-  fileName <- paste0(baseDir, '/', entity, extension)
+  fileName <- paste0(baseDir, entity, extension)
   if(file.exists(fileName)) {
     flog.trace('Loading %s data from file %s', entity, fileName)
     list(data = handler(fileName, ...), fileName = fileName)
