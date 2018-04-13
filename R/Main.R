@@ -99,7 +99,7 @@ tryStack <- function(expr, silent=FALSE) {
     stack <- head(stack, -2)
     stack <- sapply(stack, deparse)
     if(!silent && isTRUE(getOption("show.error.messages")))
-      cat("This is the error stack: ", stack, sep="\n")
+      cat("This is the error stack: ", unlist(stack), sep="\n")
     assign("stackmsg", value=paste(stack,collapse="\n"), envir=tryenv)
   }), silent=silent)
   if(inherits(out, "try-error")) out[2] <- tryenv$stackmsg

@@ -116,8 +116,12 @@ getBestGs.default <- function(x) paste('getBestGs has to be implemented for this
 getBestGs.HQCDP <- function(x, allProcFns, startGsAndCfacts) {
   # if we are just fitting DIS then use the getBestGs from that process since is better
   # as it is just a linear model
-  if(length(x$processes) == 1 && tail(class(p$processes[[1]]), 1) == 'F2')
-    return(getBestGs(p$processes[[1]], allProcFns[[1]], extended = TRUE))
+  if(length(x$processes) == 1 && tail(class(p$processes[[1]]), 1) == 'F2') {
+    bestGsF2 <- getBestGs(p$processes[[1]], allProcFns[[1]], extended = TRUE)
+    cat('best Gs F2\n')
+    print (bestGsF2)
+    return(bestGsF2)
+  }
 
   # first we need to define an function depending only of the gs
   # to be optimized
@@ -249,6 +253,11 @@ fit.HQCDP <- function(x, allPars = NULL, initGs = NULL, method = 'Nelder-Mead') 
     i <<- i + 1
   }
   op
+}
+
+getJs.HQCDP <- function(x, spectra) {
+  # get the t = 0 spectra
+  unlist(lapply(Filter(function(s) s$t == 0, spectra)[[1]]$spectra, function(spec) lapply(spec, `[[`, 'js')))
 }
 
 getKernelPars <- function(x) {

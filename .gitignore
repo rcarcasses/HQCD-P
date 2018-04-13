@@ -10,3 +10,5 @@ notes/
 man/
 R/runs/test/
 NAMESPACE
+*.rds
+*.csv
