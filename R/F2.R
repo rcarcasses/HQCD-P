@@ -93,7 +93,7 @@ fN.F2 <- function(f2, Q2, x, J, wf, alpha) {
   t2fun <- getU1NNMode(Q2 = Q2, alpha = alpha)$factor # this is a spline fun
   t3fun <- splinefun(wf$x, wf$y)
   integral <- integrate(function(x) t1fun(x) * t2fun(x) * t3fun(x), z[1], z[length(z)], stop.on.error = FALSE)
-  factor <- 1 / (tan(pi * J / 2) * 4 * pi^2 * 1 / 137)
+  factor <- 4 * pi^2 * 1 / 137
   factor *  x^(1 - J) * Q2^J * integral$value
 }
 
@@ -109,7 +109,7 @@ fNNMC.F2 <- function(f2, Q2, x, J, wf, alpha) {
   # contribution from the longitudinal part
   t3fun   <- splinefun(z, (dfQ2(z) / Q2) * DparallelPsi(wf))
   integral <- integrate(function(x) t1fun(x) * (t2fun(x) + t3fun(x)), z[1], z[length(z)], stop.on.error = FALSE)
-  factor <- 1 / (tan(pi * J / 2) * 4 * pi^2 * 1 / 137)
+  factor <- 4 * pi^2 * 1 / 137
   factor * x^(1 - J) * Q2^J * integral$value
 }
 
@@ -219,7 +219,7 @@ plot.F2 <- function(f2, predicted) {
   axis(2, at = vTicks, las = 1)
   numCols <- 3
   i <- 1
-  cols <- sapply(seq(0.2, 0.7, len = numCols), gray)
+  cols <- c('blue', 'red', 'green')#sapply(seq(0.2, 0.7, len = numCols), gray)
   # get all different Q2s
   allQ2s <- sort(unique(f2$data$Q2))
   invisible(lapply(allQ2s, function(Q2) {

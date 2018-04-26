@@ -72,7 +72,7 @@ fN.DSigma <- function(dsigma, W, Q2, J, wf) {
   t3fun <- splinefun(wf$x, wf$y)
   integral <- integrate(function(x)  t1fun(x) * t2fun(x) * t3fun(x), z[1], z[length(z)], stop.on.error = FALSE)
   # return the full thing needed for the amplitude
-  (1 - 1i/ tan(pi * J / 2)) * W^(2*J) *integral$value
+  (1i  + 1 / tan(pi * J / 2)) * W^(2*J) *integral$value
 }
 
 #' @export
@@ -105,7 +105,7 @@ expKinematics.DSigma <- function(dsigma) dsigma$data[c('Q2', 'W', 't')]
 #' For these processes the enlarge data introduces many values of t for
 #' each one of the Q2 and W combinations available
 #' @export
-enlargeData.DSigma <- function(dsigma, ts = seq(-1, 0, 0.01)) {
+enlargeData.DSigma <- function(dsigma, ts = seq(-1, 0, 0.05)) {
   # get all the different combinations of Q2s and Ws
   QsAndWs <- unique(dsigma$data[,c('Q2', 'W')])
   as.data.frame(lapply(as.data.frame(Reduce(function(acc, r) {
