@@ -45,11 +45,11 @@ getNeededTVals.Sigma <- function(x) seq(attr(x, 'tmin'), attr(x, 'tmax'), 0.05)
 #' for each one of the Reggeons.
 #' @param spectra a collection of spectrum of different kernels which can have different amount of Reggeons, etc.
 #' @export
-predict.Sigma <- function(sig, fns, gs, points, ...) {
+predict.Sigma <- function(sig, Izs, gs, points, ...) {
   # compute all the needed differential cross-sections
   # For each value of Q2 and W we need to insert many different values of t
   sig$dsigma$data <- enlargeKinematicsWithTs(sig, points)
-  dsigma <- predict(sig$dsigma, fns = fns, gs = gs, ...)
+  dsigma <- predict(sig$dsigma, Izs = Izs, gs = gs, ...)
   ts <- getNeededTVals(sig)
   numBlocks <- length(points[[1]])
   #flog.trace('[Sigma] number of t blocks %s', numBlocks)
@@ -66,15 +66,10 @@ predict.Sigma <- function(sig, fns, gs, points, ...) {
   sigma
 }
 
-getBestGs.Sigma <- function(sigma, fns, startGs = NULL) {
-  # return the fns for the enhanced points of the correspondent dsigma object
-  getBestGs(sigma$dsigma, fns = fns, startGs)
-}
-
 #' @export
-getFns.Sigma <- function(sigma, points, spectra) {
-  # return the fns for the enhanced points of the correspondent dsigma object
-  getFns(sigma$dsigma, spectra = spectra, points = enlargeKinematicsWithTs(sigma, points))
+getIzs.Sigma <- function(sigma, points, spectra) {
+  # return the Izs for the enhanced points of the correspondent dsigma object
+  getIzs(sigma$dsigma, spectra = spectra, points = enlargeKinematicsWithTs(sigma, points))
 }
 
 #' @export

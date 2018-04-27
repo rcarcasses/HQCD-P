@@ -66,26 +66,13 @@ rss.HQCDP <- function(x, pars = NULL, allGs = NULL, startGs = NULL) {
   # first we need to compute the spectra of the kernels
 	# this is a parallelized call
   spectra <- getSpectra(x, pars)
-  # now we find all the fns for each one of the processes
-  allProcFns <- lapply(x$processes, getFns, spectra = spectra)
-	gs <- NULL
-	# if allGs is set then just evaluate the function
-	val <- if(!is.null(allGs)) {
-		gs <- if(!is.data.frame(allGs))
-      	    gs.as.data.frame(x, allGs)
-      	  else
-      	    allGs
+  # now we find all the Izs for each one of the processes
+  allProcIzs    <- lapply(x$processes, getIzs, spectra = spectra)
+  allProcIzsBar <- lapply(x$processes, getIzsBar, spectra = spectra)
 
-		evalRSSInGs(x, allProcFns, gs)
-		# store as a vector (not as dataframe)
-		gs <- unlist(gs)
-	}
-	else {
-		# else find the best gs by going through the gs submanifold optimization
-		bestGs <- getBestGs(x, allProcFns, startGs)
-		gs     <- unlist(bestGs$gs)
-		bestGs$value
-	}
+  # FILL
+  # .........
+
   # add SP constraint here
   valWeighted <- 0
   if(!is.null(attr(x, 'addSPconstraint'))) {
@@ -98,100 +85,7 @@ rss.HQCDP <- function(x, pars = NULL, allGs = NULL, startGs = NULL) {
   if(is.null(attr(x, 'complete')))
     val
   else
-    list(val = val, valWeighted = valWeighted, gs = gs)
-}
-
-#' Given an ProcessObservable or HQCDP object and its associated fns already computed
-#' find the best coefficients, gs, such that the sum of difference squared
-#' weigthed by the inverse of the error squared (rss) between the prediction
-#' and the experimental values of the process is minimized.
-#' @export
-getBestGs <- function(x, ...) UseMethod('getBestGs')
-#' @export
-getBestGs.default <- function(x) paste('getBestGs has to be implemented for this object with classes', class(x))
-
-#' Given a pre computed processes fns find the best values for the gs
-#' @return an optim object
-#' @export
-getBestGs.HQCDP <- function(x, allProcFns, startGsAndCfacts) {
-  # if we are just fitting DIS then use the getBestGs from that process since is better
-  # as it is just a linear model
-  if(length(x$processes) == 1 && tail(class(p$processes[[1]]), 1) == 'F2') {
-    bestGsF2 <- getBestGs(p$processes[[1]], allProcFns[[1]], extended = TRUE)
-    cat('best Gs F2\n')
-    print (bestGsF2)
-    return(bestGsF2)
-  }
-
-  # first we need to define an function depending only of the gs
-  # to be optimized
-	fn <- function(gsAndCfacts) {
-	  # here we receive a list with the unfolded gs and Cfacts at the tail
-	  # we need to fold it again
-  	# build a dataframe of gs, which is what the predict function of the ProcessObservable
-  	# is expecting, from the allGs passed
-  	# pay attention to the number of columns: is related to the g(t) order expansion
-  	gs <- gs.as.data.frame(x, gsAndCfacts)
-	  evalRSSInGs(x, allProcFns, gs)
-	}
-	numGs <- getNumGs(x)
-
-  # if is the fist time just put something there
-  if(is.null(startGsAndCfacts)) {
-    # init all the gs
-    # add the Cfacts as correspond
-    startGsAndCfacts <- rep(1, len = (numGs + length(getCfactInProcesses(x))))
-  }
-  op <- optim(startGsAndCfacts,
-						 	fn = fn,
-						 	method = 'BFGS',
-						 	hessian = FALSE, control = list(maxit = 1000))
-  # store the best gs found so they can be used as a starting point of the next call
-	flog.debug(paste('bestGs =', do.call(paste, as.list(format(op$par[1:numGs], digits = 4))), ' in', op$counts[1], ' steps'))
-  if(numGs != length(startGsAndCfacts))
-	  flog.debug(paste('bestCfacts =', do.call(paste, as.list(format(op$par[(numGs + 1):length(startGsAndCfacts)], digits = 4))), ' in', op$counts[1], ' steps'))
-  # add the property gs with the dataframe format
-  op$gs <- gs.as.data.frame(x, op$par)
-  op
-}
-
-#' @export
-gs.as.data.frame <- function(x, gsAndCfacts) {
-  numGs <- getNumGs(x)
-  cFactNames <- getCfactInProcesses(x)
-  if(numGs != (length(gsAndCfacts) - length(cFactNames))) {
-    flog.error('The number of passed gsAndFacts does not matches the size of the gs and cFact required')
-    return()
-  }
-
-  # get the list of processes that use Cfacts
-  allGs <- gsAndCfacts[1:numGs]
-  #cat('cFacts', cFacts, '\n')
-  # create the data frame with the gs
-  df <- as.data.frame(matrix(allGs, ncol = attr(x, 'gtOrder') + 1))
-  if(numGs != length(gsAndCfacts)) {
-    # add the cFacts as attributes
-    cFacts <- gsAndCfacts[(numGs + 1):length(gsAndCfacts)]
-    mapply(function(cFact, cName)
-      attr(df, cName) <<- cFact
-      , cFacts, cFactNames)
-  }
-  # return the created data frame
-  df
-}
-
-#' Gives a list of Cfacts needed for the current configuration of the HQCDP
-#' @export
-getCfactInProcesses <- function(x) {
-  unique(unlist(lapply(unlist(lapply(p$processes, function(proc) attr(proc, 'vmName'))), function(s) paste0('C', s))))
-}
-
-# given all processes fns and a vector of gs compute the rss sum
-evalRSSInGs <- function(x, allProcFns,  gs) {
-	# find the rss for each process for the given values of gs and fns
-	sum(unlist(mapply(function(proc, procFns) {
-			rss(proc, fns = procFns, gs = gs)
-	}, x$processes, allProcFns)))
+    list(val = val, valWeighted = valWeighted)
 }
 
 #' @export
@@ -215,7 +109,7 @@ fit.HQCDP <- function(x, allPars = NULL, initGs = NULL, method = 'Nelder-Mead') 
 		# this is just to allow reproducibility of known results at the first ru
     lastEval    <- get('lastEval', envir = bestEvalEnv)
     completeVal <- tryStack(
-      rss(x, pars, allGs = if(is.null(lastEval$gs)) initGs else NULL, startGs = lastEval$gs)
+      rss(x, pars, zstar, hpars)
     )
     # if the computation ends with an error a string is returned with its description
     if(is.character(completeVal))
@@ -274,19 +168,6 @@ getDoF <- function(x) {
 	numGs <- getNumGs(x)
   fitParams <- numGs + length(getKernelPars(x))
   expPoints - fitParams
-}
-
-#' @export
-getNumGs <- function(x) {
-  gtOrder <- attr(x, 'gtOrder')
-  # if is only DIS then only the g0 matter
-  if(length(x$processes) == 1 && tail(class(x$processes[[1]]), 1) == 'F2')
-    gtOrder <- 0
-  numGs <- (gtOrder + 1)  * sum(unlist(lapply(x$kernels, '[[', 'numReg')))
-  # duplicate the number of gs if we are considering NMC
-  if(attr(x, 'alpha') != 0)
-    numGs <- 2 * numGs
-  numGs
 }
 
 # store the number of cores for this computation
@@ -379,22 +260,22 @@ plot.HQCDP <- function(x, predicted = NULL, pars = NULL, gs = NULL, dry = FALSE)
     spectra <- getSpectra(x, pars, ts)
     cat('\n') # put the progress bar in a new line
     setTxtProgressBar(pb, 30)
-    # get the fns for the plot points
+    # get the Izs for the plot points
     i <- 0
-    allProcFns <- mapply(function(proc, points) {
+    allProcIzs <- mapply(function(proc, points) {
       setTxtProgressBar(pb, 30 + 30 * i / length(x$processes))
       i <<- i + 1
-      list(getFns(proc, spectra = spectra, points = points))
+      list(getIzs(proc, spectra = spectra, points = points))
     }, x$processes, plotPoints)
     # find the predictions for the plot points for each one of the processes
     i <- 0
-    predicted <- mapply(function(proc, procFns, procPlotPoints) {
-      pred <- predict(proc, points = procPlotPoints, fns = procFns, gs = gs)
+    predicted <- mapply(function(proc, procIzs, procPlotPoints) {
+      pred <- predict(proc, points = procPlotPoints, Izs = procIzs, gs = gs)
       setTxtProgressBar(pb, 60 + 40 * i / length(x$processes))
       i <<- i + 1
       #cat('predictions found', unlist(pred), '\n')
       list(cbind(procPlotPoints, data.frame(predicted = pred)))
-    }, x$processes, allProcFns, plotPoints)
+    }, x$processes, allProcIzs, plotPoints)
   }
 
   # call the plot function on each on

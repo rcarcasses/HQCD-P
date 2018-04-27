@@ -12,34 +12,22 @@ GEVMinus2ToNB <- 3.894*10^5
 getNeededTVals.DSigma <- function(x) unique(expKinematics(x)$t)
 
 getAmplitude <- function(x, ...) UseMethod('getAmplitude')
-getAmplitude.DSigma <- function(dsigma, fns, gs, points, ...) {
+getAmplitude.DSigma <- function(dsigma, Izs, IzsBar, points, ...) {
   # if it is a composed object then just call getAmplitude on each children
   if(!is.null(dsigma$tt) && !is.null(dsigma$ll))
-    return(list(tt = getAmplitude(dsigma$tt, fns, gs, points = points, ...),
-                ll = getAmplitude(dsigma$ll, fns, gs, points = points, ...)))
+    return(list(tt = getAmplitude(dsigma$tt, Izs, IzsBar, points = points, ...),
+                ll = getAmplitude(dsigma$ll, Izs, IzsBar, points = points, ...)))
 
-  # compute g(t) for each corresponding fn, this return a dataframe
-  # were each column is the value (a vector) of g(t) for the given values
-  # of t and the n column is the g(t) of the n fn in the fns dataframe
-  # see the test file for some explanation 'tests/testthat/test_DSigma.R'
-  gts <- apply(gs, 1, function(row) {
-    rowSums(t(row * t(outer(points$t, 0:(length(gs) - 1), `^`))))
-  })
-  # here we take into account any relative factor which may have to be
-  # included in this computation. For example for DIS and DVCS the following
-  # is just 1 by convention, since all the extra factors appart from g(t)
-  # coincide for both, but for vector mesons this is not the case.
-  Cfact <- getCfact(dsigma, gs)
-  Cfact * rowSums(fns * gts, na.rm = TRUE)
+  rowSums(Izs * IzsBar, na.rm = TRUE)
 }
 
-#' Get fns times dJdt
+#' Get Izs times dJdt
 #' @export
-getFns.DSigma <- function(dsigma, spectra, points) {
-  # if it is a composed object then just call getFns on each children
+getIzs.DSigma <- function(dsigma, spectra, points) {
+  # if it is a composed object then just call getIzs on each children
   if(!is.null(dsigma$tt) && !is.null(dsigma$ll))
-    return(list(tt = getFns(dsigma$tt, spectra, points = points),
-                ll = getFns(dsigma$ll, spectra, points = points)))
+    return(list(tt = getIzs(dsigma$tt, spectra, points = points),
+                ll = getIzs(dsigma$ll, spectra, points = points)))
   fnNames <- unlist(lapply(spectra[[1]]$spectra,
                            function(s)
                              unlist(lapply(s, function(spec) paste0('fn.', spec$name)))))
@@ -55,7 +43,7 @@ getFns.DSigma <- function(dsigma, spectra, points) {
       # s: spectrum of a single kernel, have many reggeons
       # iterate over each Reggeon for the given spectrum
       lapply(s, function(spec) {
-        fN(dsigma, W, Q2, spec$js, spec$wf)
+        IzN(dsigma, W, Q2, spec$js, spec$wf)
       })
     }), recursive = TRUE)
     names(r) <- fnNames
@@ -66,29 +54,13 @@ getFns.DSigma <- function(dsigma, spectra, points) {
 }
 
 #' @export
-fN.DSigma <- function(dsigma, W, Q2, J, wf) {
+IzN.DSigma <- function(dsigma, W, Q2, J, wf) {
   t1fun <- splinefun(z, exp((-J + 1.5) * As))
   t2fun <- getExternalStateFactor(dsigma, Q2 = Q2)
   t3fun <- splinefun(wf$x, wf$y)
   integral <- integrate(function(x)  t1fun(x) * t2fun(x) * t3fun(x), z[1], z[length(z)], stop.on.error = FALSE)
   # return the full thing needed for the amplitude
-  (1i  + 1 / tan(pi * J / 2)) * W^(2*J) *integral$value
-}
-
-#' @export
-getBestGs.DSigma <- function(dsigma, fns, numGs, startGs = NULL) {
-  # first we need to define an function depending only of the gs
-  # to be optimized
-  fn <- function(gs) rss(dsigma, fns = fns, gs = as.data.frame(matrix(gs, ncol = numGs / length(fns))))
-  # if is the fist time just put something there
-  if(is.null(startGs))
-    startGs <- rep(1, len = numGs)
-
-  op <- optim(startGs,
-              fn = fn, method = 'BFGS', hessian = FALSE, control = list(maxit = 1000))
-  # store the best gs found so they can be used as a starting point of the next call
-  flog.debug(paste('DSigma bestGs  =', do.call(paste, as.list(format(op$par, digits = 4))), ' in', op$counts[1], ' steps'))
-  as.data.frame(matrix(op$par, ncol = numGs / length(fns)))
+  W^(2*J) *integral$value
 }
 
 getExternalStateFactor <- function(x, ...) UseMethod('getExternalStateFactor')

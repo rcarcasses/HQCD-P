@@ -10,6 +10,7 @@ An R package for the Pomeron in Holographic QCD.
 This work is a collection of routines developed on the following papers:
 - Soft Pomeron in Holographic QCD [arXiv:1508.00008](https://arxiv.org/abs/1508.00008)
 - Unity of pomerons from gauge/string duality [arXiv:1704.08280](https://arxiv.org/abs/1704.08280)
+- Non-minimal coupling contribution to DIS at low $x$ in Holographic QCD [arXiv:1804.07778](https://arxiv.org/abs/1804.07778)
 
 # Dependencies
 

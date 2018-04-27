@@ -14,9 +14,9 @@ getExternalStateFactor.DVCSDSigma <- function(dvcs, Q2 = Q2, ...) {
 #' for each one of the Reggeons.
 #' @param spectra a collection of spectrum of different kernels which can have different amount of Reggeons, etc.
 #' @export
-predict.DVCSDSigma <- function(dsigma, fns, gs, points, ...) {
+predict.DVCSDSigma <- function(dsigma, Izs, gs, points, ...) {
   # compute the amplitude
-  amplitude <- getAmplitude(dsigma, fns, gs, points, ...)
+  amplitude <- getAmplitude(dsigma, Izs, gs, points, ...)
   # get the Ws
   W <- points$W
   # return the differential cross sections

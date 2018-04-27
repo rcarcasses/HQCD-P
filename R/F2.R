@@ -7,62 +7,33 @@ getNeededTVals.F2 <- function(f2) c(0)
 
 #' Predicts the values of F2 for the points passed
 #' @param f2 the object over which the prediction will happend
-#' @param fns the return of the getFns function on this object. Contains
+#' @param Izs the return of the getIzs function on this object. Contains
 #' the values of the integrals for each one of the Reggeons involved
-#' @param gs the coefficients, which together with the fns, can be used to compute
+#' @param IzsBar the return of the getIzBars function on this object
 #' the observable values.
 #' @param ... Additional arguments will be ignored.
 #' @export
-predict.F2 <- function(f2, fns, gs, ...) {
-  #flog.trace('Calling predict.F2')
-  # if we are passing the full gs then use only the g(t=0) part
-  if(is.data.frame(gs))
-    gs <- gs[,1]
-
-  # get the predicted vector: sum_i(g_i * fn_i)
-  val <- rowSums(mapply(function(c, g) c * g, fns, gs), na.rm = TRUE)
-
-  if(is.null(attr(f2, 'complete')))
-    val
-  else
-    list(val = val, coefficients = gs)
-}
-
-#' Given a pre-computed set of fns find the best coefficients
-#' such that prediction matches best with the F2 data.
-#' In this case the dependence of F2 with the gs is linear, which
-#' makes the problem very simple.
-#' @export
-getBestGs.F2 <- function(f2, fns, extended = FALSE) {
-  f2Data <- expVal(f2)
-  w <- 1/expErr(f2)^2
-  # the -1 indicate that we don't want an intercept
-  fit <- lm(f2Data ~ .-1, data = cbind(f2Data, fns), weights = w)
-  #cat('getBestGs.F2', fit$coefficients, '\n')
-  if(extended) {
-    fit$gs <- fit$coefficients
-    fit$value <- sum((fit$residuals^2) * w)
-    fit
-  }
-  else
-    fit$coefficients
+predict.F2 <- function(f2, Izs, IzsBar, ...) {
+  # get the predicted vector: sum_i(I_i * Ibar_i)
+  val <- rowSums(Izs * IzsBar, na.rm = TRUE)
+  val
 }
 
 #' This function returns a term in the sum for F2 with the
 #' exception of the overall constant.
-#' @param points The kinematical points over which the fns will be computed
+#' @param points The kinematical points over which the Izs will be computed
 #' @param spectra An object with the spectrum of all the kernels for different
 #' values of t required for computing the integrals
 #' @return A data frame where the first columns are the points passed
-#' and the next ones are the values of fns for each one of the kernels
+#' and the next ones are the values of Izs for each one of the kernels
 #' @export
-getFns.F2 <- function(f2, spectra, points) {
+getIzs.F2 <- function(f2, spectra, points) {
   alpha <- attr(f2, 'alpha')
   # precompute the modes to speed up
   mclapply(unique(points$Q2), getU1NNMode, alpha = alpha, mc.cores = cores)
-  #flog.trace('Calling getFns.F2, alpha %s', alpha)
+  #flog.trace('Calling getIzs.F2, alpha %s', alpha)
   spectraForTZero <- Filter(function(s) s$t == 0, spectra)[[1]]$spectra
-  reducer <- function(fNfun,  alpha = 0, extra = '')
+  reducer <- function(IzNfun,  alpha = 0, extra = '')
     # iterate over each kernel's spectrum
     Reduce(function(acc, s) {
       # iterate over each Reggeon for the given spectrum
@@ -71,7 +42,7 @@ getFns.F2 <- function(f2, spectra, points) {
         fn <- unlist(mclapply(apply(points, 1, as.list), function(row) {
           # we need to initialize the computation on each node
           init()
-          fNfun(f2, row$Q2, row$x, spec$js, spec$wf, alpha)
+          IzNfun(f2, row$Q2, row$x, spec$js, spec$wf, alpha)
         }, mc.cores = cores))
         val <- as.data.frame(cbind(accspec, fn))
         colnames(val)[length(val)] <- paste0(spec$name, extra)
@@ -79,25 +50,25 @@ getFns.F2 <- function(f2, spectra, points) {
       }, s, init = c()))
   }, spectraForTZero, init = c(NA))
 
-  df <- reducer(fN, alpha)
+  df <- reducer(IzN, alpha)
   if(alpha != 0)
-    df <- cbind(df, reducer(fNNMC, alpha, '.NMC'))
+    df <- cbind(df, reducer(IzNNMC, alpha, '.NMC'))
 
   # remove the unneeded columns and return the result
   df[-which(names(df) == 'acc')]
 }
 
 #' @export
-fN.F2 <- function(f2, Q2, x, J, wf, alpha) {
+IzN.F2 <- function(f2, Q2, x, J, wf, alpha) {
   t1fun <- splinefun(z, exp((-J + 1.5) * As))
   t2fun <- getU1NNMode(Q2 = Q2, alpha = alpha)$factor # this is a spline fun
   t3fun <- splinefun(wf$x, wf$y)
   integral <- integrate(function(x) t1fun(x) * t2fun(x) * t3fun(x), z[1], z[length(z)], stop.on.error = FALSE)
-  factor <- 4 * pi^2 * 1 / 137
+  factor <- 1 / (4 * pi^2 * 1 / 137)
   factor *  x^(1 - J) * Q2^J * integral$value
 }
 
-fNNMC.F2 <- function(f2, Q2, x, J, wf, alpha) {
+IzNNMC.F2 <- function(f2, Q2, x, J, wf, alpha) {
   mode  <- getU1NNMode(Q2 = Q2, alpha)
   fQ2   <- mode$fQ2
   dfQ2  <- mode$dfQ2
@@ -109,8 +80,37 @@ fNNMC.F2 <- function(f2, Q2, x, J, wf, alpha) {
   # contribution from the longitudinal part
   t3fun   <- splinefun(z, (dfQ2(z) / Q2) * DparallelPsi(wf))
   integral <- integrate(function(x) t1fun(x) * (t2fun(x) + t3fun(x)), z[1], z[length(z)], stop.on.error = FALSE)
-  factor <- 4 * pi^2 * 1 / 137
+  factor <- 1 / (4 * pi^2 * 1 / 137)
   factor * x^(1 - J) * Q2^J * integral$value
+}
+
+#' @export
+getIzsBar.F2 <- function(f2, spectra, points, zstar, hpars) {
+  alpha <- attr(f2, 'alpha')
+  #flog.trace('Calling getIzs.F2, alpha %s', alpha)
+  spectraForTZero <- Filter(function(s) s$t == 0, spectra)[[1]]$spectra
+  reducer <- function(IzNBarfun,  alpha = 0, extra = '')
+    # iterate over each kernel's spectrum
+    Reduce(function(acc, s) {
+      # iterate over each Reggeon for the given spectrum
+      # remember, the tr1 and tr2 are not data about the reggeons
+      cbind(acc, Reduce(function(accspec, spec) {
+        # repeat the results as needed
+        fn <- rep(
+                Im(IzNBarfun(f2, spec$js, spec$wf, spec$dJdt, zstar, hpars),
+              length(points[[1]])))
+        val <- as.data.frame(cbind(accspec, fn))
+        colnames(val)[length(val)] <- paste0(spec$name, extra)
+        val
+      }, s, init = c()))
+    }, spectraForTZero, init = c(NA))
+
+  df <- reducer(IzNBar, alpha)
+  if(alpha != 0)
+    df <- cbind(df, reducer(IzNNMCBar, alpha, '.NMC'))
+
+  # remove the unneeded columns and return the result
+  df[-which(names(df) == 'acc')]
 }
 
 #' compute Dperp acting on psi
@@ -138,11 +138,6 @@ DparallelPsi <- function(wf) {
   )
 }
 
-# DEPRECATED
-gradG.F2 <- function(obs, fns, gs) {
-  # derivatives respect of g1 are zero
-  cbind(fns, as.data.frame(matrix(0, ncol = length(fns), nrow = length(fns[[1]]))))
-}
 
 #' @export
 expVal.F2 <- function(f2) f2$data$F2

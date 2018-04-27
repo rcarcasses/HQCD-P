@@ -10,8 +10,8 @@ VMPDSigma <- function(vmName) {
 }
 
 #' @export
-predict.VMPDSigma <- function(vmp, fns, gs, points, ...) {
-  amplitude <- getAmplitude(vmp, fns$tt, gs, points, ...)
+predict.VMPDSigma <- function(vmp, Izs, gs, points, ...) {
+  amplitude <- getAmplitude(vmp, Izs$tt, gs, points, ...)
   # get the Ws
   W <- points$W
   # return the differential cross sections

@@ -26,7 +26,7 @@ test_that('Computation of the differential cross-section is working.', {
   expect_equal(length(p),  length(loadData(dvcs)$Q2))
 })
 
-test_that('Fns are being computed', {
+test_that('Izs are being computed', {
   dvcs  <- DVCSDSigma()
   k     <- kernelUnit(UJgTest, kernelName = 'g')
   s     <- k$findKernel()
@@ -34,7 +34,7 @@ test_that('Fns are being computed', {
   sm    <- km$findKernel()
   # some dummy spectra
   spectra <- lapply(getNeededTVals(dvcs), function(t) list(t = t, spectra = list(s, sm)))
-  fns <- getFns(dvcs, spectra = spectra)
+  Izs <- getIzs(dvcs, spectra = spectra)
 })
 
 test_that('Plot works', {
@@ -52,13 +52,13 @@ test_that('Plot works', {
                               a = -4.368889,
                               b = 0.614573,
                               c = 0.765144,                                                                               d = 0.000614))))
-  # get the fns for the experimental values
-  expFns <- getFns(dvcsds, spectra = spectra)
+  # get the Izs for the experimental values
+  expIzs <- getIzs(dvcsds, spectra = spectra)
   # find the best gs
-  gs <- getBestGs(dvcsds, fns = expFns, numGs = 8)
-  fns <- getFns(dvcsds, spectra = spectra, points = points)
+  gs <- getBestGs(dvcsds, Izs = expIzs, numGs = 8)
+  Izs <- getIzs(dvcsds, spectra = spectra, points = points)
   pred <- cbind(points,
-                predicted = predict(dvcsds, fns = fns, points = points, gs = gs))
+                predicted = predict(dvcsds, Izs = Izs, points = points, gs = gs))
   plot(dvcsds, predicted = pred, numGraphs = 4)
 })
 

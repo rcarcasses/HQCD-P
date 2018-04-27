@@ -12,26 +12,26 @@ ProcessObservable <- function(className) {
 predict.ProcessObservable <- function(obs,
                                       spectra = NULL,
                                       points = NULL,
-                                      fns = NULL,
-                                      gs = NULL, ...) {
+                                      Izs = NULL,
+                                      IzsBar = NULL, ...) {
   # if there is not enough data complaint
-  if(is.null(spectra) && is.null(fns)) {
+  if(is.null(spectra) && is.null(Izs)) {
     flog.error(paste('Not enough information to make a prediction over the object with classes', class(obs)))
     return()
   }
   # if no points are provided, use the experimental ones
   if(is.null(points))
     points <- expKinematics(obs)
-  if(is.null(fns))
-    fns <- getFns(obs, points = points, spectra = spectra)
-  if(is.null(gs))
-    gs <- getBestGs(obs, fns)
+  if(is.null(Izs))
+    Izs <- getIzs(obs, points = points, spectra = spectra)
+  if(is.null(IzsBar))
+    IzsBar <- getIzsBar(obs, points = points, spectra = spectra)
 
   # call the next function
   arg <- list(...)
   arg$points  <- points     # add the experimental points of this process
-  arg$fns     <- fns        # add the fns of this process
-  arg$gs      <- gs         # add the experimental points of this process
+  arg$Izs     <- Izs        # add the Izs of this process
+  arg$IzsBar  <- IzsBar     # add the IzsBar of this process
   arg$generic <- 'predict'  # set the next method to call
   arg$object  <- obs        # and pass the same object as argument
   do.call(NextMethod, arg)  # finally call the next method in the chain
@@ -59,21 +59,24 @@ getNeededTVals <- function(x) UseMethod('getNeededTVals')
 #' @export
 getNeededTVals.default <- function(x) 'getNeededTVals should be custom implemented for each ProcessObservable subtype'
 #' @export
-getFns <- function(x, ...) UseMethod('getFns')
+getIzs <- function(x, ...) UseMethod('getIzs')
 #' @export
-getFns.default <- function(x) paste('getFns has to be implemented for this object with classes', class(x))
+getIzs.default <- function(x) paste('getIzs has to be implemented for this object with classes', class(x))
+
 #' @export
-getFns.ProcessObservable <- function(obs, spectra, points = NULL, ...) {
-  # if no points are provided, use the experimental ones
-  if(is.null(points))
-    points <- expKinematics(obs)
-  # call the next function
-  arg <- list(...)
-  arg$points  <- points     # add the experimental points of this process
-  arg$generic <- 'predict'  # set the next method to call
-  arg$object  <- obs        # and pass the same object as argument
-  do.call(NextMethod, arg)  # finally call the next method in the chain
+getIzsBar <- function(x, ...) UseMethod('getIzsBar')
+
+#' @export
+IzNBar.ProcessObservable <- function(obs, J, wf, dJdt, zstar, hpars) {
+  t1fun <- splinefun(z, exp((-J + 0.5) * As) + Phi)
+  t3fun <- splinefun(wf$x, wf$y)
+  H(J, hpars) * (1i + 1 / tan(pi * J / 2)) * dJdt * t1fun(zstar) * t3fun(zstar)
 }
+
+# this function it may depend on the specific processes but by now we take it
+# as a single general function, it represents a smooth combination of the couplings
+# k(J) kbar(J) times some extra function of J
+H <- function(J, hpars) (J - 1)^(0:(length(hpars) - 1)) * hpars
 
 #' @export
 rss <- function(x, ...) UseMethod('rss')
@@ -101,9 +104,9 @@ diffObsWeighted.ProcessObservable <- function(obs, ...) {
 
 #' @export
 gradRSSGs <- function(x, ...) UseMethod('gradRSSGs')
-gradRSSGs.ProcessObservable <- function(obs, fns, gs) {
+gradRSSGs.ProcessObservable <- function(obs, Izs, gs) {
   # sum over the experimental values
-  2 * colSums(diffObsWeighted(obs, fns = fns, gs = gs) * gradG(obs, fns, gs) / expErr(obs))
+  2 * colSums(diffObsWeighted(obs, Izs = Izs, gs = gs) * gradG(obs, Izs, gs) / expErr(obs))
 }
 
 gradG <- function(x, ...) UseMethod('gradG')
@@ -123,10 +126,10 @@ setNewPotential <- function(x, ...) UseMethod('setNewPotential')
 setNewPotential.default <- function(x) 'setNewPotential called in an object with no implementation'
 
 #' @export
-fN <- function(x, ...) UseMethod('fN')
+IzN <- function(x, ...) UseMethod('IzN')
 
 #' @export
-fNNMC <- function(x, ...) UseMethod('fNNMC')
+IzNNMC <- function(x, ...) UseMethod('IzNNMC')
 
 #' @export
 getJs <- function(x, ...) UseMethod('getJs')
