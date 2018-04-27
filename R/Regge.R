@@ -1,24 +1,20 @@
 #' @export
-regge <- function(model = 'bcde', numReg = 3) {
-  p <- potential(model)
-
-  pot <- p$u()
-  z   <- p$z
+regge <- function(numReg = 3) {
+  pot <- UJgTest
   r   <- NULL
 
   # set the potential to an external one
   setNewPotential <- function(f, pars) {
-    p$setNewPotential(f, pars)
     # update the local potential function
-    pot <<- p$u()
+    pot <<- f
   }
 
-  getTrajectories <- function(n = 4, showProgress = TRUE, ...){
+  getTrajectories <- function(n = 4, showProgress = TRUE, pars){
     # sometimes extra parameters are passed which are not parameters
     # of the potential function, just ignore them
-    fArgs <- getPotentialArgs(pot, ...)
+    fArgs <- getPotentialArgs(pot, pars)
     flog.info('[Regge] getting trajectory for %s', dumpList(fArgs))
-    js <- seq(-0.3, 6.5, len = 100)
+    js <- seq(-0.3, 6.5, len = 110)
     if(showProgress)
       pb <- txtProgressBar(min = min(js), max = max(js), initial = min(js), style = 3)
     t <- function(J) {
@@ -30,38 +26,36 @@ regge <- function(model = 'bcde', numReg = 3) {
       # make it at least one for values that give a minimum near 0
       dE <- max(dE, 0.1)
       flush.console()
-      setPotential(z, u2j)
-      computeSpectrum(n, dE)
+      s <- computeSpectrum(z, u2j, n)
       # update progress bar
       if(showProgress)
         setTxtProgressBar(pb, J)
       # return the desired object
-      getEnergiesAndIndices()
+      s
     }
 
     getts <- function(J) {
       ts <- t(J)
-      ts$energy
+      ts$energies
     }
 
-    r <<- list(j = js, t = lapply(js, getts))
-    r
+    list(j = js, t = lapply(js, getts))
   }
 
-  plotTrajectories <- function(forceCal = TRUE, n = 4, notJustLines = TRUE, ...) {
+  plotTrajectories <- function(forceCal = TRUE, n = 4, notJustLines = TRUE, pars) {
     if(is.null(r) || forceCal)
-      getTrajectories(n, ...);
+      trs <- getTrajectories(n, pars = pars)
 
     limits <- c(-5, 30)
 
-    for (i in 1:length(r$t[[1]])){
+    for (i in 1:length(trs$t[[1]])){
       tr <- list(t = c(), j = c(), j0 = -10, splineInv = c())
-      for (k in 1:length(r$j)) {
+      for (k in 1:length(trs$j)) {
         # clean all the NAs
-        if(is.na(r$t[[k]][i])) next
+        if(is.na(trs$t[[k]][i])) next
 
-        tr$t <- c(tr$t, r$t[[k]][i])
-        tr$j <- c(tr$j, r$j[[k]])
+        tr$t <- c(tr$t, trs$t[[k]][i])
+        tr$j <- c(tr$j, trs$j[[k]])
       }
       # to find the intercepts we find the zeros of the inverse function
       sf <- splinefun(tr$j, tr$t)
@@ -71,7 +65,7 @@ regge <- function(model = 'bcde', numReg = 3) {
       tr$j0 <- min(roots)
       flog.info(paste('[Regge] j', i - 1,' = ', tr$j0, sep = ''))
       if(i == 1 && notJustLines) {
-        plot(tr$t, tr$j, ylim = c(min(r$j), max(r$j)), ylab = 'j(t)', xlab = 't', type = 'n', lwd = 2, xlim = limits)
+        plot(tr$t, tr$j, ylim = c(min(trs$j), max(trs$j)), ylab = 'j(t)', xlab = 't', type = 'n', lwd = 2, xlim = limits)
         abline(h = 0, v = 0, col = "gray10")
         abline(v = 10 * (-1:10), h = c(1:6, seq(0.8, 1.5, by = 0.1)), col = "lightgray", lty = 3)
       }
@@ -81,7 +75,7 @@ regge <- function(model = 'bcde', numReg = 3) {
       labelIndex <- which.min(abs(tr$t - 0.9 * limits[2])) # get the index in the t array with a closest value to the 90% of the right t limit
       boxed.labels(tr$t[labelIndex] , tr$j[labelIndex], labels = format(tr$j0, digits = 3), col = 'blue', cex = 0.7, border = FALSE, bg = 'white')
     }
-    pars <- list(...)
+    #pars <- list(...)
     #legend(x = limits[1], y = 4, legend = mapply(function(n, v) getParExpression(n, v), names(pars), pars))
   }
 
@@ -98,13 +92,10 @@ regge <- function(model = 'bcde', numReg = 3) {
             ld2 = ld2,
             ra = ra,
             wf = wf,
-            potential = p)
-  class(r) <- append(class(r), 'Regge')
+            potential = pot)
+  class(r) <- append('Regge', class(r))
   r
 }
-
-#' @export
-setNewPotential.Regge <- function(r, ...) r$setNewPotential(...)
 
 # meson masses in GeV
 
@@ -136,7 +127,7 @@ ld1 <- ld1[-c(1,3),]
 ld2 <- ld2[-c(1),]
 
 #' @export
-plot.reggeBCDQ <- function(r, ...) r$plot(forceCal = TRUE, n = 4,...)
+plot.Regge <- function(r, pars) r$plot(forceCal = TRUE, n = 4, pars = pars)
 
 #' @export
 drawMesonsMasses <- function() {

@@ -15,7 +15,7 @@ kernelUnit <- function(potential = UJgTest,
   findReggeonDataFun <- function(n = 1, .t = 0, ...) {
     flog.trace(paste('finding reggeon ', n, ' for t =', .t, ' pars:', do.call(paste, as.list(format(list(...), digits = 3)))))
     # extra parameters may come, just ignore them
-    fArgs <- getPotentialArgs(potential, ...)
+    fArgs <- getPotentialArgs(potential, list(...))
     start.time <- Sys.time()
     t <- function(J, fullAns = FALSE) {
       u2j  <- do.call(UJgTest, as.list(c(J = J, fArgs)))
@@ -73,8 +73,7 @@ kernelUnit <- function(potential = UJgTest,
 }
 
 #' @export
-getPotentialArgs <- function(pot, ...) {
-  fArgs <- list(...)
+getPotentialArgs <- function(pot, fArgs) {
   fDef  <- formalArgs(pot)
   fDef  <- fDef[-match('J', fDef)]  # J is not a parameter
   fArgs <- fArgs[fDef]
