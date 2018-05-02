@@ -2,13 +2,13 @@
 #' It allow to define a model with many kernels that can be
 #' tested again a configurable list of experimental obsevables
 #' @export
-HQCDP <- function(alpha = 0, gtOrder = 1) {
+HQCDP <- function(alpha = 0, hOrder = 2) {
   h <- list(processes = list(), kernels = list())
   class(h) <- c('HQCDP', class(h))  # pay attention to the class name
   # add the constraint for the intercept of the soft pomeron
   # the value of this attribute will be used as weight while fitting
   attr(h, 'addSPconstraint') <- 1e6
-  attr(h, 'gtOrder')         <- gtOrder
+  attr(h, 'hOrder')          <- hOrder
   attr(h, 'alpha')           <- alpha
   h
 }
@@ -55,8 +55,7 @@ print.HQCDP <- function(x) {
 #' This computes the sum of the rss for all the processes configured.
 #' This is the function to minimize in the optimization procedure.
 #' @export
-rss.HQCDP <- function(x, pars = NULL, allGs = NULL, startGs = NULL) {
-	#cat('\n allGs', allGs, ' startGs', startGs, '\n')
+rss.HQCDP <- function(x, pars, zstar, hpars) {
   # warn the user that there are configurations
   # that are still required
   if(length(x$processes) == 0 || length(x$kernels) == 0) {
@@ -68,11 +67,12 @@ rss.HQCDP <- function(x, pars = NULL, allGs = NULL, startGs = NULL) {
   spectra <- getSpectra(x, pars)
   # now we find all the Izs for each one of the processes
   allProcIzs    <- lapply(x$processes, getIzs, spectra = spectra)
-  allProcIzsBar <- lapply(x$processes, getIzsBar, spectra = spectra)
+  allProcIzsBar <- lapply(x$processes, getIzsBar, spectra = spectra, zstar = zstar, hpars = hpars)
 
-  # FILL
-  # .........
-
+  # find the rss for each process for the given values of gs and fns
+  val <- sum(unlist(mapply(function(proc, Izs, IzsBar) {
+          rss(proc, Izs = Izs, IzsBar = IzsBar)
+        }, x$processes, allProcIzs, allProcIzsBar)))
   # add SP constraint here
   valWeighted <- 0
   if(!is.null(attr(x, 'addSPconstraint'))) {
@@ -81,6 +81,19 @@ rss.HQCDP <- function(x, pars = NULL, allGs = NULL, startGs = NULL) {
     # cat('SP intercept', jsSP, '\n')
     valWeighted <- val + attr(x, 'addSPconstraint') * (jsSP - 1.09)^2
   }
+  # find all roots and push them away from the zeros
+  js <- getJs(x, spectra)
+  roots <- uniroot.all(Vectorize(function(J) H(J, hpars)), c(0.8, 1.2))
+  valWeighted <- valWeighted + sum(
+    unlist(
+      lapply(js, function(J) {
+        # check if the intercept is close enough to a root of H(J)
+        # and add a penalization if so
+        10 * sum(unlist(lapply(roots, function(root) {
+          if(abs(J - root) < 0.02) 1 else 0
+        })))
+  })))
+
   # return the result in the appropiated format
   if(is.null(attr(x, 'complete')))
     val
@@ -91,61 +104,71 @@ rss.HQCDP <- function(x, pars = NULL, allGs = NULL, startGs = NULL) {
 #' @export
 fit <- function(x, ...) UseMethod('fit')
 #' @export
-fit.HQCDP <- function(x, allPars = NULL, initGs = NULL, method = 'Nelder-Mead') {
+fit.HQCDP <- function(x, pars = NULL, zstar = 0.6, hpars = NULL, method = 'Nelder-Mead') {
 	flog.debug('Using method %s, number of cores: %s', method, cores)
   DoF <- getDoF(x)
 	flog.debug('number of degrees of freedom: %s', DoF)
   # here we declare that we want the full output of the rss function for instance
   attr(x, 'complete') <- TRUE
   # get all the parameters to fit if required
-  if(is.null(allPars))
-    allPars <- getKernelPars(x)
+  if(is.null(pars))
+    pars <- getKernelPars(x)
+  if(is.null(hpars))
+    hpars <- rep(1, attr(x, 'hOrder') + 1)
   # reset the bestEvalEnv
-  resetEvalTracker(allPars)
+  initPars <- c(pars, zstar, hpars)
+  cat('init par', initPars, '\n')
+  resetEvalTracker(initPars)
   # the function to internally called by optim
-  fn <- function(pars) {
-    names(pars) <- names(allPars)
-		# fn arguments, allGs set only the first time, then use last gs as starting point
-		# this is just to allow reproducibility of known results at the first ru
+  fn <- function(fitPars) {
+    mark <- length(fitPars) - (attr(x, 'hOrder') + 2)
+    if(mark != 0) {
+      rssParsIndices <- 1:mark
+      cat('rssParsIndices', rssParsIndices, '\n')
+      rssPars <- fitPars[rssParsIndices]
+      zstar   <- fitPars[-rssParsIndices][1]
+      hpars   <- fitPars[-rssParsIndices][-1]  # remove the rss pars
+      names(rssPars) <- names(pars)        # put the right names
+    } else {
+      zstar   <- fitPars[1]
+      hpars   <- fitPars[-1]
+      rssPars <- c()
+    }
+    #cat('rssPars', rssPars, ' zstar', zstar, 'hpars', hpars, '\n')
     lastEval    <- get('lastEval', envir = bestEvalEnv)
     completeVal <- tryStack(
-      rss(x, pars, zstar, hpars)
+      rss(x, pars = rssPars, zstar = zstar, hpars = hpars)
     )
     # if the computation ends with an error a string is returned with its description
     if(is.character(completeVal))
-      return(1e10 * (1 + 0.05 * runif(1)))
+      return(1e3 * (1 + 0.05 * runif(1)))
     # otherwise complete the computation and save it
 		val         <- completeVal$val
     valWeighted <- completeVal$valWeighted
-    gs          <- completeVal$gs
     chi2        <- val / DoF
-    flog.debug('          pars = %s', do.call(paste, as.list(round(pars, 6))))
+    flog.debug('          pars = %s', do.call(paste, as.list(round(fitPars, 6))))
 		flog.debug('          chi2 = %s', round(chi2, 3))
     # store the partial results in the best eval tracker
-    saveStep(chi2, val, pars, gs)
+    saveStep(chi2, val, fitPars)
 		# optimize the log better
     log(valWeighted)
   }
 
-  i <- 1
-  while(TRUE) {
-    tic()
-    bestEval <- get('bestEval', envir = bestEvalEnv)
-    lastBestChi2 <- bestEval$chi2
-    startPars <- bestEval$pars
-    op <- optim(startPars,
-								fn = fn,
-								hessian = FALSE, method = method)
-    bestEval <- get('bestEval', envir = bestEvalEnv)
-    newBestChi2 <- bestEval$chi2
-    if(abs(newBestChi2 - lastBestChi2) < 1e-3) # the new iteration wasn't better than the one before
-      break
+  tic()
+  bestEval <- get('bestEval', envir = bestEvalEnv)
+  lastBestChi2 <- bestEval$chi2
+  startPars    <- bestEval$pars
+  op <- optim(startPars,
+							fn = fn,
+							hessian = FALSE, method = method)
+  bestEval <- get('bestEval', envir = bestEvalEnv)
+  newBestChi2 <- bestEval$chi2
+  if(abs(newBestChi2 - lastBestChi2) < 1e-3) # the new iteration wasn't better than the one before
+    break
 
-    lastBestChi2 <- newBestChi2
-    exectime <- toc()
-    flog.debug(paste('[HQCDP]  -::- Iteration', i, ' completed in', seconds_to_period(round(exectime$toc - exectime$tic)), ' min, new chi2', bestEval$chi2))
-    i <<- i + 1
-  }
+  lastBestChi2 <- newBestChi2
+  exectime <- toc()
+  flog.debug(paste('[HQCDP]  -::- fit completed in', seconds_to_period(round(exectime$toc - exectime$tic)), ' min, best chi2', bestEval$chi2))
   op
 }
 
@@ -164,9 +187,7 @@ getDoF <- function(x) {
   # get the experimental points per process
   expPoints <- sum(unlist(lapply(x$processes, function(p) length(expVal(p)))))
   # get the amount of fitting parameters
-  # gDeg * number of Reggeons since g(t) = g0 + g1 * t +...
-	numGs <- getNumGs(x)
-  fitParams <- numGs + length(getKernelPars(x))
+  fitParams <- attr(x, 'hOrder') + 2 + length(getKernelPars(x))
   expPoints - fitParams
 }
 

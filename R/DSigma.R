@@ -21,6 +21,21 @@ getAmplitude.DSigma <- function(dsigma, Izs, IzsBar, points, ...) {
   rowSums(Izs * IzsBar, na.rm = TRUE)
 }
 
+getAmplitudeNMC1 <- function(x, ...) UseMethod('getAmplitudeNMC1')
+getAmplitudeNMC1.DSigma <- function(dsigma, Izs, IzsBar, points, ...){if(!is.null(dsigma$tt) && !is.null(dsigma$ll))
+  return(list(tt = getAmplitudeNMC1(dsigma$tt, Izs, IzsBar, points = points, ...),
+              ll = getAmplitudeNMC1(dsigma$ll, Izs, IzsBar, points = points, ...)))
+  rowSums(Izs * IzsBar, na.rm = TRUE)
+  }
+
+getAmplitudeNMC2 <- function(x, ...) UseMethod('getAmplitudeNMC2')
+getAmplitudeNMC2.DSigma <- function(dsigma, Izs, IzsBar, points, ...){
+  if(!is.null(dsigma$tt) && !is.null(dsigma$ll))
+    return(list(tt = getAmplitudeNMC2(dsigma$tt, Izs, IzsBar, points = points, ...),
+                ll = getAmplitudeNMC2(dsigma$ll, Izs, IzsBar, points = points, ...)))
+  rowSums(Izs * IzsBar, na.rm = TRUE)
+}
+
 #' Get Izs times dJdt
 #' @export
 getIzs.DSigma <- function(dsigma, spectra, points) {
@@ -61,6 +76,26 @@ IzN.DSigma <- function(dsigma, W, Q2, J, wf) {
   integral <- integrate(function(x)  t1fun(x) * t2fun(x) * t3fun(x), z[1], z[length(z)], stop.on.error = FALSE)
   # return the full thing needed for the amplitude
   W^(2*J) *integral$value
+}
+
+#' @export
+IzNNMC1.DSigma <- function(dsigma, W, Q2, J, wf) {
+  t1fun <- splinefun(z, exp((-J + 1.5) * As))
+  t2fun <- getExternalStateFactor(dsigma, Q2 = Q2)
+  t3fun <- splinefun(z, DperpPsi(wf))
+  integral <- integrate(function(x)  t1fun(x) * t2fun(x) * t3fun(x), z[1], z[length(z)], stop.on.error = FALSE)
+  # return the full thing needed for the amplitude
+  W^(2*J) *integral$value
+}
+
+#' @export
+IzNNMC2.DSigma <- function(dsigma, W, Q2, J, wf) {
+  t1fun <- splinefun(z, exp((-J - 0.5) * As))
+  t2fun <- getExternalStateFactor(dsigma, Q2 = Q2)
+  t3fun <- splinefun(wf$x, wf$y)
+  integral <- integrate(function(x)  t1fun(x) * t2fun(x) * t3fun(x), z[1], z[length(z)], stop.on.error = FALSE)
+  # return the full thing needed for the amplitude
+  -W^(2*J) *integral$value
 }
 
 getExternalStateFactor <- function(x, ...) UseMethod('getExternalStateFactor')

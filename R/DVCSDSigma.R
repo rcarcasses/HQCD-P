@@ -10,17 +10,24 @@ getExternalStateFactor.DVCSDSigma <- function(dvcs, Q2 = Q2, ...) {
 #' @param points the data points over which dsigma/dt will be predicted.
 #' This should be a data frame with the same structure as the one returned
 #' by expKinematics. Is important to keep the order of the columns.
-#' @param gs A data frame which contains the coefficients of  g(t) = g0 + g1 * t + ...
+#' @param hs A data frame which contains the coefficients of  h(J) = h0 + h1 * (J-1) + ...
 #' for each one of the Reggeons.
 #' @param spectra a collection of spectrum of different kernels which can have different amount of Reggeons, etc.
 #' @export
-predict.DVCSDSigma <- function(dsigma, Izs, gs, points, ...) {
-  # compute the amplitude
-  amplitude <- getAmplitude(dsigma, Izs, gs, points, ...)
+predict.DVCSDSigma <- function(dsigma, Izs, IzsBar, points, alpha = 0, ...) {
+  amplitude <- getAmplitude(dsigma, Izs, IzsBar, points, ...)
+  absAmplitudeSquared <- if (abs(alpha) >  0) {
+    amplitudeNMC1 <- getAmplitudeNMC1(dsigma, Izs, IzsBar, points, ...)
+    amplitudeNMC2 <- getAmplitudeNMC2(dsigma, Izs, IzsBar, points, ...)
+    # TODO: return the differential cross sections
+    absAmplitudeSquared <- abs(1)^2
+  } else {
+    abs(amplitude)^2
+  }
   # get the Ws
   W <- points$W
   # return the differential cross sections
-  (1 / (16 * pi^2)) * GEVMinus2ToNB * (1 / W^4) * abs(amplitude)^2
+  (1 / (16 * pi^2)) * GEVMinus2ToNB * (1 / W^4) * absAmplitudeSquared
 }
 
 #' @export

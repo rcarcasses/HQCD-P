@@ -26,7 +26,7 @@ init <- function(useCache = TRUE, useRedis = TRUE) {
   solve(iHQCD())
   # set the method we want to use to compute the eigenvalues
   chebPoints <- if(Sys.getenv('CHEB_POINTS') == '')
-  	800
+  	400
   else
   	as.integer(Sys.getenv('CHEB_POINTS'))
 

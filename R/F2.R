@@ -97,8 +97,8 @@ getIzsBar.F2 <- function(f2, spectra, points, zstar, hpars) {
       cbind(acc, Reduce(function(accspec, spec) {
         # repeat the results as needed
         fn <- rep(
-                Im(IzNBarfun(f2, spec$js, spec$wf, spec$dJdt, zstar, hpars),
-              length(points[[1]])))
+                Im(IzNBarfun(f2, spec$js, spec$wf, spec$dJdt, zstar, hpars)),
+              length(points[[1]]))
         val <- as.data.frame(cbind(accspec, fn))
         colnames(val)[length(val)] <- paste0(spec$name, extra)
         val

@@ -37,6 +37,36 @@ predict.ProcessObservable <- function(obs,
   do.call(NextMethod, arg)  # finally call the next method in the chain
 }
 
+#' @export
+getIzs.ProcessObservable <- function(obs, spectra = NULL, ...) {
+  # if there is not enough data complaint
+  if(is.null(spectra)) {
+    flog.error(paste('Not enough information to find the z integrals over the object with classes', class(obs)))
+    return()
+  }
+  do.call(NextMethod, injectPoints(obs, 'getIzs', spectra = spectra, ...)) # finally call the next method in the chain
+}
+
+#' @export
+getIzsBar.ProcessObservable <- function(obs, spectra = NULL, ...) {
+  # if there is not enough data complaint
+  if(is.null(spectra)) {
+    flog.error(paste('Not enough information to find the z bar integrals over the object with classes', class(obs)))
+    return()
+  }
+  do.call(NextMethod, injectPoints(obs, 'getIzsBar', spectra = spectra, ...)) # finally call the next method in the chain
+}
+
+injectPoints <- function(obs, genName, ...) {
+  arg <- list(...)
+  # if no points are provided, use the experimental ones
+  if(is.null(arg$points))
+    arg$points <- expKinematics(obs)
+
+  arg$generic <- genName # set the next method to call
+  arg$object  <- obs     # and pass the same object as argument
+  arg
+}
 #' Set the non minimal coupling attribute which is used to known
 #' if the non minimal coupling contribution will be considered or not
 #' @return same object with the NMC attribute set
@@ -62,10 +92,12 @@ getNeededTVals.default <- function(x) 'getNeededTVals should be custom implement
 getIzs <- function(x, ...) UseMethod('getIzs')
 #' @export
 getIzs.default <- function(x) paste('getIzs has to be implemented for this object with classes', class(x))
-
 #' @export
 getIzsBar <- function(x, ...) UseMethod('getIzsBar')
+getIzsBar.default <- function(x) paste('getIzsBar has to be implemented for this object with classes', class(x))
 
+#' @export
+IzNBar <- function(x, ...) UseMethod('IzNBar')
 #' @export
 IzNBar.ProcessObservable <- function(obs, J, wf, dJdt, zstar, hpars) {
   t1fun <- splinefun(z, exp((-J + 0.5) * As) + Phi)
@@ -76,7 +108,7 @@ IzNBar.ProcessObservable <- function(obs, J, wf, dJdt, zstar, hpars) {
 # this function it may depend on the specific processes but by now we take it
 # as a single general function, it represents a smooth combination of the couplings
 # k(J) kbar(J) times some extra function of J
-H <- function(J, hpars) (J - 1)^(0:(length(hpars) - 1)) * hpars
+H <- function(J, hpars) sum((J - 1)^(0:(length(hpars) - 1)) * hpars)
 
 #' @export
 rss <- function(x, ...) UseMethod('rss')
@@ -101,16 +133,6 @@ diffObsWeighted.ProcessObservable <- function(obs, ...) {
   err  <- expErr(obs)
   (pred - exp) / err
 }
-
-#' @export
-gradRSSGs <- function(x, ...) UseMethod('gradRSSGs')
-gradRSSGs.ProcessObservable <- function(obs, Izs, gs) {
-  # sum over the experimental values
-  2 * colSums(diffObsWeighted(obs, Izs = Izs, gs = gs) * gradG(obs, Izs, gs) / expErr(obs))
-}
-
-gradG <- function(x, ...) UseMethod('gradG')
-gradG.default <- function(x, ...) 'gradG not defined for this object'
 
 #' @export
 expVal <- function(x) UseMethod('expVal')
@@ -142,10 +164,3 @@ plotSpectrum.default <- function(x) 'plotSpectrum called in an object with no im
 #' @export
 enlargeData <- function(x, ...) UseMethod('enlargeData')
 enlargeData.default <- function(x, ...) 'enlargeData called in an object with no implementation'
-
-#' This function returns a number which is used to rescale the amplitude of
-#' the specific process
-#' @export
-getCfact <- function(x, ...) UseMethod('getCfact')
-#' @export
-getCfact.default <- function(x, ...) 1
