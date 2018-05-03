@@ -20,7 +20,16 @@ predict.DVCSDSigma <- function(dsigma, Izs, IzsBar, points, alpha = 0, ...) {
     amplitudeNMC1 <- getAmplitudeNMC1(dsigma, Izs, IzsBar, points, ...)
     amplitudeNMC2 <- getAmplitudeNMC2(dsigma, Izs, IzsBar, points, ...)
     # TODO: return the differential cross sections
-    absAmplitudeSquared <- abs(1)^2
+    ReAMC <- Re(amplitude)
+    ImAMC <- Im(amplitude)
+    ReANMC1 <- Re(amplitudeNMC1)
+    ImANMC1 <- Im(amplitudeNMC1)
+    ReANMC2 <- Re(amplitudeNMC2)
+    ImANMC2 <- Im(amplitudeNMC2)
+    ImAMC^2 + 2 * ImAMC * ImANMC1 + ImANMC1^2 + points$t * ImAMC * ImANMC2 +
+      points$t * ImANMC1 * ImANMC2 + (3/8) * points$t^2 * ImANMC2^2 + ReAMC^2 +
+      2 * ReAMC * ReANMC1 + ReANMC1^2 + points$t * ReAMC * ReANMC2 +
+      points$t * ReANMC1 * ReANMC2 + (3/8) * points$t^2 * ReANMC2^2
   } else {
     abs(amplitude)^2
   }
