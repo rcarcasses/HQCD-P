@@ -2,14 +2,16 @@
 #' It allow to define a model with many kernels that can be
 #' tested again a configurable list of experimental obsevables
 #' @export
-HQCDP <- function(alpha = 0, hOrder = 2) {
+HQCDP <- function(alpha = 0, hOrder = 2, rootRejectionWeight = 1, rootRejectionCutoff = 0.02) {
   h <- list(processes = list(), kernels = list())
   class(h) <- c('HQCDP', class(h))  # pay attention to the class name
   # add the constraint for the intercept of the soft pomeron
   # the value of this attribute will be used as weight while fitting
-  attr(h, 'addSPconstraint') <- 1e6
-  attr(h, 'hOrder')          <- hOrder
-  attr(h, 'alpha')           <- alpha
+  attr(h, 'addSPconstraint')     <- 1e6
+  attr(h, 'hOrder')              <- hOrder
+  attr(h, 'alpha')               <- alpha
+  attr(h, 'rootRejectionWeight') <- rootRejectionWeight
+  attr(h, 'rootRejectionCutoff') <- rootRejectionCutoff
   h
 }
 
@@ -89,8 +91,8 @@ rss.HQCDP <- function(x, pars, zstar, hpars) {
       lapply(js, function(J) {
         # check if the intercept is close enough to a root of H(J)
         # and add a penalization if so
-        10 * sum(unlist(lapply(roots, function(root) {
-          if(abs(J - root) < 0.02) 1 else 0
+        attr(x, 'rootRejectionWeight') * sum(unlist(lapply(roots, function(root) {
+          if(abs(J - root) < attr(x, 'rootRejectionCutoff')) 1 else 0
         })))
   })))
 
@@ -124,7 +126,6 @@ fit.HQCDP <- function(x, pars = NULL, zstar = 0.6, hpars = NULL, method = 'Nelde
     mark <- length(fitPars) - (attr(x, 'hOrder') + 2)
     if(mark != 0) {
       rssParsIndices <- 1:mark
-      cat('rssParsIndices', rssParsIndices, '\n')
       rssPars <- fitPars[rssParsIndices]
       zstar   <- fitPars[-rssParsIndices][1]
       hpars   <- fitPars[-rssParsIndices][-1]  # remove the rss pars
