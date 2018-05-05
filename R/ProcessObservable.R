@@ -108,8 +108,8 @@ IzNBar.ProcessObservable <- function(obs, J, wf, dJdt, zstar, hpars) {
 # this function it may depend on the specific processes but by now we take it
 # as a single general function, it represents a smooth combination of the couplings
 # k(J) kbar(J) times some extra function of J
-H <- function(J, hpars) sum((J - 1)^(0:(length(hpars) - 1)) * hpars)
-
+#H <- function(J, hpars) sum((J - 1)^(0:(length(hpars) - 1)) * hpars)
+H <- function(J, hpars) exp(par[1] * J + par[2] * log(J) + par[3])
 #' @export
 rss <- function(x, ...) UseMethod('rss')
 #' @export
