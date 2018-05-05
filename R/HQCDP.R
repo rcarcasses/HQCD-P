@@ -162,7 +162,7 @@ fit.HQCDP <- function(x, pars = NULL, zstar = 0.565, hpars = NULL, method = 'Nel
   startPars    <- bestEval$pars
   op <- optim(startPars,
 							fn = fn,
-							hessian = FALSE, method = method)
+							hessian = FALSE, method = method, control = list(maxit = 10000))
   bestEval <- get('bestEval', envir = bestEvalEnv)
   newBestChi2 <- bestEval$chi2
   if(abs(newBestChi2 - lastBestChi2) < 1e-3) # the new iteration wasn't better than the one before
