@@ -106,7 +106,7 @@ rss.HQCDP <- function(x, pars, zstar, hpars) {
 #' @export
 fit <- function(x, ...) UseMethod('fit')
 #' @export
-fit.HQCDP <- function(x, pars = NULL, zstar = 0.6, hpars = NULL, method = 'Nelder-Mead') {
+fit.HQCDP <- function(x, pars = NULL, zstar = 0.565, hpars = NULL, method = 'Nelder-Mead') {
 	flog.debug('Using method %s, number of cores: %s', method, cores)
   DoF <- getDoF(x)
 	flog.debug('number of degrees of freedom: %s', DoF)
@@ -116,7 +116,7 @@ fit.HQCDP <- function(x, pars = NULL, zstar = 0.6, hpars = NULL, method = 'Nelde
   if(is.null(pars))
     pars <- getKernelPars(x)
   if(is.null(hpars))
-    hpars <- rep(1, attr(x, 'hOrder') + 1)
+    hpars <- c(-166.51, 171.41, -201.52)
   # reset the bestEvalEnv
   initPars <- c(pars, zstar, hpars)
   cat('init par', initPars, '\n')
