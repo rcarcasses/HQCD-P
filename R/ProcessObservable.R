@@ -102,7 +102,9 @@ IzNBar <- function(x, ...) UseMethod('IzNBar')
 IzNBar.ProcessObservable <- function(obs, J, wf, dJdt, zstar, hpars) {
   t1fun <- splinefun(z, exp((-J + 0.5) * As + Phi))
   t3fun <- splinefun(wf$x, wf$y)
-  H(J, hpars) * (1i + 1 / tan(pi * J / 2)) * dJdt * t1fun(zstar) * t3fun(zstar)
+  gn <- H(J, hpars) *  dJdt * t1fun(zstar) * t3fun(zstar)
+  #cat('gn', gn, 'js', J, '\n')
+  (1i + 1 / tan(pi * J / 2)) * gn
 }
 
 # this function it may depend on the specific processes but by now we take it
