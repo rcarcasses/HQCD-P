@@ -110,6 +110,7 @@ IzNBar.ProcessObservable <- function(obs, J, wf, dJdt, zstar, hpars) {
 # k(J) kbar(J) times some extra function of J
 #H <- function(J, hpars) sum((J - 1)^(0:(length(hpars) - 1)) * hpars)
 H <- function(J, hpars) exp(hpars[1] * J + hpars[2] * log(J) + hpars[3])
+
 #' @export
 rss <- function(x, ...) UseMethod('rss')
 #' @export
