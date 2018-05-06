@@ -36,7 +36,7 @@ getAmplitudeNMC2.DSigma <- function(dsigma, Izs, IzsBar, points, ...){
   rowSums(Izs * IzsBar, na.rm = TRUE)
 }
 
-#' Get Izs times dJdt
+#' Get the integrals on z
 #' @export
 getIzs.DSigma <- function(dsigma, spectra, points) {
   # if it is a composed object then just call getIzs on each children
@@ -59,6 +59,44 @@ getIzs.DSigma <- function(dsigma, spectra, points) {
       # iterate over each Reggeon for the given spectrum
       lapply(s, function(spec) {
         IzN(dsigma, W, Q2, spec$js, spec$wf)
+      })
+    }), recursive = TRUE)
+    names(r) <- fnNames
+    r
+  }, mc.cores = cores)))
+  attr(df, 'row.names') <- 1:length(df[[1]])
+  df
+}
+
+#' Get the integrals on z bar
+#' @export
+getIzsBar.DSigma <- function(dsigma, spectra, points, zstar, hpars) {
+  # if it is a composed object then just call getIzs on each children
+  if(!is.null(dsigma$tt) && !is.null(dsigma$ll))
+    return(list(tt = getIzs(dsigma$tt, spectra, points = points),
+                ll = getIzs(dsigma$ll, spectra, points = points)))
+  fnNames <- unlist(lapply(spectra[[1]]$spectra,
+                           function(s)
+                             unlist(lapply(s, function(spec) paste0('fn.', spec$name)))))
+  # TODO improve this, right now I'm just caching the computation
+  # maybe we should rewrite all the code to make it more clear and efficient
+  IzBarCache <- list()
+  df <- as.data.frame(Reduce(rbind, mclapply(apply(points, 1, as.list), function(row) {
+    row <- as.list(row)
+    t  <- row$t
+    # get the spectra of all kernels for a given value of t
+    spectraForT <- Filter(function(s) s$t == t, spectra)[[1]]$spectra
+    # iterate over each kernel's spectrum
+    r <- unlist(lapply(spectraForT, function(s) {
+      # s: spectrum of a single kernel, have many reggeons
+      # iterate over each Reggeon for the given spectrum
+      lapply(s, function(spec) {
+        # here we are using js as identifier of the reggeon, is not the most appropriate thing but it should work
+        id <- paste0(t, js)
+        if(is.null(IzBarCache[[id]]))
+          IzBarCache[[id]] <- IzNBar(dsigma, spec$js, spec$wf, spec$dJdt, zstar, hpars)
+
+        IzBarCache[[id]]
       })
     }), recursive = TRUE)
     names(r) <- fnNames
