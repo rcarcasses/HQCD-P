@@ -45,14 +45,19 @@ getNeededTVals.Sigma <- function(x) seq(attr(x, 'tmin'), attr(x, 'tmax'), 0.05)
 #' for each one of the Reggeons.
 #' @param spectra a collection of spectrum of different kernels which can have different amount of Reggeons, etc.
 #' @export
-predict.Sigma <- function(sig, Izs, gs, points, ...) {
+predict.Sigma <- function(sig, Izs, IzsBar, points, ...) {
   # compute all the needed differential cross-sections
   # For each value of Q2 and W we need to insert many different values of t
   sig$dsigma$data <- enlargeKinematicsWithTs(sig, points)
-  dsigma <- predict(sig$dsigma, Izs = Izs, gs = gs, ...)
+  dsigma <- predict(sig$dsigma, Izs = Izs, IzsBar = IzsBar, ...)
   ts <- getNeededTVals(sig)
   numBlocks <- length(points[[1]])
   #flog.trace('[Sigma] number of t blocks %s', numBlocks)
+  # we have created above blocks of row in the dataframe that correspond
+  # to the same values of Q2 and W with different values of t between -1 and 0
+  # now we need to compute the differential cross-section for each value of t
+  # inside a given block, and integrate it to get the total cross-section
+  # associated with the given block, or equivalently, to the values of Q2 and W
   sigma <- unlist(lapply(1:numBlocks, function(i) {
     # get the dsigma data computed for the value of Q2 and W, etc...
     # in the present block
@@ -68,8 +73,14 @@ predict.Sigma <- function(sig, Izs, gs, points, ...) {
 
 #' @export
 getIzs.Sigma <- function(sigma, points, spectra) {
-  # return the Izs for the enhanced points of the correspondent dsigma object
+  # return the z integrals for the enhanced points of the correspondent dsigma object
   getIzs(sigma$dsigma, spectra = spectra, points = enlargeKinematicsWithTs(sigma, points))
+}
+
+#' @export
+getIzsBar.Sigma <- function(sigma, points, spectra, zstar, hpars) {
+  # return the z bar integrals for the enhanced points of the correspondent dsigma object
+  getIzsBar(sigma$dsigma, spectra = spectra, points = enlargeKinematicsWithTs(sigma, points), zstar = zstar, hpars = hpars)
 }
 
 #' @export
