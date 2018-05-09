@@ -2,14 +2,16 @@
 #' It allow to define a model with many kernels that can be
 #' tested again a configurable list of experimental obsevables
 #' @export
-HQCDP <- function(alpha = 0, hOrder = 2) {
+HQCDP <- function(alpha = 0, hOrder = 2, rootRejectionWeight = 1, rootRejectionCutoff = 0.02) {
   h <- list(processes = list(), kernels = list())
   class(h) <- c('HQCDP', class(h))  # pay attention to the class name
   # add the constraint for the intercept of the soft pomeron
   # the value of this attribute will be used as weight while fitting
-  attr(h, 'addSPconstraint') <- 1e6
-  attr(h, 'hOrder')          <- hOrder
-  attr(h, 'alpha')           <- alpha
+  attr(h, 'addSPconstraint')     <- 1e6
+  attr(h, 'hOrder')              <- hOrder
+  attr(h, 'alpha')               <- alpha
+  attr(h, 'rootRejectionWeight') <- rootRejectionWeight
+  attr(h, 'rootRejectionCutoff') <- rootRejectionCutoff
   h
 }
 
@@ -89,8 +91,8 @@ rss.HQCDP <- function(x, pars, zstar, hpars) {
       lapply(js, function(J) {
         # check if the intercept is close enough to a root of H(J)
         # and add a penalization if so
-        10 * sum(unlist(lapply(roots, function(root) {
-          if(abs(J - root) < 0.02) 1 else 0
+        attr(x, 'rootRejectionWeight') * sum(unlist(lapply(roots, function(root) {
+          if(abs(J - root) < attr(x, 'rootRejectionCutoff')) 1 else 0
         })))
   })))
 
@@ -104,7 +106,7 @@ rss.HQCDP <- function(x, pars, zstar, hpars) {
 #' @export
 fit <- function(x, ...) UseMethod('fit')
 #' @export
-fit.HQCDP <- function(x, pars = NULL, zstar = 0.6, hpars = NULL, method = 'Nelder-Mead') {
+fit.HQCDP <- function(x, pars = NULL, zstar = 0.565, hpars = NULL, method = 'Nelder-Mead') {
 	flog.debug('Using method %s, number of cores: %s', method, cores)
   DoF <- getDoF(x)
 	flog.debug('number of degrees of freedom: %s', DoF)
@@ -114,7 +116,8 @@ fit.HQCDP <- function(x, pars = NULL, zstar = 0.6, hpars = NULL, method = 'Nelde
   if(is.null(pars))
     pars <- getKernelPars(x)
   if(is.null(hpars))
-    hpars <- rep(1, attr(x, 'hOrder') + 1)
+    #hpars <- c(-95.46191, 98.83000, -122.94178)
+    hpars <- c(-1.677950, 1.714511, -2.015598)
   # reset the bestEvalEnv
   initPars <- c(pars, zstar, hpars)
   cat('init par', initPars, '\n')
@@ -124,7 +127,6 @@ fit.HQCDP <- function(x, pars = NULL, zstar = 0.6, hpars = NULL, method = 'Nelde
     mark <- length(fitPars) - (attr(x, 'hOrder') + 2)
     if(mark != 0) {
       rssParsIndices <- 1:mark
-      cat('rssParsIndices', rssParsIndices, '\n')
       rssPars <- fitPars[rssParsIndices]
       zstar   <- fitPars[-rssParsIndices][1]
       hpars   <- fitPars[-rssParsIndices][-1]  # remove the rss pars
@@ -160,7 +162,7 @@ fit.HQCDP <- function(x, pars = NULL, zstar = 0.6, hpars = NULL, method = 'Nelde
   startPars    <- bestEval$pars
   op <- optim(startPars,
 							fn = fn,
-							hessian = FALSE, method = method)
+							hessian = FALSE, method = method, control = list(maxit = 10000))
   bestEval <- get('bestEval', envir = bestEvalEnv)
   newBestChi2 <- bestEval$chi2
   if(abs(newBestChi2 - lastBestChi2) < 1e-3) # the new iteration wasn't better than the one before

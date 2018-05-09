@@ -100,15 +100,19 @@ getIzsBar.default <- function(x) paste('getIzsBar has to be implemented for this
 IzNBar <- function(x, ...) UseMethod('IzNBar')
 #' @export
 IzNBar.ProcessObservable <- function(obs, J, wf, dJdt, zstar, hpars) {
-  t1fun <- splinefun(z, exp((-J + 0.5) * As) + Phi)
+  t1fun <- splinefun(z, exp((-J + 0.5) * As + Phi))
   t3fun <- splinefun(wf$x, wf$y)
-  H(J, hpars) * (1i + 1 / tan(pi * J / 2)) * dJdt * t1fun(zstar) * t3fun(zstar)
+  gn <- H(J, hpars) *  dJdt * t1fun(zstar) * t3fun(zstar)
+  #cat('gn', gn, 'js', J, '\n')
+  (1i + 1 / tan(pi * J / 2)) * gn
 }
 
 # this function it may depend on the specific processes but by now we take it
 # as a single general function, it represents a smooth combination of the couplings
 # k(J) kbar(J) times some extra function of J
-H <- function(J, hpars) sum((J - 1)^(0:(length(hpars) - 1)) * hpars)
+#H <- function(J, hpars) sum((J - 1)^(0:(length(hpars) - 1)) * hpars)
+#' @export
+H <- function(J, hpars) exp(100 * (hpars[1] + hpars[2] * J + hpars[3] * log(J)))
 
 #' @export
 rss <- function(x, ...) UseMethod('rss')
