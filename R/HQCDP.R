@@ -117,7 +117,7 @@ fit.HQCDP <- function(x, pars = NULL, zstar = 0.565, hpars = NULL, method = 'Nel
     pars <- getKernelPars(x)
   if(is.null(hpars))
     #hpars <- c(-95.46191, 98.83000, -122.94178)
-    hpars <- c(-1.677950, 1.714511, -2.015598)
+    hpars <- c(-1.677950, 1.714511, -2.015598, 0, 0)
   # reset the bestEvalEnv
   initPars <- c(pars, zstar, hpars)
   cat('init par', initPars, '\n')
