@@ -150,8 +150,6 @@ fit <- function(x, ...) UseMethod('fit')
 #' @export
 fit.HQCDP <- function(x, pars = NULL, zstar = 0.565, hpars = NULL, method = 'Nelder-Mead') {
 	flog.debug('Using method %s, number of cores: %s', method, cores)
-  DoF <- getDoF(x)
-	flog.debug('number of degrees of freedom: %s', DoF)
   # here we declare that we want the full output of the rss function for instance
   attr(x, 'complete') <- TRUE
   # get all the parameters to fit if required
@@ -174,8 +172,10 @@ fit.HQCDP <- function(x, pars = NULL, zstar = 0.565, hpars = NULL, method = 'Nel
           if(length(hparsNAIndices) > 0) hpars[-hparsNAIndices] else hpars
         )
   # reset the bestEvalEnv
-  flog.debug('init pars %s', do.call(paste, as.list(round(initPars, 3))))
   resetEvalTracker(initPars)
+  DoF <- getDoF(x, initPars)
+  flog.debug('init pars %s', do.call(paste, as.list(round(initPars, 3))))
+	flog.debug('number of degrees of freedom: %s', DoF)
   # the function to internally called by optim
   fn <- function(fitPars) {
     mark <- length(getKernelPars(x)) - length(parsNAIndices)
@@ -240,12 +240,10 @@ getKernelPars <- function(x) {
   allPars[keep]
 }
 
-getDoF <- function(x) {
+getDoF <- function(x, pars) {
   # get the experimental points per process
   expPoints <- sum(unlist(lapply(x$processes, function(p) length(expVal(p)))))
-  # get the amount of fitting parameters
-  fitParams <- attr(x, 'hOrder') + 2 + length(getKernelPars(x))
-  expPoints - fitParams
+  expPoints -  length(pars)
 }
 
 # store the number of cores for this computation
