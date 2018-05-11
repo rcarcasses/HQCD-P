@@ -100,3 +100,12 @@ test_that('The computations of each one of the Reggeon\'s data is assembled prop
   builtSpectra <- convertRawSpectra(rawSpectra, numRegs, ts)
   expect_true(identical(builtSpectra, spectra))
 })
+
+test_that('completeWithFixedVal works properly', {
+  vals <- c(invls = 2, a = 1, b = NA, c = NA, d = 1)
+  HQCDP(fixed = list(fixedPars = c(NA, NA, 1.1, 2.2, NA), zstar = 2.3)) -> p
+  valsCompleted <- completeWithFixedVal(p, vals, 'fixedPars')
+  expect_equal(valsCompleted,  c(invls = 2, a = 1, b = 1.1, c = 2.2, d = 1))
+  # notice that we need to pass NA while replacing a number
+  expect_equal(attr(p, 'fixed')$zstar,  completeWithFixedVal(p, NA, 'zstar'))
+})

@@ -2,18 +2,60 @@
 #' It allow to define a model with many kernels that can be
 #' tested again a configurable list of experimental obsevables
 #' @export
-HQCDP <- function(alpha = 0, hOrder = 2, rootRejectionWeight = 1, rootRejectionCutoff = 0.02) {
+HQCDP <- function(alpha = 0, fixed = list(), rootRejectionWeight = 1, rootRejectionCutoff = 0.02) {
   h <- list(processes = list(), kernels = list())
   class(h) <- c('HQCDP', class(h))  # pay attention to the class name
   # add the constraint for the intercept of the soft pomeron
   # the value of this attribute will be used as weight while fitting
   attr(h, 'addSPconstraint')     <- 1e6
-  attr(h, 'hOrder')              <- hOrder
+  attr(h, 'fixed')               <- fixed
   attr(h, 'alpha')               <- alpha
   attr(h, 'rootRejectionWeight') <- rootRejectionWeight
   attr(h, 'rootRejectionCutoff') <- rootRejectionCutoff
   h
 }
+
+#' Given an actual list or number, replace the NA
+#' on it with the values in thegiven 'field of the
+#'  attribute 'fixed' of the x HQCDP object passed
+#' @export
+completeWithFixedVal <- function(x, actual, field) {
+  # if there are not any NA, then there is nothing to be replaced
+  if(!anyNA(actual))
+    return(actual)
+  # get the replacement(s) for the NA, if any
+  replacement <- attr(x, 'fixed')[[field]]
+  if(is.null(replacement)) {
+    flog.warn('There is no replacements in field %s of attribute fixed of the HQCDP object for the NA values', field)
+    return(actual)
+  }
+  # store where there are not NA in replacement, to be replaced
+  naPlaces <- !is.na(replacement)
+  # if is a vector replace the NA with the correspondent
+  # values from the replacement vector, else just replace the number
+  if(is.vector(actual))
+    actual[naPlaces] <- replacement[naPlaces]
+  else
+    actual <- replacement
+
+  if(anyNA(actual))
+    flog.warn('The replacement using the field %s of the attribute fixed of the HQCDP object seems to be incomplete', field)
+
+  actual
+}
+
+#' @export
+addFixedValues <- function(x, actual, NAIndices, field) {
+  if(length(NAIndices) == 0)
+    return(actual)
+  # add the missing NA
+  for (i in 1:length(NAIndices)) {
+    actual <- append(actual, NA, after = NAIndices[i] - 1)
+  }
+  # return the competed value
+  completeWithFixedVal(x, actual, field)
+}
+
 
 #' @export
 getNeededTVals.HQCDP <- function(p) sort(unique(c(0, unlist(lapply(p$processes, getNeededTVals)))))
@@ -118,25 +160,38 @@ fit.HQCDP <- function(x, pars = NULL, zstar = 0.565, hpars = NULL, method = 'Nel
   if(is.null(hpars))
     #hpars <- c(-95.46191, 98.83000, -122.94178)
     hpars <- c(-1.677950, 1.714511, -2.015598, 0, 0)
+  # we need to save the positions where the NA are, which
+  # means such parameters are fixed with the values used in the
+  # constructor of x
+  parsNAIndices  <- which(is.na(pars))
+  isZstarNA      <- is.na(zstar)
+  hparsNAIndices <- which(is.na(hpars))
+
+  # remove all the NAs
+  initPars <- c(
+          if(length(parsNAIndices) > 0)  pars[-parsNAIndices]   else pars,
+          if(isZstarNA)                  NULL                   else zstar,
+          if(length(hparsNAIndices) > 0) hpars[-hparsNAIndices] else hpars
+        )
   # reset the bestEvalEnv
-  initPars <- c(pars, zstar, hpars)
-  cat('init par', initPars, '\n')
+  flog.debug('init pars %s', do.call(paste, as.list(round(initPars, 3))))
   resetEvalTracker(initPars)
   # the function to internally called by optim
   fn <- function(fitPars) {
-    mark <- length(fitPars) - (attr(x, 'hOrder') + 2)
+    mark <- length(getKernelPars(x)) - length(parsNAIndices)
     if(mark != 0) {
+      # complete the full parameters demanded by the rss function if NA appears
       rssParsIndices <- 1:mark
-      rssPars <- fitPars[rssParsIndices]
-      zstar   <- fitPars[-rssParsIndices][1]
-      hpars   <- fitPars[-rssParsIndices][-1]  # remove the rss pars
-      names(rssPars) <- names(pars)        # put the right names
+      rssPars <- addFixedValues(x, fitPars[rssParsIndices], parsNAIndices, 'pars')
+      zstar   <- if(isZstarNA) completeWithFixedVal(x, NA, 'zstar') else fitPars[-rssParsIndices][1]
+      hpars   <- if(isZstarNA) addFixedValues(x, fitPars[-rssParsIndices], hparsNAIndices, 'hpars') else addFixedValues(x, fitPars[-rssParsIndices][-1], hparsNAIndices, 'hpars')  # remove the rss pars
+      names(rssPars) <- names(pars)            # put the right names
     } else {
-      zstar   <- fitPars[1]
-      hpars   <- fitPars[-1]
+      zstar   <- if(isZstarNA) completeWithFixedVal(x, NA, 'zstar') else fitPars[1]
+      hpars   <- if(isZstarNA) addFixedValues(x, fitPars, hparsNAIndices, 'hpars') else addFixedValues(x, fitPars[-1], hparsNAIndices, 'hpars')
       rssPars <- c()
     }
-    #cat('rssPars', rssPars, ' zstar', zstar, 'hpars', hpars, '\n')
+    cat('rssPars', rssPars, ' zstar', zstar, 'hpars', hpars, '\n')
     lastEval    <- get('lastEval', envir = bestEvalEnv)
     completeVal <- tryStack(
       rss(x, pars = rssPars, zstar = zstar, hpars = hpars)
@@ -160,7 +215,7 @@ fit.HQCDP <- function(x, pars = NULL, zstar = 0.565, hpars = NULL, method = 'Nel
   bestEval <- get('bestEval', envir = bestEvalEnv)
   lastBestChi2 <- bestEval$chi2
   startPars    <- bestEval$pars
-  op <- optim(startPars,
+  op <- optimx(startPars,
 							fn = fn,
 							hessian = FALSE, method = method, control = list(maxit = 10000))
   bestEval <- get('bestEval', envir = bestEvalEnv)
@@ -223,6 +278,9 @@ getSpectra.HQCDP <- function(x, pars = NULL, ts = NULL) {
   	  Reduce(function(acc, k) {
     	  as.list(c(acc,
     	    lapply(1:k$numReg, function(n) {
+    	      # it may be the case that for a given kernel we are passing
+    	      # more parameters than those needed by it, the findReggeonData
+    	      # function will appropriately discard them
     	      kArgs <- c(list(n = n, .t = t), pars)
     	      # return the function to be called
     	      function(i) {
