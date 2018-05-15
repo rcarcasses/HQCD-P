@@ -140,9 +140,9 @@ rss.HQCDP <- function(x, pars, zstar, hpars) {
     # cat('SP intercept', jsSP, '\n')
     valWeighted <- val + attr(x, 'addSPconstraint') * (jsSP - 1.09)^2
   }
-  # find all roots and push them away from the zeros
+  # find all roots and push them away from the poles
   js <- getJs(x, spectra)
-  roots <- uniroot.all(Vectorize(function(J) H(J, hpars)), c(0.8, 1.2))
+  roots <- uniroot.all(Vectorize(function(J) attr(x, 'H')(J, hpars)), c(0.8, 1.2))
   valWeighted <- valWeighted + sum(
     unlist(
       lapply(js, function(J) {
@@ -245,6 +245,7 @@ fit.HQCDP <- function(x, pars = NULL, zstar = 0.565, hpars = NULL, method = 'Nel
   op
 }
 
+#' @export
 getJs.HQCDP <- function(x, spectra) {
   # get the t = 0 spectra
   unlist(lapply(Filter(function(s) s$t == 0, spectra)[[1]]$spectra, function(spec) lapply(spec, `[[`, 'js')))

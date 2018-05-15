@@ -110,8 +110,7 @@ IzNBar.ProcessObservable <- function(obs, J, wf, dJdt, zstar, hpars) {
            exp(100 * (hpars[1] + hpars[2] * J + hpars[3] * log(J) + hpars[4] * J * log(J) + hpars[5] * J^2))
   # compute the gns
   gn <- H(J, hpars) *  dJdt * t1fun(zstar) * t3fun(zstar)
-  #cat('gn', gn, 'js', J, '\n')
-  (1i + 1 / tan(pi * J / 2)) * gn
+  gn * (1i + 1 / tan(pi * J / 2))
 }
 
 #' @export
