@@ -2,18 +2,32 @@
 #' It allow to define a model with many kernels that can be
 #' tested again a configurable list of experimental obsevables
 #' @export
-HQCDP <- function(alpha = 0, fixed = list(), rootRejectionWeight = 1, rootRejectionCutoff = 0.02) {
+HQCDP <- function(alpha = 0,
+                  fixed = list(),
+                  rootRejectionWeight = 1, rootRejectionCutoff = 0.02,
+                  H = NULL, hparsInitDefault = NULL) {
   h <- list(processes = list(), kernels = list())
   class(h) <- c('HQCDP', class(h))  # pay attention to the class name
+  if(is.null(hparsInitDefault))
+    hparsInitDefault <- c(-1.677950, 1.714511, -2.015598, 0, 0)
+  # if H was not passed, use a default one
+  if(is.null(H))
+    H <- function(J, hpars)
+           exp(100 * (hpars[1] + hpars[2] * J + hpars[3] * log(J) + hpars[4] * J * log(J) + hpars[5] * J^2))
+
   # add the constraint for the intercept of the soft pomeron
   # the value of this attribute will be used as weight while fitting
-  attr(h, 'addSPconstraint')     <- 1e6
+  attr(h, 'addSPconstraint')     <- 1e4
   attr(h, 'fixed')               <- fixed
   attr(h, 'alpha')               <- alpha
   attr(h, 'rootRejectionWeight') <- rootRejectionWeight
   attr(h, 'rootRejectionCutoff') <- rootRejectionCutoff
+  attr(h, 'hparsInitDefault')    <- hparsInitDefault
+  attr(h, 'H')                   <- H
+  # compute the gns
   h
 }
+
 
 #' Given an actual list or number, replace the NA
 #' on it with the values in thegiven 'field of the
@@ -82,6 +96,7 @@ addProcessObservable.HQCDP <- function(p, ...) {
   Reduce(function(h, x) {
     # insert the non minimal coupling attribute in the child processes
     attr(x, 'alpha') <- attr(h, 'alpha')
+    attr(x, 'H')     <- attr(h, 'H')
     if(is.element('ProcessObservable', class(x)))
       h$processes <- append(h$processes, list(x))
     else
@@ -153,11 +168,12 @@ fit.HQCDP <- function(x, pars = NULL, zstar = 0.565, hpars = NULL, method = 'Nel
   # here we declare that we want the full output of the rss function for instance
   attr(x, 'complete') <- TRUE
   # get all the parameters to fit if required
-  if(is.null(pars))
-    pars <- getKernelPars(x)
-  if(is.null(hpars))
-    #hpars <- c(-95.46191, 98.83000, -122.94178)
-    hpars <- c(-1.677950, 1.714511, -2.015598, 0, 0)
+  pars <- if(is.null(pars))
+            getKernelPars(x)
+
+  hpars <- if(is.null(hpars))
+             attr(x, 'hparsInitDefault')
+
   # we need to save the positions where the NA are, which
   # means such parameters are fixed with the values used in the
   # constructor of x
@@ -191,7 +207,7 @@ fit.HQCDP <- function(x, pars = NULL, zstar = 0.565, hpars = NULL, method = 'Nel
       hpars   <- if(isZstarNA) addFixedValues(x, fitPars, hparsNAIndices, 'hpars') else addFixedValues(x, fitPars[-1], hparsNAIndices, 'hpars')
       rssPars <- c()
     }
-    cat('rssPars', rssPars, ' zstar', zstar, 'hpars', hpars, '\n')
+    #cat('rssPars', rssPars, ' zstar', zstar, 'hpars', hpars, '\n')
     lastEval    <- get('lastEval', envir = bestEvalEnv)
     completeVal <- tryStack(
       rss(x, pars = rssPars, zstar = zstar, hpars = hpars)

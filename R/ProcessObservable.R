@@ -102,17 +102,17 @@ IzNBar <- function(x, ...) UseMethod('IzNBar')
 IzNBar.ProcessObservable <- function(obs, J, wf, dJdt, zstar, hpars) {
   t1fun <- splinefun(z, exp((-J + 0.5) * As + Phi))
   t3fun <- splinefun(wf$x, wf$y)
+  # get the function H from the observable attribute H
+  H <- attr(obs, 'H')
+  # if it doesn't exist use a default one
+  if(is.null(H))
+    H <- function(J, hpars)
+           exp(100 * (hpars[1] + hpars[2] * J + hpars[3] * log(J) + hpars[4] * J * log(J) + hpars[5] * J^2))
+  # compute the gns
   gn <- H(J, hpars) *  dJdt * t1fun(zstar) * t3fun(zstar)
   #cat('gn', gn, 'js', J, '\n')
   (1i + 1 / tan(pi * J / 2)) * gn
 }
-
-# this function it may depend on the specific processes but by now we take it
-# as a single general function, it represents a smooth combination of the couplings
-# k(J) kbar(J) times some extra function of J
-#H <- function(J, hpars) sum((J - 1)^(0:(length(hpars) - 1)) * hpars)
-#' @export
-H <- function(J, hpars) exp(100 * (hpars[1] + hpars[2] * J + hpars[3] * log(J) + hpars[4] * J * log(J) + hpars[5] * J^2))
 
 #' @export
 rss <- function(x, ...) UseMethod('rss')
