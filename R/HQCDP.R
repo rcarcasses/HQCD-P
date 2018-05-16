@@ -168,11 +168,11 @@ fit.HQCDP <- function(x, pars = NULL, zstar = 0.565, hpars = NULL, method = 'Nel
   # here we declare that we want the full output of the rss function for instance
   attr(x, 'complete') <- TRUE
   # get all the parameters to fit if required
-  pars <- if(is.null(pars))
-            getKernelPars(x)
+  if(is.null(pars))
+    pars <- getKernelPars(x)
 
-  hpars <- if(is.null(hpars))
-             attr(x, 'hparsInitDefault')
+  if(is.null(hpars))
+    hpars <- attr(x, 'hparsInitDefault')
 
   # we need to save the positions where the NA are, which
   # means such parameters are fixed with the values used in the
