@@ -213,7 +213,7 @@ fit.HQCDP <- function(x, pars = NULL, zstar = 0.565, hpars = NULL, method = 'Nel
       rss(x, pars = rssPars, zstar = zstar, hpars = hpars)
     )
     # if the computation ends with an error a string is returned with its description
-    if(is.character(completeVal))
+    if(is.character(completeVal) || is.na(completeVal$val))
       return(1e3 * (1 + 0.05 * runif(1)))
     # otherwise complete the computation and save it
 		val         <- completeVal$val
