@@ -10,7 +10,6 @@
 #' @import rredis
 #' @import cmaes
 #' @import tictoc
-#' @import optimx
 #' @import testthat
 #' @import latex2exp
 #' @import minpack.lm

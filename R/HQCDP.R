@@ -11,9 +11,11 @@ HQCDP <- function(alpha = 0,
   if(is.null(hparsInitDefault))
     hparsInitDefault <- c(-1.677950, 1.714511, -2.015598, 0, 0)
   # if H was not passed, use a default one
-  if(is.null(H))
+  if(is.null(H)) {
+    flog.warn('Using default H(J) function (are you sure?)')
     H <- function(J, hpars)
            exp(100 * (hpars[1] + hpars[2] * J + hpars[3] * log(J) + hpars[4] * J * log(J) + hpars[5] * J^2))
+  }
 
   # add the constraint for the intercept of the soft pomeron
   # the value of this attribute will be used as weight while fitting
@@ -231,7 +233,7 @@ fit.HQCDP <- function(x, pars = NULL, zstar = 0.565, hpars = NULL, method = 'Nel
   bestEval <- get('bestEval', envir = bestEvalEnv)
   lastBestChi2 <- bestEval$chi2
   startPars    <- bestEval$pars
-  op <- optimx(startPars,
+  op <- optim(startPars,
 							fn = fn,
 							hessian = FALSE, method = method, control = list(maxit = 10000))
   bestEval <- get('bestEval', envir = bestEvalEnv)
