@@ -147,5 +147,6 @@ loadData.ppDSigma <- function(pp) {
   new_data13 <- data.frame(my_data$sqrt_s,my_data$minus_t,my_data$dsigma,exp_error)
   names(new_data13) <- c("sqrt_s","minus_t","dsigma","error")
   data <- rbind(data,new_data13)
-  data
+  data.frame(Q2 = rep(NA, length(data$dsigma)), W = data$sqrt_s, t = -data$minus_t,
+             dsigma = data$dsigma, deltaDSigma = data$error)
 }
