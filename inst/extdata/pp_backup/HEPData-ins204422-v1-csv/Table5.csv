@@ -1,0 +1,23 @@
+#: table_doi: 10.17182/hepdata.33837.v1/t5
+#: name: Table 5
+#: description: ELASTIC CROSS SECTIONS.
+
+#: data_file: Table5.yaml
+#: keyword reactions: PBAR P --> PBAR P | P P --> P P
+#: keyword observables: SIG
+#: keyword phrases: Elastic | Integrated Cross Section | Cross Section | Proton-Proton Elastic Scattering | Proton-Proton Scattering | Proton-Proton Elastic Cross Section | Proton-AntiProton Elastic Cross Section
+#: keyword cmenergies: 31.0-62.0
+#: RE,P P --> P P
+#: SQRT(S) [GeV],31.0-62.0
+'SQRT(S) [GEV]','SIG(NAME=ELASTIC) [MB]','error +','error -'
+31.0,7.12,0.34,-0.34
+53.0,7.37,0.13,-0.13
+62.0,7.61,0.22,-0.22
+
+#: RE,PBAR P --> PBAR P
+#: SQRT(S) [GeV],31.0-62.0
+'SQRT(S) [GEV]','SIG(NAME=ELASTIC) [MB]','error +','error -'
+31.0,7.94,0.39,-0.39
+53.0,7.35,0.3,-0.3
+62.0,7.12,0.4,-0.4
+

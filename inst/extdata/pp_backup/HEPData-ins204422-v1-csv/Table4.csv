@@ -1,0 +1,18 @@
+#: table_doi: 10.17182/hepdata.33837.v1/t4
+#: name: Table 4
+#: description: SLOPE DIFFERENCES BASED ON EXPONENTIAL FITS.
+
+#: data_file: Table4.yaml
+#: keyword reactions: PBAR P --> PBAR P | P P --> P P
+#: keyword observables: SLOPE
+#: keyword phrases: Elastic | Proton-Proton Elastic Scattering | Proton-Proton Scattering
+#: keyword cmenergies: 31.0-62.0
+#: RE(Q=AP),PBAR P --> PBAR P
+#: -T [GEV**2],0.17 TO 0.85
+#: RE(Q=P),P P --> P P
+#: SQRT(S) [GeV],31.0-62.0
+'SQRT(S) [GEV]','SLOPE(Q=AP) - SLOPE(Q=P)','error +','error -'
+31.0,0.28,0.23,-0.23
+53.0,0.37,0.18,-0.18
+62.0,0.29,0.17,-0.17
+
