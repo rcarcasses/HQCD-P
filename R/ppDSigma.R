@@ -20,15 +20,6 @@ predict.ppDSigma <- function(dsigma, Izs, IzsBar, points, ...) {
 }
 
 #' @export
-IzN.ppDSigma <- function(pp, J, coeffs) {
-  # Ansatz to compute the integral related to the proton
-  sum(((J - 1)^(0:(length(coeff) - 1))) * coeff)
-}
-
-#' @export
-IzNBar.ppDSigma <- IzN.ppDSigma
-
-#' @export
 expVal.ppDSigma <- function(pp) pp$data$dsigma
 #' @export
 expErr.ppDSigma <- function(pp) pp$data$error

@@ -58,7 +58,12 @@ getIzs.DSigma <- function(dsigma, spectra, points) {
       # s: spectrum of a single kernel, have many reggeons
       # iterate over each Reggeon for the given spectrum
       lapply(s, function(spec) {
-        IzN(dsigma, W, Q2, spec$js, spec$wf)
+        # use the definition passed with the object to compute this integral
+        # if any, the attribute has to be a function with the right arity
+        if(!is.null(attr(dsigma, 'IzN')))
+          attr(dsigma, 'IzN')(dsigma, W, Q2, spec)
+        else
+          IzN(dsigma, W, Q2, spec$js, spec$wf)
       })
     }), recursive = TRUE)
     names(r) <- fnNames
@@ -91,10 +96,16 @@ getIzsBar.DSigma <- function(dsigma, spectra, points, zstar, hpars) {
       # s: spectrum of a single kernel, have many reggeons
       # iterate over each Reggeon for the given spectrum
       lapply(s, function(spec) {
-        # here we are using js as identifier of the reggeon, is not the most appropriate thing but it should work
-        id <- paste0(t, spec$js)
+        # here we use the fact that the integral value depends only on
+        # t and the reggeon in case therefore we cache the result
+        id <- paste0(t, spec$index)
         if(is.null(IzBarCache[[id]]))
-          IzBarCache[[id]] <- IzNBar(dsigma, spec$js, spec$wf, spec$dJdt, zstar, hpars)
+          IzBarCache[[id]] <- if(!is.null(attr(dsigma, 'IzNBar')))
+            # use the definition passed with the object to compute this integral
+            # if any, the attribute has to be a function with the right arity
+            attr(dsigma, 'IzNBar')(dsigma, W, Q2, spec, zstar, hpars)
+          else
+            IzNBar(dsigma, spec$js, spec$wf, spec$dJdt, zstar, hpars)
 
         IzBarCache[[id]]
       })
