@@ -35,7 +35,8 @@ cache <- function(f, ...) {
     # beware of potential issues with partial argument matching
     # see: https://stackoverflow.com/questions/15264994/prevent-partial-argument-matching
     arguments <- list(...)
-    key <- paste0(format(Filter(is.numeric, arguments), digits = 16), collapse = ',')
+    numArgs <- Filter(is.numeric, arguments)
+    key <- do.call(paste, c(list(), mapply(function(v, n) paste0(n, '=', v), numArgs, names(numArgs))))
     key <- paste0(key, '-', funName, '-', extraKey, collapse = '')
 
     if(get('use', envir = cacheEnv) == 'redis') {
