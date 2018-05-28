@@ -46,7 +46,7 @@ kernelUnit <- function(potential = UJgTest,
     c      <- integrate(wffun, s$wf$x[1], s$wf$x[length(s$wf$x)])$value
     s$wf$y <- (s$wf$y[10] / abs(s$wf$y[10])) * s$wf$y / sqrt(c)
     # return a list with the data
-    list(js = js, dJdt = dJdt, wf = s$wf, u2j = s$u2j, name = paste0(kernelName, '.', n))
+    list(js = js, dJdt = dJdt, wf = s$wf, u2j = s$u2j, name = paste0(kernelName, '.', n), index = n, numReg = numReg)
   }
 
   findReggeonData <- cache(findReggeonDataFun, kernelName)
