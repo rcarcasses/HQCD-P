@@ -8,7 +8,7 @@
 #' @import rootSolve
 #' @import plotrix
 #' @import rredis
-#' @import cmaes
+#' @import digest
 #' @import tictoc
 #' @import testthat
 #' @import latex2exp

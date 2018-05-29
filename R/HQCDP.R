@@ -25,6 +25,7 @@ HQCDP <- function(alpha = 0,
   attr(h, 'rootRejectionWeight') <- rootRejectionWeight
   attr(h, 'rootRejectionCutoff') <- rootRejectionCutoff
   attr(h, 'hparsInitDefault')    <- hparsInitDefault
+  attr(h, 'cacheSpectra')        <- FALSE
   attr(h, 'H')                   <- H
   # compute the gns
   h
@@ -211,9 +212,9 @@ fit.HQCDP <- function(x, pars = NULL, zstar = 0.565, hpars = NULL, method = 'Nel
     }
     #cat('rssPars', rssPars, ' zstar', zstar, 'hpars', hpars, '\n')
     lastEval    <- get('lastEval', envir = bestEvalEnv)
-    completeVal <- tryStack(
+    completeVal <- #tryStack(
       rss(x, pars = rssPars, zstar = zstar, hpars = hpars)
-    )
+    #)
     # if the computation ends with an error a string is returned with its description
     if(is.character(completeVal) || is.na(completeVal$val))
       return(1e3 * (1 + 0.05 * runif(1)))
@@ -288,6 +289,19 @@ getSpectra.HQCDP <- function(x, pars = NULL, ts = NULL) {
   if(is.null(ts))
 	  ts <- getNeededTVals(x)
 
+  # in order to speed up computations we cache, if enabled the option,
+  # the computation of the spectra as well
+  # create a unique key for this function call arguments values
+  key <- digest(c(pars, ts), algo = 'md5')
+  if(attr(x, 'cacheSpectra')) {
+    cached <- rredis::redisGet(key)
+    if(!is.null(cached)) {
+      #flog.trace('Using cached spectra list')
+      return(cached)
+    } else
+      flog.trace('Spectra will be computed and cached')
+  }
+
 	numRegs <- unlist(lapply(x$kernels, function(k) k$numReg))
 	# unwrap the computation of each one of the Reggeon data for each one of the kernels
 	unwrappedFunCalls <- Reduce(function(acct, t) {
@@ -313,12 +327,30 @@ getSpectra.HQCDP <- function(x, pars = NULL, ts = NULL) {
 
   # now compute every kernel for each value of t and the parameters passed
   # this is the most expensive part of the computation and its parallelizable
-  convertRawSpectra(
-    if(Sys.info()['sysname'] == 'Linux')
-      mclapply(unwrappedFunCalls, function(f) f(), mc.cores = cores)
+  spectra <- convertRawSpectra(
+    if(TRUE || Sys.info()['sysname'] == 'Linux') {
+      # it is a good idea apparently to explicitly split the function calls
+      # into chunks, otherwise it seems like a large unwrappedFunCalls list
+      # causes memory issues
+      # see the chunks example at https://stackoverflow.com/questions/3318333/split-a-vector-into-chunks-in-r
+      chunks <- split(unwrappedFunCalls, cut(seq_along(unwrappedFunCalls),
+                             ceiling(length(unwrappedFunCalls) / cores), labels = FALSE))
+      # flatten list one level only
+      unlist(lapply(chunks, function(chunk) {
+        mclapply(chunk, function(f) f(), mc.cores = cores)
+      }), recursive = FALSE)
+    }
     else
       lapply(unwrappedFunCalls, function(f) f())
   , numRegs, ts)
+  # cache if enabled and needed
+  if(attr(x, 'cacheSpectra'))
+    if(is.null(rredis::redisGet(key))) {
+      flog.trace('Saving full spectra to cache')
+      rredis::redisSet(key, spectra)
+    }
+
+  spectra
 }
 
 #' @export
