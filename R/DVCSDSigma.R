@@ -36,7 +36,7 @@ predict.DVCSDSigma <- function(dsigma, Izs, IzsBar, points, alpha = 0, ...) {
   # get the Ws
   W <- points$W
   # return the differential cross sections
-  (1 / (16 * pi^2)) * GEVMinus2ToNB * (1 / W^4) * absAmplitudeSquared
+  GEVMinus2ToNB * (1 / (16 * pi * W^4)) * absAmplitudeSquared
 }
 
 #' @export

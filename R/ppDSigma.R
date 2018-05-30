@@ -15,8 +15,10 @@ predict.ppDSigma <- function(dsigma, Izs, IzsBar, points, ...) {
   amplitude <- getAmplitude(dsigma, Izs, IzsBar, points, ...)
   # get the Ws
   W <- points$W
-  # return the differential cross sections
-  (1 / (16 * pi^2)) * GEVMinus2ToNB * (1 / W^4) * abs(amplitude)^2
+  # return the differential cross sections, converted to MB
+  df <- GEVMinus2ToMB * (1 / (16 * pi * W^4)) * abs(amplitude)^2
+  #dput(df)
+  df
 }
 
 #' @export

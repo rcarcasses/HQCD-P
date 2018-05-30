@@ -5,8 +5,9 @@ DSigma <- function(procName, postName = '') {
   obs
 }
 
-# Conversion factor between GeV^2 and mili barn units
+# Conversion factor between GeV^2 and mili/nano barn units
 GEVMinus2ToNB <- 3.894*10^5
+GEVMinus2ToMB <- 0.3894
 
 #' @export
 getNeededTVals.DSigma <- function(x) unique(expKinematics(x)$t)

@@ -4,7 +4,8 @@ ProcessObservable <- function(className) {
   data <- loadData(obs)
   obs <- c(obs, list(data = data))
   class(obs) <- append(class(obs), c('ProcessObservable', className))
-  attr(obs, 'alpha') <- 0
+  attr(obs, 'alpha')  <- 0
+  attr(obs, 'rsslog') <- FALSE
   obs
 }
 
@@ -127,14 +128,18 @@ rss.ProcessObservable <- function(obs, ...) {
 
 diffObsWeighted <- function(x, ...) UseMethod('diffObsWeighted')
 diffObsWeighted.ProcessObservable <- function(obs, ...) {
-  pred <- predict(obs, ...)
+  Opred <- predict(obs, ...)
   # recall that predict give additional information if the attribute 'complete' is set
   if(!is.null(attr(obs, 'complete')))
-    pred <- pred$val
+    Opred <- Opred$val
 
-  exp  <- expVal(obs)
-  err  <- expErr(obs)
-  (pred - exp) / err
+  Oexp  <- expVal(obs)
+  Oerr  <- expErr(obs)
+
+  if(attr(obs, 'rsslog'))
+    Oexp * log(Opred / Oexp) / Oerr
+  else
+    (Opred - Oexp) / Oerr
 }
 
 #' @export

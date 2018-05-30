@@ -4,6 +4,7 @@
 #' @export
 HQCDP <- function(alpha = 0,
                   fixed = list(),
+                  rsslog = FALSE,
                   rootRejectionWeight = 1, rootRejectionCutoff = 0.02,
                   H = NULL, hparsInitDefault = NULL) {
   h <- list(processes = list(), kernels = list())
@@ -27,6 +28,7 @@ HQCDP <- function(alpha = 0,
   attr(h, 'hparsInitDefault')    <- hparsInitDefault
   attr(h, 'cacheSpectra')        <- FALSE
   attr(h, 'H')                   <- H
+  attr(h, 'rsslog')              <- rsslog
   # compute the gns
   h
 }
@@ -99,6 +101,7 @@ addProcessObservable.HQCDP <- function(p, ...) {
   Reduce(function(h, x) {
     # insert the non minimal coupling attribute in the child processes
     attr(x, 'alpha') <- attr(h, 'alpha')
+    attr(x, 'rsslog') <- attr(h, 'rsslog')
     attr(x, 'H')     <- attr(h, 'H')
     if(is.element('ProcessObservable', class(x)))
       h$processes <- append(h$processes, list(x))
@@ -227,7 +230,10 @@ fit.HQCDP <- function(x, pars = NULL, zstar = 0.565, hpars = NULL, method = 'Nel
     # store the partial results in the best eval tracker
     saveStep(chi2, val, fitPars)
 		# optimize the log better
-    log(valWeighted)
+    if(attr(x, 'rsslog'))
+      valWeighted
+    else
+      log(valWeighted)
   }
 
   tic()
