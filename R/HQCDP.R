@@ -328,17 +328,23 @@ getSpectra.HQCDP <- function(x, pars = NULL, ts = NULL) {
   # now compute every kernel for each value of t and the parameters passed
   # this is the most expensive part of the computation and its parallelizable
   spectra <- convertRawSpectra(
-    if(TRUE || Sys.info()['sysname'] == 'Linux') {
+    if(Sys.info()['sysname'] == 'Linux') {
       # it is a good idea apparently to explicitly split the function calls
       # into chunks, otherwise it seems like a large unwrappedFunCalls list
       # causes memory issues
       # see the chunks example at https://stackoverflow.com/questions/3318333/split-a-vector-into-chunks-in-r
       chunks <- split(unwrappedFunCalls, cut(seq_along(unwrappedFunCalls),
-                             ceiling(length(unwrappedFunCalls) / cores), labels = FALSE))
+                             ceiling(length(unwrappedFunCalls) / (3 * cores)), labels = FALSE))
+      pb <- progress_bar$new(format = " computing spectra [:bar] :percent eta: :eta",
+                              total = length(chunks), clear = FALSE, width= 60)
       # flatten list one level only
       unlist(lapply(chunks, function(chunk) {
+        # update the progress bar
+        pb$tick()
+        # do the batch computation to find kernel pieces
         mclapply(chunk, function(f) f(), mc.cores = cores)
       }), recursive = FALSE)
+      #mclapply(unwrappedFunCalls, function(f) f(), mc.cores = cores)
     }
     else
       lapply(unwrappedFunCalls, function(f) f())
