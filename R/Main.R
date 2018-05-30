@@ -12,7 +12,7 @@
 #' @import tictoc
 #' @import testthat
 #' @import latex2exp
-#' @import minpack.lm
+#' @import progress
 
 #' @export
 init <- function(useCache = TRUE, useRedis = TRUE) {
