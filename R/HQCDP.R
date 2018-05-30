@@ -229,11 +229,8 @@ fit.HQCDP <- function(x, pars = NULL, zstar = 0.565, hpars = NULL, method = 'Nel
 		flog.debug('          chi2 = %s', round(chi2, 3))
     # store the partial results in the best eval tracker
     saveStep(chi2, val, fitPars)
-		# optimize the log better
-    if(attr(x, 'rsslog'))
-      valWeighted
-    else
-      log(valWeighted)
+		# optimize the log better ?
+    valWeighted
   }
 
   tic()
