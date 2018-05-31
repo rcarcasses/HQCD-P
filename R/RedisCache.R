@@ -6,7 +6,9 @@ assign('cacheValues', list(), envir = cacheEnv)
 assign('maxInMemoryEntries', 1e3, envir = cacheEnv)
 
 #' @export
-startRedis <- function(host = 'localhost', port = 6379) {
+startRedis <- function() {
+  host <- ifelse(Sys.getenv('REDIS_HOST') == '', 'localhost', Sys.getenv('REDIS_HOST'))
+  port <- ifelse(Sys.getenv('REDIS_PORT') == '', 6379, Sys.getenv('REDIS_PORT'))
   rredis::redisConnect(host = host, port = port, nodelay = FALSE)
 }
 
