@@ -29,6 +29,8 @@ HQCDP <- function(alpha = 0,
   attr(h, 'cacheSpectra')        <- FALSE
   attr(h, 'H')                   <- H
   attr(h, 'rsslog')              <- rsslog
+  attr(h, 'showSpectraProgress') <- TRUE
+  attr(h, 'saveLastSpectra')     <- TRUE
   # compute the gns
   h
 }
@@ -130,6 +132,10 @@ rss.HQCDP <- function(x, pars, zstar, hpars) {
   # first we need to compute the spectra of the kernels
 	# this is a parallelized call
   spectra <- getSpectra(x, pars)
+  # store the last spectra for debug purposes
+  if(attr(x, 'saveLastSpectra'))
+    saveRDS(spectra, file = 'lastSpectra.rds')
+
   # now we find all the Izs for each one of the processes
   allProcIzs    <- lapply(x$processes, getIzs, spectra = spectra)
   allProcIzsBar <- lapply(x$processes, getIzsBar, spectra = spectra, zstar = zstar, hpars = hpars)
@@ -338,19 +344,31 @@ getSpectra.HQCDP <- function(x, pars = NULL, ts = NULL) {
       # see the chunks example at https://stackoverflow.com/questions/3318333/split-a-vector-into-chunks-in-r
       chunks <- split(unwrappedFunCalls, cut(seq_along(unwrappedFunCalls),
                              ceiling(length(unwrappedFunCalls) / (3 * cores)), labels = FALSE))
-      pb <- progress_bar$new(format = " computing spectra [:bar] :percent eta: :eta",
-                              total = length(chunks), clear = FALSE, width= 60)
+      if(attr(x, 'showSpectraProgress'))
+        pb <- progress_bar$new(format = " computing spectra [:bar] :percent eta: :eta",
+                                total = length(chunks), clear = FALSE, width= 60)
       # flatten list one level only
       unlist(lapply(chunks, function(chunk) {
         # update the progress bar
-        pb$tick()
+        if(attr(x, 'showSpectraProgress'))
+          pb$tick()
         # do the batch computation to find kernel pieces
         mclapply(chunk, function(f) f(), mc.cores = cores)
       }), recursive = FALSE)
       #mclapply(unwrappedFunCalls, function(f) f(), mc.cores = cores)
     }
-    else
-      lapply(unwrappedFunCalls, function(f) f())
+    else {
+      if(attr(x, 'showSpectraProgress'))
+        pb <- progress_bar$new(format = " computing spectra [:bar] :percent eta: :eta",
+                               total = length(unwrappedFunCalls), clear = FALSE, width= 60)
+      lapply(unwrappedFunCalls, function(f) {
+        # update the progress bar
+        if(attr(x, 'showSpectraProgress'))
+          pb$tick()
+        # call the function and return its value
+        f()
+      })
+    }
   , numRegs, ts)
   # cache if enabled and needed
   if(attr(x, 'cacheSpectra'))
