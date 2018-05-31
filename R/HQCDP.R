@@ -101,10 +101,17 @@ addProcessObservable.default <- function(x, ...) 'calling addProcessObservable i
 #' @export
 addProcessObservable.HQCDP <- function(p, ...) {
   Reduce(function(h, x) {
-    # insert the non minimal coupling attribute in the child processes
-    attr(x, 'alpha') <- attr(h, 'alpha')
+    # copy attributes that need to propagate
+    attr(x, 'alpha')  <- attr(h, 'alpha')
     attr(x, 'rsslog') <- attr(h, 'rsslog')
-    attr(x, 'H')     <- attr(h, 'H')
+    attr(x, 'H')      <- attr(h, 'H')
+    # take care if there is a child dsigma object
+    if(!is.null(x$dsigma)) {
+      attr(x$dsigma, 'alpha')  <- attr(h, 'alpha')
+      attr(x$dsigma, 'rsslog') <- attr(h, 'rsslog')
+      attr(x$dsigma, 'H')      <- attr(h, 'H')
+    }
+
     if(is.element('ProcessObservable', class(x)))
       h$processes <- append(h$processes, list(x))
     else
@@ -134,7 +141,7 @@ rss.HQCDP <- function(x, pars, zstar, hpars) {
   spectra <- getSpectra(x, pars)
   # store the last spectra for debug purposes
   if(attr(x, 'saveLastSpectra'))
-    saveRDS(spectra, file = 'lastSpectra.rds')
+    saveRDS(spectra, file = '~/lastSpectra.rds')
 
   # now we find all the Izs for each one of the processes
   allProcIzs    <- lapply(x$processes, getIzs, spectra = spectra)
