@@ -69,6 +69,11 @@ predict.Sigma <- function(sig, Izs, IzsBar, points, ...) {
       ds <- ds[-na.pos]
       ts <- ts[-na.pos]
     }
+    # if there are not enough points we will return a big number and throw an error
+    if(length(ds) < 2) {
+      flog.error('Not enough information to predict Sigma')
+      return(1e20)
+    }
     # we now need to compute the cross section as the integral over [-1,0] of dsigma
     dsFun <- splinefun(ts, ds)
     #flog.trace('[Sigma] computing integral from %s to %s', attr(sig, 'tmin'), attr(sig, 'tmax'))
