@@ -62,6 +62,12 @@ predict.Sigma <- function(sig, Izs, IzsBar, points, ...) {
     # get the dsigma data computed for the value of Q2 and W, etc...
     # in the present block
     ds <- dsigma[1:length(ts) + (i - 1) * length(ts)]
+    # check if there is any NA and remove it
+    na.pos <- which(is.na(ds))
+    if(length(na.pos) > 0)
+      flog.warn('NA values found at Sigma computation, discarding them...')
+    ds <- ds[-na.pos]
+    ts <- ts[-na.pos]
     # we now need to compute the cross section as the integral over [-1,0] of dsigma
     dsFun <- splinefun(ts, ds)
     #flog.trace('[Sigma] computing integral from %s to %s', attr(sig, 'tmin'), attr(sig, 'tmax'))
