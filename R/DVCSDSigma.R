@@ -43,11 +43,11 @@ predict.DVCSDSigma <- function(dsigma, Izs, IzsBar, points, alpha = 0, ...) {
 plot.DVCSDSigma <- function(dvcsds, predicted, numGraphs = 4) {
   plot.new()
   par(mfrow = c(2, 2), las = 1)
-  # get all different Q2s
-  allQ2s <- sort(unique(dvcsds$data$Q2))
+  # group by the following values of Q2
+  allQ2s <- list(c(3.2, 20.0), c(8), c(10), c(15.5, 25.0))
   # do as many plot as demanded
   invisible(lapply(1:numGraphs, function(n) {
-    Q2s <- allQ2s[sapply(0:(length(allQ2s) - 1), mod, numGraphs) + 1 == n]
+    Q2s <- allQ2s[[n]]
     data <- dvcsds$data[dvcsds$data$Q2 %in% Q2s,]
     values <- data$dsigma
     # prepare the plot
@@ -64,7 +64,7 @@ plot.DVCSDSigma <- function(dvcsds, predicted, numGraphs = 4) {
     axis(1, at = hTicks)
     axis(2, at = vTicks)
     i <- 1
-    cols <-  sapply(seq(0, 1, len = 5), gray)
+    cols <- c('black', 'red', 'green', 'blue')#sapply(seq(0, 1, len = 5), gray)
     legendItems <- list()
     lapply(Q2s, function(Q2) {
       # get the data for this Q2

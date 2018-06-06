@@ -33,7 +33,7 @@ plot.DVCSSigma <- function(dvcss, predicted = NULL) {
   axis(1, at = vTicks)
   numCols <- 4
   i <- 1
-  cols <- sapply(seq(0.2, 0.7, len = numCols), gray)
+  cols <- c('black', 'red', 'green', 'blue')
   lapply(allQ2s, function(Q2) {
     # get the subset of data for the given Q2
     dataForQ2 <- data[data$Q2 == Q2,]
