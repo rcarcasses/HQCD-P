@@ -47,7 +47,10 @@ getIzs.DSigma <- function(dsigma, spectra, points) {
   fnNames <- unlist(lapply(spectra[[1]]$spectra,
                            function(s)
                              unlist(lapply(s, function(spec) paste0('fn.', spec$name)))))
+  pb <- progress_bar$new(format = " getIzs.DSigma [:bar] :percent eta: :eta",
+                          total = length(points[[1]]), clear = FALSE, width= 60)
   df <- as.data.frame(Reduce(rbind, mclapply(apply(points, 1, as.list), function(row) {
+    pb$tick()
     row <- as.list(row)
     Q2 <- row$Q2
     W  <- row$W
@@ -86,8 +89,11 @@ getIzsBar.DSigma <- function(dsigma, spectra, points, zstar, hpars) {
                              unlist(lapply(s, function(spec) paste0('fn.', spec$name)))))
   # TODO improve this, right now I'm just caching the computation
   # maybe we should rewrite all the code to make it more clear and efficient
+  pb <- progress_bar$new(format = " getIzsBar.DSigma [:bar] :percent eta: :eta",
+                          total = length(points[[1]]), clear = FALSE, width= 60)
   IzBarCache <- list()
   df <- as.data.frame(Reduce(rbind, lapply(apply(points, 1, as.list), function(row) {
+    pb$tick()
     row <- as.list(row)
     t  <- row$t
     # get the spectra of all kernels for a given value of t
