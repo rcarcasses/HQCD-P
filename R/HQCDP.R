@@ -143,10 +143,6 @@ rss.HQCDP <- function(x, pars, zstar, hpars) {
   # first we need to compute the spectra of the kernels
 	# this is a parallelized call
   spectra <- getSpectra(x, pars)
-  # store the last spectra for debug purposes
-  if(attr(x, 'saveLastSpectra'))
-    saveRDS(spectra, file = '~/lastSpectra.rds')
-
   # now we find all the Izs for each one of the processes
   allProcIzs    <- lapply(x$processes, getIzs, spectra = spectra)
   allProcIzsBar <- lapply(x$processes, getIzsBar, spectra = spectra, zstar = zstar, hpars = hpars)
@@ -399,6 +395,7 @@ getSpectra.HQCDP <- function(x, pars = NULL, ts = NULL) {
   if(length(attr(x, 'useTVals')) > 0) {
     # get the real ones needed
     ts <- getNeededTVals(x)
+    flog.trace('Interpolating spectra from %s points to %s', length(attr(x, 'useTVals')), length(ts))
     spectra <- interpolateSpectraTo(spectra, ts)
   }
 
@@ -408,7 +405,10 @@ getSpectra.HQCDP <- function(x, pars = NULL, ts = NULL) {
       flog.trace('Saving full spectra to cache')
       rredis::redisSet(key, spectra)
     }
-
+  # store the last spectra for debug purposes
+  if(attr(x, 'saveLastSpectra'))
+    saveRDS(spectra, file = '~/lastSpectra.rds')
+  # return the computed object
   spectra
 }
 
@@ -426,24 +426,14 @@ interpolateSpectraTo <- function(spectra, ts) {
   # kernels, like for example with a two kernel configuration of two reggeons
   # index 3 is the first reggeon of the second kernel
   interpolateReggeon <- function(index) {
-    # get te
-    # get the values of J for each t,
-    Jt <- unlist(
-            lapply(
-              lapply(
-                flattenSpectra,
-              `[[`, index),
-            `[[`, 'js'))
+    # get the values of J for each t and its derivative
+    Jt <- unlist(lapply(lapply(flattenSpectra, `[[`, index), `[[`, 'js'))
+    dJdt <- unlist(lapply(lapply(flattenSpectra, `[[`, index), `[[`, 'dJdt'))
     # create the interpolation function for the J values dependence with t
     Jfun <- splinefun(usedTs, Jt)
+    dJdtfun <- splinefun(usedTs, dJdt)
     # get the values of wf$y for each t
-    ys <- lapply(
-            lapply(
-              lapply(
-                flattenSpectra,
-              `[[`, index),
-            `[[`, 'wf'),
-          `[[`, 'y')
+    ys <- lapply(lapply(lapply(flattenSpectra, `[[`, index), `[[`, 'wf'), `[[`, 'y')
     # for each position x produce an interpolation function that describe
     # how the point i of the wave functio index changes with t
     ysfun <- lapply(1:length(xs), function(i) {
@@ -452,13 +442,15 @@ interpolateSpectraTo <- function(spectra, ts) {
       # make a spline and return it
       splinefun(usedTs, yi)
     })
-    list(ysfun = ysfun, Jfun = Jfun, index = index)
+    list(ysfun = ysfun, Jfun = Jfun, dJdtfun = dJdtfun, index = index)
   }
   # do the interpolation per index
   spectraInterpolationPerIndex <- lapply(indices, interpolateReggeon)
   # now with the previous computation done we need to actually use the interpolation
   # functions found to find the approximated spectra for the actually needed
   # values of t
+  pb <- progress_bar$new(format = " interpolating spectra [:bar] :percent eta: :eta",
+                          total = length(ts), clear = FALSE, width= 60)
   lapply(ts, function(tval) {
     computedSpectra <- lapply(indices, function(index) {
       sindex <- spectraInterpolationPerIndex[[index]]
@@ -468,7 +460,7 @@ interpolateSpectraTo <- function(spectra, ts) {
       # update the relevant information
       obj$js   <- sindex$Jfun(tval)
       obj$wf$y <- unlist(lapply(sindex$ysfun, function(f) f(tval)))
-      obj$dJdt <- sindex$Jfun(tval, deriv = 1)
+      obj$dJdt <- sindex$dJdtfun(tval)
       # finally return the modified object, notice that properties
       # as name, index and numReg are not touched
       obj
@@ -496,7 +488,6 @@ interpolateSpectraTo <- function(spectra, ts) {
     # finaly return the t and the correspondent spectra computed
     list(t = tval, spectra = computedSpectraStructured)
   })
-  #spectra
 }
 
 #' @export
