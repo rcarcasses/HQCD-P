@@ -46,17 +46,13 @@ test_that('HQCDP addKernel is functional', {
   expect_true(length(p$processes) == 2)
 })
 
-test_that('The same result as in https://arxiv.org/abs/1704.08280 is gotten', {
-  # compute this with 400 cheb points
-  p <- HQCDP()
-  p <- addKernel(p, potential = UJgTest,
-                 numReg = 4,
-                 comment = 'Leading twist gluon sector',
-                 kernelName = 'gluon', # this has to be unique: is used to name the couplings and the kernel
-                 optimPars = c(invls = 1/0.153, a = -4.35, b = 1.41, c = 0.626, d = -0.117))
-  p <- addProcessObservable(p, F2())
-  expect_equal(rss(p) - 405.7502, tolerance = 1e-3)
-})
+#test_that('The same result as in https://arxiv.org/abs/1704.08280 is gotten', {
+#  # compute this with 400 cheb points
+#  p <- HQCDP()
+#  p <- addKernel(p)
+#  p <- addProcessObservable(p, F2())
+#  expect_equal(rss(p, pars = c(invls = 1/0.153, a = -4.35, b = 1.41, c = 0.626, d = -0.117)), - 405.7502, tolerance = 1e-3)
+#})
 
 test_that('The gs are converted from a vector to a data.frame back and forth properly', {
   # create to sample vectors of the same size
@@ -108,4 +104,34 @@ test_that('completeWithFixedVal works properly', {
   expect_equal(valsCompleted,  c(invls = 2, a = 1, b = 1.1, c = 2.2, d = 1))
   # notice that we need to pass NA while replacing a number
   expect_equal(attr(p, 'fixed')$zstar,  completeWithFixedVal(p, NA, 'zstar'))
+})
+
+test_that('spectra interpolation works', {
+  flog.threshold(DEBUG)
+  ts <- seq(-5, 0, len = 40)
+  fp <- structure(list(), class = c('FakeProcess', 'ProcessObservable'))
+  # let's first compute some spectra exactly
+  getNeededTVals.FakeProcess <- function(...) ts
+  HQCDP() %>% addKernel %>% addProcessObservable(fp)-> p
+  spectra <- getSpectra(p)
+  # now let's compute the spectra using some interpolation instead
+  attr(p, 'useTVals') <- seq(-5, 0, len = 10)
+  interpolatedSpectra <- getSpectra(p)
+  # now let's compare the results obtained by interpolation against the true results
+  flattenSpectra <- unlist(lapply(spectra, `[[`, 'spectra'), recursive = FALSE)
+  flattenSpectraInter <- unlist(lapply(interpolatedSpectra, `[[`, 'spectra'), recursive = FALSE)
+  # compare the two 4th trajectories
+  index <- 4
+  Jt <- unlist(lapply(lapply(flattenSpectra, `[[`, index), `[[`, 'js'))
+  JtInter <- unlist(lapply(lapply(flattenSpectraInter, `[[`, index), `[[`, 'js'))
+  dJdt <- unlist(lapply(lapply(flattenSpectra, `[[`, index), `[[`, 'dJdt'))
+  dJdtInter <- unlist(lapply(lapply(flattenSpectraInter, `[[`, index), `[[`, 'dJdt'))
+  expect_equal(Jt, JtInter, tolerance = 0.001)
+  expect_equal(dJdt, dJdtInter, tolerance = 0.001)
+  # compare the 27 3th wavefunctions
+  wf1 <- spectra[[27]]$spectra[[1]][[3]]$wf
+  wf2 <- interpolatedSpectra[[27]]$spectra[[1]][[3]]$wf
+  expect_equal(wf1$y, wf2$y, tolerance = 0.001)
+  # clean the mess
+  rm(getNeededTVals.FakeProcess)
 })

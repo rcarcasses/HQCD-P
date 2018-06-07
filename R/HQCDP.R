@@ -31,6 +31,7 @@ HQCDP <- function(alpha = 0,
   attr(h, 'rsslog')              <- rsslog
   attr(h, 'showSpectraProgress') <- TRUE
   attr(h, 'saveLastSpectra')     <- TRUE
+  attr(h, 'useTVals')            <- c()
   # compute the gns
   h
 }
@@ -79,9 +80,12 @@ addFixedValues <- function(x, actual, NAIndices, field) {
 
 
 #' @export
-getNeededTVals.HQCDP <- function(p) sort(unique(c(0, unlist(lapply(p$processes, getNeededTVals)))))
+getNeededTVals.HQCDP <- function(x) {
+    # find the sorted unique union of all the processes needed t values
+    sort(unique(c(0, unlist(lapply(x$processes, getNeededTVals)))))
+}
 #' @export
-enlargeData.HQCDP <- function(p) lapply(p$processes, enlargeData)
+enlargeData.HQCDP <- function(x) lapply(x$processes, enlargeData)
 
 #' @export
 addKernel <- function(x, ...) UseMethod('addKernel')
@@ -276,6 +280,7 @@ getKernelPars <- function(x) {
   allPars[keep]
 }
 
+#' @export
 getDoF <- function(x, pars) {
   # get the experimental points per process
   expPoints <- sum(unlist(lapply(x$processes, function(p) length(expVal(p)))))
@@ -296,14 +301,24 @@ cores <- if(Sys.getenv('USE_CORES') == '') {
 getSpectra <- function(x, ...) UseMethod('getSpectra')
 #' @export
 getSpectra.default <- function(x) 'getSpectra not defined in current object'
-#' Get the spectra of a configured HQCDP object
-#' @param x a HQCDP object, already configured
-#' @param ... additional parameters which will be passed
-#' down while computing the spectrum
+#' Get the spectra of a configured HQCDP object.
+#' @param x a HQCDP object, already configured.
+#' @param pars additional parameters which will be passed
+#' down while computing the spectrum.
+#' @param ts the values of t for which the spectrum will be computed. If this parameter is not passed
+#' then the t values needed are deduced from the union of the t values needed in the computation of each
+#' one of the process of the HQCDP object. If such object, contains an attribute 'useTVals' being a non
+#' zero length vector, then the values in this vector are used to compute a spectra which later is used
+#' to find the spectra for the real t values needed, as defined by the union of the t values needed of
+#' all the processes, by using interpolation.
 #' @export
 getSpectra.HQCDP <- function(x, pars = NULL, ts = NULL) {
-  if(is.null(ts))
-	  ts <- getNeededTVals(x)
+  # if the attribute 'useTVals' have been set with a length bigger than zero,
+  # then use those, in this case we have to later interpolate the values obtained
+  if(length(attr(x, 'useTVals')) > 0)
+    ts <- attr(x, 'useTVals')
+  else if(is.null(ts))
+    ts <- getNeededTVals(x)
 
   # in order to speed up computations we cache, if enabled the option,
   # the computation of the spectra as well
@@ -377,6 +392,16 @@ getSpectra.HQCDP <- function(x, pars = NULL, ts = NULL) {
       })
     }
   , numRegs, ts)
+
+  # if the attribute 'useTVals' have been set with a length bigger than zero,
+  # then here we need to use the computed spectra for the 'useTVals' values
+  # and interpolate it for the real t values needed
+  if(length(attr(x, 'useTVals')) > 0) {
+    # get the real ones needed
+    ts <- getNeededTVals(x)
+    spectra <- interpolateSpectraTo(spectra, ts)
+  }
+
   # cache if enabled and needed
   if(attr(x, 'cacheSpectra'))
     if(is.null(rredis::redisGet(key))) {
@@ -385,6 +410,93 @@ getSpectra.HQCDP <- function(x, pars = NULL, ts = NULL) {
     }
 
   spectra
+}
+
+interpolateSpectraTo <- function(spectra, ts) {
+  # get all the t for which the spectra was computed
+  usedTs <- unlist(lapply(spectra, `[[`, 't'))
+  # get the x values for the wave functions used
+  xs <- spectra[[1]]$spectra[[1]][[1]]$wf$x
+  # flatten different kernels reggeons and put them in the same level
+  flattenSpectra <- unlist(lapply(spectra, `[[`, 'spectra'), recursive = FALSE)
+  # get the set of indices
+  indices <- 1:length(flattenSpectra[[1]])
+
+  # the index here is the index of the reggeon when one takes into account all the
+  # kernels, like for example with a two kernel configuration of two reggeons
+  # index 3 is the first reggeon of the second kernel
+  interpolateReggeon <- function(index) {
+    # get te
+    # get the values of J for each t,
+    Jt <- unlist(
+            lapply(
+              lapply(
+                flattenSpectra,
+              `[[`, index),
+            `[[`, 'js'))
+    # create the interpolation function for the J values dependence with t
+    Jfun <- splinefun(usedTs, Jt)
+    # get the values of wf$y for each t
+    ys <- lapply(
+            lapply(
+              lapply(
+                flattenSpectra,
+              `[[`, index),
+            `[[`, 'wf'),
+          `[[`, 'y')
+    # for each position x produce an interpolation function that describe
+    # how the point i of the wave functio index changes with t
+    ysfun <- lapply(1:length(xs), function(i) {
+      # get all the values of y for the given i index, which correspond to xs[i]
+      yi <- unlist(lapply(ys, `[[`, i))
+      # make a spline and return it
+      splinefun(usedTs, yi)
+    })
+    list(ysfun = ysfun, Jfun = Jfun, index = index)
+  }
+  # do the interpolation per index
+  spectraInterpolationPerIndex <- lapply(indices, interpolateReggeon)
+  # now with the previous computation done we need to actually use the interpolation
+  # functions found to find the approximated spectra for the actually needed
+  # values of t
+  lapply(ts, function(tval) {
+    computedSpectra <- lapply(indices, function(index) {
+      sindex <- spectraInterpolationPerIndex[[index]]
+      # get the structure of the given index object, we pick the first element
+      # of flattenSpectra since the structure is the same for any of it
+      obj <- flattenSpectra[[1]][[index]]
+      # update the relevant information
+      obj$js   <- sindex$Jfun(tval)
+      obj$wf$y <- unlist(lapply(sindex$ysfun, function(f) f(tval)))
+      obj$dJdt <- sindex$Jfun(tval, deriv = 1)
+      # finally return the modified object, notice that properties
+      # as name, index and numReg are not touched
+      obj
+    })
+    # now the previous computation has the structure of a flattened spectra, we need
+    # to put it with the right structure taking into account the amount of
+    # actual kernels
+    computedSpectraStructured <- list(list())
+    kerIndex <- 1
+    regIndex <- 1
+    for (i in indices) {
+      computedSpectraStructured[[kerIndex]][[regIndex]] <- computedSpectra[[i]]
+      # if this is the data for the last reggeon of the present kernel
+      # then update the kernel index, recall that we are assumming here that
+      # the spectra list is organized such that each reggeon index property
+      # matches its position inside the list
+      if(i != indices[length(indices)] && computedSpectra[[i]]$index == computedSpectra[[i]]$numReg) {
+        kerIndex <- kerIndex + 1
+        computedSpectraStructured[[kerIndex]] <- list()
+        regIndex <- 0
+      }
+      regIndex <- regIndex + 1
+    }
+
+    # finaly return the t and the correspondent spectra computed
+    list(t = tval, spectra = computedSpectraStructured)
+  })
+  #spectra
 }
 
 #' @export
@@ -405,12 +517,9 @@ convertRawSpectra <- function(rawSpectra, numRegs, ts) {
 }
 
 #' @export
-plot.HQCDP <- function(x, predicted = NULL, pars = NULL, gs = NULL, dry = FALSE) {
+plot.HQCDP <- function(x, predicted = NULL, pars = NULL, zstar = NULL, hpars = NULL, dry = FALSE) {
   if(is.null(predicted)) {
     # we need to compute the spectra for an enlarged set of t values
-    # convert gs to a data frame, if required
-    if(!is.data.frame(gs))
-      gs <- gs.as.data.frame(x, gs)
     # get the plot points
     plotPoints <- enlargeData(x)
     # compute the spectrum, now with the particular t values needed
@@ -420,26 +529,32 @@ plot.HQCDP <- function(x, predicted = NULL, pars = NULL, gs = NULL, dry = FALSE)
       else
         enlargeData(proc)$t
     })))
-    pb <- txtProgressBar(min = 0, max = 100, initial = 1, style = 3)
-    spectra <- getSpectra(x, pars, ts)
-    cat('\n') # put the progress bar in a new line
-    setTxtProgressBar(pb, 30)
+    flog.trace('Number of t values %s', length(ts))
+    spectra <- getSpectra(x, pars = pars, ts = ts)
+    pb <- progress_bar$new(format = " computing Izs [:bar] :percent eta: :eta",
+                            total = length(x$processes), clear = FALSE, width= 60)
     # get the Izs for the plot points
-    i <- 0
     allProcIzs <- mapply(function(proc, points) {
-      setTxtProgressBar(pb, 30 + 30 * i / length(x$processes))
-      i <<- i + 1
+      pb$tick()
       list(getIzs(proc, spectra = spectra, points = points))
     }, x$processes, plotPoints)
+    pb <- progress_bar$new(format = " computing IzsBar [:bar] :percent eta: :eta",
+                           total = length(x$processes), clear = FALSE, width= 60)
+    # get the Izs for the plot points
+    allProcIzsBar <- mapply(function(proc, points) {
+      pb$tick()
+      list(getIzsBar(proc, spectra = spectra, points = points, zstar = zstar, hpars = hpars))
+    }, x$processes, plotPoints)
+
+    pb <- progress_bar$new(format = " predicting values for plot points [:bar] :percent eta: :eta",
+                           total = length(x$processes), clear = FALSE, width= 60)
     # find the predictions for the plot points for each one of the processes
-    i <- 0
-    predicted <- mapply(function(proc, procIzs, procPlotPoints) {
-      pred <- predict(proc, points = procPlotPoints, Izs = procIzs, gs = gs)
-      setTxtProgressBar(pb, 60 + 40 * i / length(x$processes))
-      i <<- i + 1
+    predicted <- mapply(function(proc, Izs, IzsBar, points) {
+      pred <- predict(proc, Izs = Izs, IzsBar = IzsBar, points = points)
+      pb$tick()
       #cat('predictions found', unlist(pred), '\n')
-      list(cbind(procPlotPoints, data.frame(predicted = pred)))
-    }, x$processes, allProcIzs, plotPoints)
+      list(cbind(points, data.frame(predicted = pred)))
+    }, x$processes, allProcIzs, allProcIzsBar, plotPoints)
   }
 
   # call the plot function on each on
