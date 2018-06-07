@@ -105,7 +105,7 @@ getIzsBar.DSigma <- function(dsigma, spectra, points, zstar, hpars) {
       lapply(s, function(spec) {
         # here we use the fact that the integral value depends only on
         # t and the reggeon in case therefore we cache the result
-        id <- paste0(t, spec$index)
+        id <- paste0(t, '-', spec$index)
         if(is.null(IzBarCache[[id]]))
           IzBarCache[[id]] <- if(!is.null(attr(dsigma, 'IzNBar')))
             # use the definition passed with the object to compute this integral
