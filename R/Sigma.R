@@ -34,7 +34,7 @@ enlargeKinematicsWithTs <- function(sigma, data = NULL) {
 }
 # Here we need to take the t values from t = -1 to t = 0
 #' @export
-getNeededTVals.Sigma <- function(x) seq(attr(x, 'tmin'), attr(x, 'tmax'), 0.01)
+getNeededTVals.Sigma <- function(x) seq(attr(x, 'tmin'), attr(x, 'tmax'), len = 20)
 
 #' Predicts the values of F2 for the points passed
 #' @param sigma the object over which the prediction will happend

@@ -361,7 +361,7 @@ getSpectra.HQCDP <- function(x, pars = NULL, ts = NULL) {
       # causes memory issues
       # see the chunks example at https://stackoverflow.com/questions/3318333/split-a-vector-into-chunks-in-r
       chunks <- split(unwrappedFunCalls, cut(seq_along(unwrappedFunCalls),
-                             ceiling(length(unwrappedFunCalls) / (3 * cores)), labels = FALSE))
+                             ceiling(length(unwrappedFunCalls) / (2 * cores)), labels = FALSE))
       if(attr(x, 'showSpectraProgress'))
         pb <- progress_bar$new(format = " computing spectra [:bar] :percent eta: :eta",
                                 total = length(chunks), clear = FALSE, width= 60)
