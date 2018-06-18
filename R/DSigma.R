@@ -62,7 +62,7 @@ getIzs.DSigma <- function(dsigma, spectra, points) {
       lapply(s, function(spec) {
         # use the definition passed with the object to compute this integral
         # if any, the attribute has to be a function with the right arity
-        if(!is.null(attr(dsigma, 'IzN')))
+        if('IzN' %in% names(attributes(dsigma)))
           attr(dsigma, 'IzN')(dsigma, row, spec)
         else
           IzN(dsigma, row, spec)
@@ -105,7 +105,7 @@ getIzsBar.DSigma <- function(dsigma, spectra, points, zstar, hpars) {
         # t and the reggeon in case therefore we cache the result
         id <- paste0(t, '-', spec$index)
         if(is.null(IzBarCache[[id]]))
-          IzBarCache[[id]] <- if(!is.null(attr(dsigma, 'IzNBar')))
+          IzBarCache[[id]] <- if('IzNBar' %in% names(attributes(dsigma)))
             # use the definition passed with the object to compute this integral
             # if any, the attribute has to be a function with the right arity
             attr(dsigma, 'IzNBar')(dsigma, row, spec, zstar, hpars)

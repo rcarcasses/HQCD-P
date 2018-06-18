@@ -86,7 +86,7 @@ predict.Sigma <- function(sig, Izs, IzsBar, points, ...) {
 #' @export
 getIzs.Sigma <- function(sigma, points, spectra) {
   # if a custom way of computing the integral was defined, then notify the child dsigma object about it
-  if(!is.null(attr(sigma, 'IzN')))
+  if('IzN' %in% names(attributes(sigma)))
     attr(sigma$dsigma, 'IzN') <- attr(sigma, 'IzN')
   # return the z integrals for the enhanced points of the correspondent dsigma object
   getIzs(sigma$dsigma, spectra = spectra, points = enlargeKinematicsWithTs(sigma, points))
@@ -95,7 +95,7 @@ getIzs.Sigma <- function(sigma, points, spectra) {
 #' @export
 getIzsBar.Sigma <- function(sigma, points, spectra, zstar, hpars) {
   # if a custom way of computing the integral was defined, then notify the child dsigma object about it
-  if(!is.null(attr(sigma, 'IzNBar')))
+  if('IzNBar' %in% names(attributes(sigma)))
     attr(sigma$dsigma, 'IzNBar') <- attr(sigma, 'IzNBar')
   # return the z bar integrals for the enhanced points of the correspondent dsigma object
   getIzsBar(sigma$dsigma, spectra = spectra, points = enlargeKinematicsWithTs(sigma, points), zstar = zstar, hpars = hpars)

@@ -44,19 +44,25 @@ getIzs.F2 <- function(f2, spectra, points) {
           init()
           IzNfun(f2, row, spec, alpha)
         }, mc.cores = cores))
+        # stop in case of an error, and display some information
+        if(is.character(fn[1])) {
+          flog.warn('Non numeric result in F2')
+          flog.warn('%s ', fn[1])
+          stop()
+        }
         val <- as.data.frame(cbind(accspec, fn))
         colnames(val)[length(val)] <- paste0(spec$name, extra)
         val
       }, s, init = c()))
   }, spectraForTZero, init = c(NA))
 
-  if(is.null(attr(f2, 'IzN')))
-    df <- reducer(IzN, 0)
+  df <- if('IzN' %in% names(attributes(f2)))
+    reducer(attr(f2, 'IzN'), 0)
   else
-    df <- reducer(attr(f2, 'IzN'), 0)
+    reducer(IzN, 0)
+  # if considering non minimal coupling
   if(alpha != 0)
     df <- cbind(df, reducer(IzNNMC, alpha, '.NMC'))
-
   # remove the unneeded columns and return the result
   df[-which(names(df) == 'acc')]
 }
@@ -115,10 +121,10 @@ getIzsBar.F2 <- function(f2, spectra, points, zstar, hpars) {
       }, s, init = c()))
     }, spectraForTZero, init = c(NA))
   # use the attribute if defined while computing the IzNBar integrals
-  if(is.null(attr(f2, 'IzNBar')))
-    df <- reducer(IzNBar, 0)
+  df <- if('IzNBar' %in% names(attributes(f2)))
+    reducer(attr(f2, 'IzNBar'), 0)
   else
-    df <- reducer(attr(f2, 'IzNBar'), 0)
+    reducer(IzNBar, 0)
   # TODO: implement the IzNNMCBar
   #if(alpha != 0)
   #  df <- cbind(df, reducer(IzNNMCBar, alpha, '.NMC'))
