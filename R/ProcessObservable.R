@@ -100,7 +100,10 @@ getIzsBar.default <- function(x) paste('getIzsBar has to be implemented for this
 #' @export
 IzNBar <- function(x, ...) UseMethod('IzNBar')
 #' @export
-IzNBar.ProcessObservable <- function(obs, J, wf, dJdt, zstar, hpars) {
+IzNBar.ProcessObservable <- function(obs, kin, spec, zstar, hpars) {
+  J     <- spec$js
+  wf    <- spec$wf
+  dJdt  <- spec$dJdt
   t1fun <- splinefun(z, exp((-J + 0.5) * As + Phi))
   t3fun <- splinefun(wf$x, wf$y)
   # get the function H from the observable attribute H

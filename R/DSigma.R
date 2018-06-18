@@ -52,8 +52,6 @@ getIzs.DSigma <- function(dsigma, spectra, points) {
   df <- as.data.frame(Reduce(rbind, mclapply(apply(points, 1, as.list), function(row) {
     pb$tick()
     row <- as.list(row)
-    Q2 <- row$Q2
-    W  <- row$W
     t  <- row$t
     # get the spectra of all kernels for a given value of t
     spectraForT <- Filter(function(s) s$t == t, spectra)[[1]]$spectra
@@ -65,9 +63,9 @@ getIzs.DSigma <- function(dsigma, spectra, points) {
         # use the definition passed with the object to compute this integral
         # if any, the attribute has to be a function with the right arity
         if(!is.null(attr(dsigma, 'IzN')))
-          attr(dsigma, 'IzN')(dsigma, W, Q2, spec)
+          attr(dsigma, 'IzN')(dsigma, row, spec)
         else
-          IzN(dsigma, W, Q2, spec$js, spec$wf)
+          IzN(dsigma, row, spec)
       })
     }), recursive = TRUE)
     names(r) <- fnNames
@@ -110,9 +108,9 @@ getIzsBar.DSigma <- function(dsigma, spectra, points, zstar, hpars) {
           IzBarCache[[id]] <- if(!is.null(attr(dsigma, 'IzNBar')))
             # use the definition passed with the object to compute this integral
             # if any, the attribute has to be a function with the right arity
-            attr(dsigma, 'IzNBar')(dsigma, W, Q2, spec, zstar, hpars)
+            attr(dsigma, 'IzNBar')(dsigma, row, spec, zstar, hpars)
           else
-            IzNBar(dsigma, spec$js, spec$wf, spec$dJdt, zstar, hpars)
+            IzNBar(dsigma, row, spec, zstar, hpars)
 
         IzBarCache[[id]]
       })
@@ -125,7 +123,11 @@ getIzsBar.DSigma <- function(dsigma, spectra, points, zstar, hpars) {
 }
 
 #' @export
-IzN.DSigma <- function(dsigma, W, Q2, J, wf) {
+IzN.DSigma <- function(dsigma, kin, spec) {
+  W  <- kin$W
+  Q2 <- kin$Q2
+  J  <- spec$js
+  wf <- spec$wf
   t1fun <- splinefun(z, exp((-J + 1.5) * As))
   t2fun <- getExternalStateFactor(dsigma, Q2 = Q2)
   t3fun <- splinefun(wf$x, wf$y)

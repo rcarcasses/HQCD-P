@@ -42,7 +42,7 @@ getIzs.F2 <- function(f2, spectra, points) {
         fn <- unlist(mclapply(apply(points, 1, as.list), function(row) {
           # we need to initialize the computation on each node
           init()
-          IzNfun(f2, row$Q2, row$x, spec$js, spec$wf, alpha)
+          IzNfun(f2, row, spec, alpha)
         }, mc.cores = cores))
         val <- as.data.frame(cbind(accspec, fn))
         colnames(val)[length(val)] <- paste0(spec$name, extra)
@@ -50,7 +50,10 @@ getIzs.F2 <- function(f2, spectra, points) {
       }, s, init = c()))
   }, spectraForTZero, init = c(NA))
 
-  df <- reducer(IzN, alpha)
+  if(is.null(attr(f2, 'IzN')))
+    df <- reducer(IzN, 0)
+  else
+    df <- reducer(attr(f2, 'IzN'), 0)
   if(alpha != 0)
     df <- cbind(df, reducer(IzNNMC, alpha, '.NMC'))
 
@@ -59,7 +62,11 @@ getIzs.F2 <- function(f2, spectra, points) {
 }
 
 #' @export
-IzN.F2 <- function(f2, Q2, x, J, wf, alpha) {
+IzN.F2 <- function(f2, kin, spec, alpha) {
+  Q2 <- kin$Q2
+  x  <- kin$x
+  J  <- spec$js
+  wf <- spec$wf
   t1fun <- splinefun(z, exp((-J + 1.5) * As))
   t2fun <- getU1NNMode(Q2 = Q2, alpha = alpha)$factor # this is a spline fun
   t3fun <- splinefun(wf$x, wf$y)
@@ -68,7 +75,11 @@ IzN.F2 <- function(f2, Q2, x, J, wf, alpha) {
   factor *  x^(1 - J) * Q2^J * integral$value
 }
 
-IzNNMC.F2 <- function(f2, Q2, x, J, wf, alpha) {
+IzNNMC.F2 <- function(f2, kin, spec, alpha) {
+  Q2 <- kin$Q2
+  x  <- kin$x
+  J  <- spec$js
+  wf <- spec$wf
   mode  <- getU1NNMode(Q2 = Q2, alpha)
   fQ2   <- mode$fQ2
   dfQ2  <- mode$dfQ2
@@ -93,21 +104,24 @@ getIzsBar.F2 <- function(f2, spectra, points, zstar, hpars) {
     # iterate over each kernel's spectrum
     Reduce(function(acc, s) {
       # iterate over each Reggeon for the given spectrum
-      # remember, the tr1 and tr2 are not data about the reggeons
       cbind(acc, Reduce(function(accspec, spec) {
         # repeat the results as needed
         fn <- rep(
-                Im(IzNBarfun(f2, spec$js, spec$wf, spec$dJdt, zstar, hpars)),
+                Im(IzNBarfun(f2, NULL, spec, zstar, hpars)),
               length(points[[1]]))
         val <- as.data.frame(cbind(accspec, fn))
         colnames(val)[length(val)] <- paste0(spec$name, extra)
         val
       }, s, init = c()))
     }, spectraForTZero, init = c(NA))
-
-  df <- reducer(IzNBar, alpha)
-  if(alpha != 0)
-    df <- cbind(df, reducer(IzNNMCBar, alpha, '.NMC'))
+  # use the attribute if defined while computing the IzNBar integrals
+  if(is.null(attr(f2, 'IzNBar')))
+    df <- reducer(IzNBar, 0)
+  else
+    df <- reducer(attr(f2, 'IzNBar'), 0)
+  # TODO: implement the IzNNMCBar
+  #if(alpha != 0)
+  #  df <- cbind(df, reducer(IzNNMCBar, alpha, '.NMC'))
 
   # remove the unneeded columns and return the result
   df[-which(names(df) == 'acc')]
