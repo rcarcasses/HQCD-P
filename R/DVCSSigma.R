@@ -18,13 +18,15 @@ plot.DVCSSigma <- function(dvcss, predicted = NULL) {
   allQ2s <- sort(unique(dvcss$data$Q2))
   data <- dvcss$data
   values <- data$dsigma
+  plot.new()
+  par(mar = c(4, 5, 2, 2))
   # prepare the plot
   plot(1e-10, 1,
        log = 'y',
        las = 1,
        xlim = c(30, 165),
        ylim = c(0.07, 40),
-       xlab = 'W', ylab = expression(sigma[t]),
+       xlab = expression(W ~ italic('(GeV)')), ylab = expression(sigma[t] ~ italic('(nb)')),
        xaxt = 'n', yaxt = 'n')
   hTicks <- 10^(-1:1)
   vTicks <- c(60, 100, 140)
@@ -58,6 +60,6 @@ plot.DVCSSigma <- function(dvcss, predicted = NULL) {
                  cex = 0.8, xpad = 1.3, ypad = 1.3, border = FALSE, bg = 'white', ylog = TRUE)
     i <<- i + 1
   })
-
+  par()
   invisible(predicted)
 }

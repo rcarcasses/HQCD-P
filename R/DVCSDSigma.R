@@ -42,7 +42,7 @@ predict.DVCSDSigma <- function(dsigma, Izs, IzsBar, points, alpha = 0, ...) {
 #' @export
 plot.DVCSDSigma <- function(dvcsds, predicted, numGraphs = 4) {
   plot.new()
-  par(mfrow = c(2, 2), las = 1)
+  par(mfrow = c(2, 2), las = 1, mar = c(4, 4, 1, 2))
   # group by the following values of Q2
   allQ2s <- list(c(3.2, 20.0), c(8), c(10), c(15.5, 25.0))
   # do as many plot as demanded
@@ -89,7 +89,7 @@ plot.DVCSDSigma <- function(dvcsds, predicted, numGraphs = 4) {
           predictedQ2andW <- predictedQ2andW[order(predictedQ2andW$t),]
           lines(-predictedQ2andW$t, predictedQ2andW$predicted, col = col)
         })
-        legendItems[[length(legendItems) + 1]] <<- list(pch = pch, col = col, W = W, Q2 = Q2)
+        legendItems[[length(legendItems) + 1]] <<- list(pch = pch, col = col, W = W, Q2 = paste0(Q2, ', '))
         # get the predicted values for the given values of W and Q2
         j <<- j + 1
       })
@@ -97,7 +97,7 @@ plot.DVCSDSigma <- function(dvcsds, predicted, numGraphs = 4) {
     })
     # add the legend
     txt <- sapply(legendItems, function(item) as.expression(substitute(Q^2 == Q2 ~~ 'W' == W, item)))
-    legend(0.6, 70, txt, pch = sapply(legendItems, `[[`, 'pch'), col = sapply(legendItems, `[[`, 'col'), bty = 'o', y.intersp = 0.9, cex = 0.8, box.lwd = 0, box.col = "white",bg = "white")
+    legend(0.55, 60, txt, pch = sapply(legendItems, `[[`, 'pch'), col = sapply(legendItems, `[[`, 'col'), bty = 'o', y.intersp = 0.9, cex = 0.8, box.lwd = 0, box.col = "white",bg = "white")
   }))
   invisible(par())
 }
