@@ -167,11 +167,13 @@ expErr.F2 <- function(f2) f2$data$err
 expKinematics.F2 <- function(f2) as.data.frame(f2$data[c('Q2', 'x')])
 
 # this function attempts to reconstruct the wavefunctions from the raw data
-reconstruct.F2 <- function(f2, js = c(1.3, 1.09)) {
+#' @export
+reconstruct.F2 <- function(f2, js = c(1.17, 1.09), getPsiNs = FALSE, isAdS = FALSE) {
   # get the data
   data <- cbind(list(F2 = expVal(f2)), expKinematics(f2), list(err = expErr(f2)))
   # get all the different values of Q2, once
   Q2s <- unique(data$Q2)
+  df <- data.frame(Q2 = c(), rss = c(), c1 = c(), c2 = c())
   Filter(function(q) !any(is.na(q)),
     lapply(Q2s, function(Q2) {
       # get the data of this Q2
@@ -190,17 +192,144 @@ reconstruct.F2 <- function(f2, js = c(1.3, 1.09)) {
         acc
       }, js, init = list())))
       fit <- lm(F2 ~ . - 1, data = lmData, weights = dataForQ2$err^(-2))
-      c(list(Q2 = Q2, rss = sum(fit$residuals^2)), fit$coefficients)
+      # get the standard errors
+      s.e <- summary(fit)$coefficients[,2]
+      df <<- rbind(df, data.frame(Q2 = Q2,
+                                  rss = sum(fit$residuals^2),
+                                  c1 = fit$coefficients[1],
+                                  dc1 = s.e[1],
+                                  c2 = fit$coefficients[2],
+                                  dc2 = s.e[2]))
     }))
+  rownames(df) <- c()
+  fNs <- na.omit(df)
+  r <- if(getPsiNs)
+    list(fNs = fNs, psiNs = reconstructPsiNs(fNs, js, isAdS))
+  else
+    fNs
+  # mark this as an object that contains reconstruction data of F2
+  class(r) <- append('F2reconstructed', class(r))
+  # pass the used js as attribute
+  attr(r, 'js') <- js
+  r
 }
 
+#' @export
+plot.F2reconstructed <- function(r, method = 'fNs', ...) {
+  js <- attr(r, 'js')
+  print(js)
+  df <- if(is.null(r$fNs)) r else r$fNs
+  f0 <- function(pch = 20, col = 'black') {
+    # plot f0
+    lines(log(df$Q2), df$c1, pch = pch, col = col, type = 'p')
+    # plot the error bars with 2 sigma
+    arrows(log(df$Q2), df$c1 - 2 * df$dc1, log(df$Q2), df$c1 + 2 * df$dc1,
+           length = 0.04, angle = 90, code = 3, col = col)
+    # plot a background grid to improve readability
+    abline(h = 0.5 * (0:3), v = 2 * (-1:3), lty = 3, col = 'lightgrey')
+    # plot an approximating function
+    f0.lm <- lm(c1 ~ I(log(Q2))+I(log(Q2)^2), data = df)
+    logQ2s <- seq(-2, 6, len = 200)
+    lines(logQ2s, predict(f0.lm, newdata = data.frame(Q2 = exp(logQ2s))), col = col)
+  }
+  f1 <- function(pch = 20, col = 'black') {
+    # plot f1
+    lines(log(df$Q2), df$c2, pch = pch, col = col, type = 'p')
+    # plot the error bars with 2 sigma
+    arrows(log(df$Q2), df$c2 - 2 * df$dc2, log(df$Q2), df$c2 + 2 * df$dc2,
+           length = 0.04, angle = 90, code = 3, col = col)
+    # plot a background grid to improve readability
+    abline(h = 0.5 * (-4:1), v = 2 * (-1:3), lty = 3, col = 'lightgrey')
+    # plot an approximating function
+    f1.lm <- lm(c2 ~ I(log(Q2))+I(log(Q2)^2), data = df)
+    logQ2s <- seq(-2, 6, len = 200)
+    lines(logQ2s, predict(f1.lm, newdata = data.frame(Q2 = exp(logQ2s))), col = col)
+  }
+
+  switch (method,
+    'fNs' = {
+      plot(-100, xlim = c(-2, 6), ylim = c(-2, 2),
+           ylab = expression(f[0] ~ ', '~ f[1]),
+           xlab = expression(log(Q^2)),
+           main = eval(substitute(expression(f[0](Q^2) ~ ' and ' ~ f[1](Q^2) ~ ' for ' ~ j[0] == j0 ~ ' and ' ~ j[1] ==  j1), list(j0 = format(js[1], digits = 4), j1 = format(js[2], digits = 4))))
+           )
+      f0(col = 'red')
+      f1(col = 'blue')
+    },
+    'f0'  = {
+      plot(-100, xlim = c(-2, 6), ylim = c(-0.3, 2),
+           ylab = expression(f[0](Q^2)),
+           xlab = expression(log(Q^2)),
+           main = expression(f[0](Q^2)))
+      f0()
+    },
+    'f1'  = {
+      plot(1, xlim = c(-2, 6), ylim = c(-2, 0.3),
+           ylab = expression(f[1](Q^2)),
+           xlab = expression(log(Q^2)),
+           main = expression(f[1](Q^2)))
+      f1()
+    }
+  )
+}
+
+
+
+# From the tests I have made it seems like the most important
+# ingredient to get the right shapes for the kernel wavefuntions
+# is the dilaton profile: you can run AdS and warped AdS cases
+# with zero dilaton and the reconstruction does not work well,
+# however, if you consider a non trivial dilaton in both cases
+# one get reasonable shapes, particularly better for the warped
+# AdS case.
+reconstructPsiNs <- function(fNs, js = c(1.17, 1.09), isAdS = FALSE) {
+  if(isAdS) {
+    Asfun <- splinefun(z, -log(z))
+    Phifun <- splinefun(z, rep(0, length(z)))
+  } else {
+    Asfun <- splinefun(z, As)
+    Phifun <- splinefun(z, Phi)
+  }
+  fNs <- cbind(fNs, z = 1/sqrt(r$Q2))
+  lapply(1:length(js), function(jsIndex) {
+    as.data.frame(cbind(z = 1/sqrt(r$Q2),
+          psi = apply(r, 1, function(row) {
+            row <- as.list(row)
+            exp((js[jsIndex] - (1/2)) * Asfun(1/row$z)) * exp(-Phifun(row$z)) * row$Q2^(-js[jsIndex]) * row[[paste0('c', jsIndex)]]
+          })))
+  })
+}
+
+#' @export
+plotReconstructedf0f1 <- function(js = c(1.17, 1.09), isAdS = FALSE) {
+  r <- reconstruct(F2(), js)
+  plot(r$Q2, r$c1, log = 'x', pch = 20, col = 'blue',
+       ylim = c(-1.5, 1.5),
+       ylab = expression(paste(f[0], ', ', f[1])),
+       xlab = expression(Q^2))
+  lines(r$Q2, r$c2, type = 'p', pch = 20, col = 'red')
+  abline(h = 0.5 * (-3:3), v = c(0.2, 2, 20, 200), col = 'gray80', lty = 3)
+}
+
+#' @export
+plotReconstructedPsiNs <- function(js = c(1.17, 1.09), isAdS = FALSE) {
+  psin <- reconstructPsiNs(js, isAdS)
+  plot(psin[[1]]$z, psin[[1]]$psi, col = 'red',
+       ylim = c(-0.25, 0.5),
+       ylab = expression(paste(psi[0], ', ', psi[1])),
+       xlab = expression(z), pch = 20)
+  lines(psin[[2]]$z, psin[[2]]$psi, col = 'blue', type = 'p', pch = 20)
+  abline(h = 0.1 * (-3:5), v = 0.5 * (0:5), col = 'gray80', lty = 3)
+}
+
+#' @export
 getBestExponents.F2 <- function(f2) {
   fOptim <- function(pars) {
-    val <- sum(unlist(lapply(reconstruct.F2(f2, pars), `[[`, 'rss')))
+    val <- sum(reconstruct(f2, c(pars, 1.09))$rss)
     cat('pars', pars, ' value', val, '\n')
     val
   }
-  optim(c(1.3, 1.1), fOptim)
+  optim(c(1.3), fOptim)
 }
 
 #' For F2 the enlargement of the experimental data produces
