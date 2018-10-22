@@ -100,4 +100,3 @@ plot(z, cF, ylim = c(0, 6), xlim = c(0, 6), xlab = 'z', ylab = 'c', type = 'l')
 abline(h = 0, lty = 'dashed')
 par(op)
 ```
-
