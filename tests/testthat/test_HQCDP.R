@@ -35,7 +35,7 @@ test_that('HQCDP fit works', {
   expect_true(length(p$kernels) == 2)
 })
 
-test_that('HQCDP addKernel is functional', {
+test_that('HQCDP addProcessObservable is functional', {
   # test the addKernel
   # create a mockup f2 object
   f2   <- F2()

@@ -11,4 +11,11 @@ man/
 R/runs/test/
 NAMESPACE
 *.rds
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.pdf
+*.synctex.gz
+*.toc
 
