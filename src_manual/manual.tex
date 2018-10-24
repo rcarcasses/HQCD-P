@@ -1,17 +1,81 @@
 % Define document class
 \documentclass{book}
 
+% Call the needed packages
+\usepackage{listings}
+\usepackage{color}
 
+% Setting the code language to appear
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=R,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
 
 \begin{document}
 \title{Holographic QCD Pomeron}
 \author{Artur Amorim, Robert Carcasses Quevedo}
 \maketitle
 \tableofcontents
-
+%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Introduction}
+%%%%%%%%%%%%%%%%%%%%%%%%
+
 This is a manual that helps the user to use our tool. The objective is the user to choose his/her favourite model and comparing it with the available scattering data.
 
+%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{HQCDP Class}
-In order to fit the holographic model of QCD we need first to create a HQCDP object. Here we describe the functions of this class and provide examples of how to use them.
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+In order to fit the holographic model of QCD we need first to create a HQCDP object. Here we describe the functions of this class and provide examples of how to use them. Below we present the different functions of this class as well a description of how to use them.
+
+%%%%%%%%%%%%%%%%%%%%%%%
+\section{HQCDP}
+%%%%%%%%%%%%%%%%%%%%%%%
+
+This function starts a HQCDP object. It allows to define a model with many kernels that can be tested against the data of experimental observables available. It's definition is
+\begin{lstlisting}
+HQCDP <- function (alpha = 0, fixed = list (),
+                  rsslog = FALSE, rootRejectionWeight = 1,
+                  rootRejectionCutoff = 0.02, H = NULL,
+                  hparsInitDefault = NULL)    
+\end{lstlisting}
+H is the function we will use to describe the couplings $k_J$ between the bulk fields and the fields of the graviton Regge trajectory.\ hparInitDefault is the parameters that define the function H.
+To initialize a HQCDP object you just need to type
+\begin{lstlisting}
+    p <- HQCD ()
+\end{lstlisting}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+\section{addKernel}
+%%%%%%%%%%%%%%%%%%%%%%%
+This function allow to add a Kernel to the holographic pomeron. This kernel is determined by its potential, number of Regeons, a comment giving more details, its name and parameters necessary to define the potential.
+After defining a HQCP object you can act in it with this function as
+\begin{lstlisting}
+    p <- addKernel (p, potential, numReg, comment, kernelName, optimPars)
+\end{lstlisting}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+\section{addProcessObservable}
+%%%%%%%%%%%%%%%%%%%%%%%
+In order to fit our model we need data. This function allows us to add which processes we want to use data to fit the holographic pomeron. If we define a ppDSigma object named pp we can add it as
+\begin{lstlisting}
+    p <- addProcessObservable (p, pp)
+\end{lstlisting}
+
 \end{document}
