@@ -1,9 +1,38 @@
 % Define document class
 \documentclass{book}
 
-% Call the needed packages
+% Call the needed packages to represent code
 \usepackage{listings}
 \usepackage{color}
+
+% Call the needed packages to draw the decision tree
+\usepackage{tikz,forest}
+\usetikzlibrary{arrows.meta}
+% Set the forest. Copied from stackexchange
+\forestset{
+    .style={
+        for tree={
+            base=bottom,
+            child anchor=north,
+            align=center,
+            s sep+=1cm,
+    straight edge/.style={
+        edge path={\noexpand\path[\forestoption{edge},thick,-{Latex}] 
+        (!u.parent anchor) -- (.child anchor);}
+    },
+    if n children={0}
+        {tier=word, draw, thick, rectangle}
+        {draw, diamond, thick, aspect=2},
+    if n=1{%
+        edge path={\noexpand\path[\forestoption{edge},thick,-{Latex}] 
+        (!u.parent anchor) -| (.child anchor) node[pos=.2, above] {Y};}
+        }{
+        edge path={\noexpand\path[\forestoption{edge},thick,-{Latex}] 
+        (!u.parent anchor) -| (.child anchor) node[pos=.2, above] {N};}
+        }
+        }
+    }
+}
 
 % Setting the code language to appear
 \definecolor{dkgreen}{rgb}{0,0.6,0}
@@ -28,10 +57,12 @@
 }
 
 \begin{document}
+
 \title{Holographic QCD Pomeron}
 \author{Artur Amorim, Robert Carcasses Quevedo}
 \maketitle
 \tableofcontents
+
 %%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%
@@ -77,5 +108,87 @@ In order to fit our model we need data. This function allows us to add which pro
 \begin{lstlisting}
     p <- addProcessObservable (p, pp)
 \end{lstlisting}
+Remember to define first the object associated with the observable.
 
+%%%%%%%%%%%%%%%%%%%%%%%
+\section{rss}
+%%%%%%%%%%%%%%%%%%%%%%%
+For a given value of the parameters of our model it computes the sum of the $\chi^2$ of each individual observable. We try to minimize this quantity in order to find a optimal set of parameters. It takes as input a HQCDP object x, a set of parameters that characterizes the kernel of the pomeron as well the parameters that characterizes the couplings between the bulk fields and the fields of the graviton Regge trajectory. Simply call it by typing
+\begin{lstlisting}
+    rss (x, pars, zstar, hpars)
+\end{lstlisting}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+\section{fit}
+%%%%%%%%%%%%%%%%%%%%%%%
+
+Function that fits the model using the data of the processes that were added to the HQCDP object. To each of these processes it is associated a~$\chi^2$. The function we try to minimize is the sum of the $\chi^2$ of each process. It returns the minimum $\chi^2$ as well the values of the parameters of the model at that point. The standard method to find the minimum is Nelder-Mead.
+\begin{lstlisting}
+    fit (x, pars, zstar, hpars, method = `Nelder-Mead`)
+\end{lstlisting}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+\section{getNeededTVals}
+%%%%%%%%%%%%%%%%%%%%%%%
+
+For a given set of parameters, in order to predict observables, we need to compute the spectrum of the pomeron. The function getNeededTVals returns a list that contains all the necessary t values to compute de spectrum. This function is called after adding all the Process observable that we want to fit. Each of this process observable has a set of values of t that will be contained in the list returned by this function. For a HQCDP object x simply call
+\begin{lstlisting}
+    getNeededTVals (x)
+\end{lstlisting}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+\section{getSpectra}
+%%%%%%%%%%%%%%%%%%%%%%%
+
+After specifying the kernel of the Pomeron using the function addKernel we can compute the associated spectra. The input of this function is a HQCDP object, the set of parameters that characterizes the kernel and a list of t values for wich we want to compute the spectra. If the list of t values is not provided the function will call internally getNeededTVals. 
+
+The function after called will return a list with the same number of elements as the number of different of different values of t. Each element has a t variable and a spectra variable that contains all the information relevant to the spectrum for a given value of t. The spectra variable then consists of a list whose elements correspond to the different kernels being used in the fit. Each of these kernels has a number of Reggeons that was specified when the kernel was added by the addKernel function. Each Reggeon is a list the the value of $j_n\left(t\right)$, $\frac{d j_n}{d t}$ and the corresponding wavefunction. An example of what to use this function is the following
+\begin{lstlisting}
+    x <- HQCDP ()
+    x <- addKernel (p, potential = UJgTest,
+                        numReg = 2, comment = `Leading twist gluon sector,
+                        kernelName = `gluon,
+                        optimPars = c (invls = 1/0.153, a = -4.35, b = 1.41, c = 0.626, d = -0.117))
+
+    t <- seq (-10, 10, 0.1)
+    spec <- getSpectra (x, t)
+\end{lstlisting}
+A scheme of how the output of getSpectra is organized is given below
+
+\begin{forest}
+    for tree={
+      draw,
+      minimum height=2cm,
+      anchor=north,
+      align=center,
+      child anchor=north
+    },
+    [{getSpectra}, align=center, name=SS
+      [{spectra}, name=PDC
+        [K1, name=MS,
+        [R1
+        [$j_n$]
+        [$\frac{d j_n}{dt}$]
+        [wavefunction
+        [x]
+        [y]
+        ]
+        ]
+        [R2]
+        [R3]
+        ]
+        [K2
+        [R1]
+        [R2]
+        ]
+      ]
+      [{t}]
+    ]
+    \node[anchor=west,align=left] 
+      at ([xshift=-2cm]MS.west) {};
+    \node[anchor=west,align=left] 
+      at ([xshift=-2cm]MS.west|-PDC) {};
+    \node[anchor=west,align=left] 
+      at ([xshift=-2cm]MS.west|-SS) {};
+    \end{forest}
 \end{document}
