@@ -95,6 +95,7 @@ iHQCD <- function(A0 = 5, zmax = 10, h = 0.002, lambda0 = 0.0337462) {
         Phider2 = Phider2[st:len],
         Phifun  = Phispline,
         As = As[st:len],
+        AsSpline = AsSpline,
         dress = dress[st:len],
         aF = aF[st:len],
         bF = bF[st:len],
