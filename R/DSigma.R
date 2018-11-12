@@ -19,6 +19,8 @@ getAmplitude.DSigma <- function(dsigma, Izs, IzsBar, points, ...) {
     return(list(tt = getAmplitude(dsigma$tt, Izs, IzsBar, points = points, ...),
                 ll = getAmplitude(dsigma$ll, Izs, IzsBar, points = points, ...)))
 
+  #print(Izs)
+  #print(IzsBar)
   rowSums(Izs * IzsBar, na.rm = TRUE)
 }
 
@@ -123,13 +125,21 @@ getIzsBar.DSigma <- function(dsigma, spectra, points, zstar, hpars) {
 }
 
 #' @export
-IzN.DSigma <- function(dsigma, kin, spec) {
+IzN.DSigma <- function(dsigma, kin, spec, zstar) {
   W  <- kin$W
-  Q2 <- kin$Q2
   J  <- spec$js
   wf <- spec$wf
-  t1fun <- splinefun(z, exp((-J + 1.5) * As))
-  t2fun <- getExternalStateFactor(dsigma, Q2 = Q2)
+  if ( class(dsigma)[length(class(dsigma))] == "ppDSigma" )
+  {
+    t1fun <- splinefun(z, exp((-J + 0.5) * As + Phi))
+    t2fun <- -getExternalProtonFactor() # We put a minus because we have - \sum_n Iz_n IzBar_z
+  }
+  else
+  {
+    Q2 <- kin$Q2
+    t1fun <- splinefun(z, exp((-J + 1.5) * As))
+    t2fun <- getExternalStateFactor(dsigma, Q2 = Q2)
+  }
   t3fun <- splinefun(wf$x, wf$y)
   integral <- integrate(function(x)  t1fun(x) * t2fun(x) * t3fun(x), z[1], z[length(z)], stop.on.error = FALSE)
   # return the full thing needed for the amplitude
@@ -159,6 +169,10 @@ IzNNMC2.DSigma <- function(dsigma, W, Q2, J, wf) {
 getExternalStateFactor <- function(x, ...) UseMethod('getExternalStateFactor')
 
 getExternalStateFactor.default <- function(x, ...) 'getExternalStateFactor have to be implemented for this process'
+
+getBackgroundFactor <- function(x, ...) UseMethod('getBackgroundFactor')
+
+getBackgroundFactor.default <- function(x, ...) 'getBackgroundFactor have to be implemented for this process'
 
 #' @export
 expVal.DSigma <- function(dsigma) dsigma$data$dsigma

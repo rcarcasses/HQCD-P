@@ -21,22 +21,6 @@ predict.ppDSigma <- function(dsigma, Izs, IzsBar, points, ...) {
   df
 }
 
-# Here is the expression we have for IzN for a delta function approximation
-#' @export
-IzN.ppDSigma <- function(pp, kin, spec, zstar) {
-  W  <- kin$W
-  J  <- spec$js
-  dJ <- spec$dJdt
-  psi <- splinefun(spec$wf$x, spec$wf$y)
-  factor <- - (pi / 2) * W^(2*J) * dJ * (1/tan(J*pi/2) + 1i) / 2^J
-  factor <- factor * (exp(Phifun(zstar) - (J - 0.5)*Afun(zstar)) * psi(zstar))^2
-  factor
-}
-#' @export
-IzNBar.ppDSigma <- function(pp, kin, spec, zstar) {
-  1
-}
-
 #' @export
 expVal.ppDSigma <- function(pp) pp$data$dsigma
 #' @export

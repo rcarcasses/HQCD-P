@@ -105,16 +105,19 @@ IzNBar.ProcessObservable <- function(obs, kin, spec, zstar, hpars) {
   wf    <- spec$wf
   dJdt  <- spec$dJdt
   t1fun <- splinefun(z, exp((-J + 0.5) * As + Phi))
+  t2fun <- getExternalProtonFactor()
   t3fun <- splinefun(wf$x, wf$y)
+  integral <- integrate(function(x) t1fun(x) * t2fun(x) * t3fun(x), z[1], z[length(z)], stop.on.error = FALSE)$value
   # get the function H from the observable attribute H
   H <- attr(obs, 'H')
   # if it doesn't exist use a default one
+  # THIS FUNCTION DEPENDING IF WE CONSIDER PP SCATTERING OR NOT. THINK ABOUT THIS LATER
   if(is.null(H))
     H <- function(J, hpars)
-           exp(100 * (hpars[1] + hpars[2] * J + hpars[3] * log(J) + hpars[4] * J * log(J) + hpars[5] * J^2))
-  # compute the gns
-  gn <- H(J, hpars) *  dJdt * t1fun(zstar) * t3fun(zstar)
-  gn * (1i + 1 / tan(pi * J / 2))
+           exp( hpars[1] + hpars[2] * (J - 1) + hpars[3] * (J - 1)^2 )
+  # Return IzNBar
+  iznbar <- H(J, hpars) * (1i + 1 / tan( 0.5 * pi * J) ) * dJdt * integral
+  return(iznbar)
 }
 
 #' @export
@@ -127,7 +130,8 @@ rss.ProcessObservable <- function(obs, ...) {
     val
   else
     list(val = val)
-}
+  }
+
 
 diffObsWeighted <- function(x, ...) UseMethod('diffObsWeighted')
 diffObsWeighted.ProcessObservable <- function(obs, ...) {

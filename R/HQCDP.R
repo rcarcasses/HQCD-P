@@ -531,7 +531,7 @@ plot.HQCDP <- function(x, predicted = NULL, pars = NULL, zstar = NULL, hpars = N
     }, x$processes, plotPoints)
     pb <- progress_bar$new(format = " computing IzsBar [:bar] :percent eta: :eta",
                            total = length(x$processes), clear = FALSE, width= 60)
-    # get the Izs for the plot points
+    # get the IzBars for the plot points
     allProcIzsBar <- mapply(function(proc, points) {
       pb$tick()
       list(getIzsBar(proc, spectra = spectra, points = points, zstar = zstar, hpars = hpars))
