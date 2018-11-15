@@ -10,7 +10,7 @@ VR <- function(z, m5 = 2.5) {
   return( exp(2*AsSpline(z)) * m5^2 + m5 * AsSpline(z, deriv = 1) * exp(AsSpline(z)) )
 }
 
-getSpinorLModeRaw <- function(m5 = 2.5)
+getSpinorLModeRaw <- function(m5 = 2.5, n = 1)
 {
   # Computes the lowest L eigenvalue wavefunction for a bulk field of mass m5
   # It returns gL^2 spline function
@@ -18,12 +18,12 @@ getSpinorLModeRaw <- function(m5 = 2.5)
   # Compute the potential for the left-handed mode
   V  <- VL(z, m5)
   # We identify the proton as the lowest energy state
-  data <- computeSpectrum(z, V, nEigen = 1)$wfs[[1]]
+  data <- computeSpectrum(z, V, nEigen = n)$wfs[[n]]
   wf <- splinefun(data$x, data$y^2)
   return(wf)
 }
 
-getSpinorRModeRaw <- function(m5 = 2.5)
+getSpinorRModeRaw <- function(m5 = 2.5, n = 1)
 {
   # Computes the lowest R eigenvalue wavefunction for a bulk field of mass m5
   # It returns gR^2 spline function
@@ -31,18 +31,18 @@ getSpinorRModeRaw <- function(m5 = 2.5)
   # Compute the potential for the left-handed mode
   V  <- VR(z, m5)
   # We identify the proton as the lowest energy state
-  data <- computeSpectrum(z, V, nEigen = 1)$wfs[[1]]
+  data <- computeSpectrum(z, V, nEigen = n)$wfs[[n]]
   wf <- splinefun(data$x, data$y^2)
   return(wf)
 }
 
-getExternalProtonFactorRaw <- function(m5 = 2.5)
+getExternalSpinorFactorRaw <- function(m5 = 2.5, n = 1)
 {
   # Returns gL^2 + gR^2 that will be usefull later
-  gL2fun <- getSpinorLModeRaw(m5)
-  gR2fun <- getSpinorRModeRaw(m5)
-  protonExtFactorFun <- splinefun(z, gL2fun(z) + gR2fun(z))
-  return(protonExtFactorFun)
+  gL2fun <- getSpinorLModeRaw(m5, n)
+  gR2fun <- getSpinorRModeRaw(m5, n)
+  spinorExtFactorFun <- splinefun(z, gL2fun(z) + gR2fun(z))
+  return(spinorExtFactorFun)
 }
 
 #' @export
@@ -52,7 +52,4 @@ getSpinorLMode <- cache(getSpinorLModeRaw)
 getSpinorRMode <- cache(getSpinorRModeRaw)
 
 #' @export
-getExternalProtonFactor <- cache(getExternalProtonFactorRaw)
-
-
-
+getExternalSpinorFactor <- cache(getExternalSpinorFactorRaw)

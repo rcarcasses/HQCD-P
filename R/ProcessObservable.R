@@ -105,16 +105,17 @@ IzNBar.ProcessObservable <- function(obs, kin, spec, zstar, hpars) {
   wf    <- spec$wf
   dJdt  <- spec$dJdt
   t1fun <- splinefun(z, exp((-J + 0.5) * As + Phi))
-  t2fun <- getExternalProtonFactor()
+  t2fun <- getExternalProtonFactor(obs)
   t3fun <- splinefun(wf$x, wf$y)
   integral <- integrate(function(x) t1fun(x) * t2fun(x) * t3fun(x), z[1], z[length(z)], stop.on.error = FALSE)$value
   # get the function H from the observable attribute H
   H <- attr(obs, 'H')
   # if it doesn't exist use a default one
-  # THIS FUNCTION DEPENDING IF WE CONSIDER PP SCATTERING OR NOT. THINK ABOUT THIS LATER
+  # THIS FUNCTION DEPENDS IF WE CONSIDER PP SCATTERING OR NOT. THINK ABOUT THIS LATER
+  coeff <- hpars[(3*spec$index-2):(3*spec$index)]
   if(is.null(H))
-    H <- function(J, hpars)
-           exp( hpars[1] + hpars[2] * (J - 1) + hpars[3] * (J - 1)^2 )
+    H <- function(J, coeff)
+           exp( coeff[1] + coeff[2] * (J - 1) + coeff[3] * (J - 1)^2 )
   # Return IzNBar
   iznbar <- H(J, hpars) * (1i + 1 / tan( 0.5 * pi * J) ) * dJdt * integral
   return(iznbar)
@@ -147,6 +148,17 @@ diffObsWeighted.ProcessObservable <- function(obs, ...) {
     Oexp * log(Opred / Oexp) / Oerr
   else
     (Opred - Oexp) / Oerr
+}
+
+#' @export
+getExternalProtonFactor <- function(x, ...) UseMethod('getExternalProtonFactor')
+
+#' @export
+getExternalProtonFactor.default <- function(x, ...) 'getExternalProtonFactor have to be implemented for this process'
+
+#' @export
+getExternalProtonFactor.ProcessObservable <- function(obs, m5 = 2.5) {
+  getExternalSpinorFactor(m5, n = 1)
 }
 
 #' @export

@@ -80,10 +80,6 @@ getIzs.DSigma <- function(dsigma, spectra, points) {
 #' Get the integrals on z bar
 #' @export
 getIzsBar.DSigma <- function(dsigma, spectra, points, zstar, hpars) {
-  # if it is a composed object then just call getIzs on each children
-  if(!is.null(dsigma$tt) && !is.null(dsigma$ll))
-    return(list(tt = getIzs(dsigma$tt, spectra, points = points),
-                ll = getIzs(dsigma$ll, spectra, points = points)))
   fnNames <- unlist(lapply(spectra[[1]]$spectra,
                            function(s)
                              unlist(lapply(s, function(spec) paste0('fn.', spec$name)))))
@@ -92,7 +88,9 @@ getIzsBar.DSigma <- function(dsigma, spectra, points, zstar, hpars) {
   pb <- progress_bar$new(format = " getIzsBar.DSigma [:bar] :percent eta: :eta",
                           total = length(points[[1]]), clear = FALSE, width= 60)
   IzBarCache <- list()
-  df <- as.data.frame(Reduce(rbind, lapply(apply(points, 1, as.list), function(row) {
+  # We take only the 2nd and 3rd columns of points because for the proton
+  # There is no virtuality Q and so it is not relevant to this part of the diagram
+  df <- as.data.frame(Reduce(rbind, lapply(apply(points[,2:3], 1, as.list), function(row) {
     pb$tick()
     row <- as.list(row)
     t  <- row$t
@@ -131,19 +129,21 @@ IzN.DSigma <- function(dsigma, kin, spec, zstar) {
   wf <- spec$wf
   if ( class(dsigma)[length(class(dsigma))] == "ppDSigma" )
   {
+    fact  <- -1 # We put a minus because we have - \sum_n Iz_n IzBar_z
     t1fun <- splinefun(z, exp((-J + 0.5) * As + Phi))
-    t2fun <- -getExternalProtonFactor() # We put a minus because we have - \sum_n Iz_n IzBar_z
+    t2fun <- getExternalProtonFactor(dsigma)
   }
   else
   {
     Q2 <- kin$Q2
+    fact  <- 1
     t1fun <- splinefun(z, exp((-J + 1.5) * As))
     t2fun <- getExternalStateFactor(dsigma, Q2 = Q2)
   }
   t3fun <- splinefun(wf$x, wf$y)
   integral <- integrate(function(x)  t1fun(x) * t2fun(x) * t3fun(x), z[1], z[length(z)], stop.on.error = FALSE)
   # return the full thing needed for the amplitude
-  W^(2*J) *integral$value
+  fact * W^(2*J) *integral$value
 }
 
 #' @export
@@ -166,8 +166,10 @@ IzNNMC2.DSigma <- function(dsigma, W, Q2, J, wf) {
   -W^(2*J) *integral$value
 }
 
+#' @export
 getExternalStateFactor <- function(x, ...) UseMethod('getExternalStateFactor')
 
+#' @export
 getExternalStateFactor.default <- function(x, ...) 'getExternalStateFactor have to be implemented for this process'
 
 getBackgroundFactor <- function(x, ...) UseMethod('getBackgroundFactor')

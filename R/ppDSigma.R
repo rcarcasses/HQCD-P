@@ -20,10 +20,3 @@ predict.ppDSigma <- function(dsigma, Izs, IzsBar, points, ...) {
   #dput(df)
   df
 }
-
-#' @export
-expVal.ppDSigma <- function(pp) pp$data$dsigma
-#' @export
-expErr.ppDSigma <- function(pp) pp$data$error
-#' @export
-expKinematics.ppDSigma <- function(pp) pp$data[,1:2]
