@@ -51,6 +51,7 @@ getIzs.DSigma <- function(dsigma, spectra, points) {
                              unlist(lapply(s, function(spec) paste0('fn.', spec$name)))))
   pb <- progress_bar$new(format = " getIzs.DSigma [:bar] :percent eta: :eta",
                           total = length(points[[1]]), clear = FALSE, width= 60)
+  if ( class(dsigma)[length(class(dsigma))] == "ppDSigma" ) points <- points[,2:3]
   df <- as.data.frame(Reduce(rbind, mclapply(apply(points, 1, as.list), function(row) {
     pb$tick()
     row <- as.list(row)
@@ -90,7 +91,7 @@ getIzsBar.DSigma <- function(dsigma, spectra, points, zstar, hpars) {
   IzBarCache <- list()
   # We take only the 2nd and 3rd columns of points because for the proton
   # There is no virtuality Q and so it is not relevant to this part of the diagram
-  df <- as.data.frame(Reduce(rbind, lapply(apply(points[,2:3], 1, as.list), function(row) {
+  df <- as.data.frame(Reduce(rbind, lapply(apply(points, 1, as.list), function(row) {
     pb$tick()
     row <- as.list(row)
     t  <- row$t
@@ -130,7 +131,8 @@ IzN.DSigma <- function(dsigma, kin, spec, zstar) {
   if ( class(dsigma)[length(class(dsigma))] == "ppDSigma" )
   {
     fact  <- -1 # We put a minus because we have - \sum_n Iz_n IzBar_z
-    t1fun <- splinefun(z, exp((-J + 0.5) * As + Phi))
+    # CHECK IF WE NEED TO INCLUDE THE DILATON
+    t1fun <- splinefun(z, exp((-J + 0.5) * As) )
     t2fun <- getExternalProtonFactor(dsigma)
   }
   else

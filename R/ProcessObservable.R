@@ -104,7 +104,8 @@ IzNBar.ProcessObservable <- function(obs, kin, spec, zstar, hpars) {
   J     <- spec$js
   wf    <- spec$wf
   dJdt  <- spec$dJdt
-  t1fun <- splinefun(z, exp((-J + 0.5) * As + Phi))
+  # CHECK IF WE NEED TO INCLUDE THE DILATON
+  t1fun <- splinefun(z, exp((-J + 0.5) * As))
   t2fun <- getExternalProtonFactor(obs)
   t3fun <- splinefun(wf$x, wf$y)
   integral <- integrate(function(x) t1fun(x) * t2fun(x) * t3fun(x), z[1], z[length(z)], stop.on.error = FALSE)$value
@@ -158,7 +159,7 @@ getExternalProtonFactor.default <- function(x, ...) 'getExternalProtonFactor hav
 
 #' @export
 getExternalProtonFactor.ProcessObservable <- function(obs, m5 = 2.5) {
-  getExternalSpinorFactor(m5, n = 1)
+  getExternalSpinorFactor(m5, n =1)
 }
 
 #' @export
