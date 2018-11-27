@@ -10,12 +10,12 @@ HQCDP <- function(alpha = 0,
   h <- list(processes = list(), kernels = list())
   class(h) <- c('HQCDP', class(h))  # pay attention to the class name
   if(is.null(hparsInitDefault))
-    hparsInitDefault <- c(-1.677950, 1.714511, -2.015598, 0, 0)
+    hparsInitDefault <- c(1, 0, 0)
   # if H was not passed, use a default one
   if(is.null(H)) {
     flog.warn('Using default H(J) function (are you sure?)')
     H <- function(J, hpars)
-           exp(100 * (hpars[1] + hpars[2] * J + hpars[3] * log(J) + hpars[4] * J * log(J) + hpars[5] * J^2))
+           exp(hpars[1] + hpars[2] * (J-1) + hpars[3] * (J-1)^2)
   }
 
   # add the constraint for the intercept of the soft pomeron

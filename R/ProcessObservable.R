@@ -109,16 +109,10 @@ IzNBar.ProcessObservable <- function(obs, kin, spec, zstar, hpars) {
   t2fun <- getExternalProtonFactor(obs)
   t3fun <- splinefun(wf$x, wf$y)
   integral <- integrate(function(x) t1fun(x) * t2fun(x) * t3fun(x), z[1], z[length(z)], stop.on.error = FALSE)$value
-  # get the function H from the observable attribute H
-  H <- attr(obs, 'H')
-  # if it doesn't exist use a default one
   # THIS FUNCTION DEPENDS IF WE CONSIDER PP SCATTERING OR NOT. THINK ABOUT THIS LATER
-  coeff <- hpars[(3*spec$index-2):(3*spec$index)]
-  if(is.null(H))
-    H <- function(J, coeff)
-           exp( coeff[1] + coeff[2] * (J - 1) + coeff[3] * (J - 1)^2 )
+  kJ <- exp( hpars[1] + hpars[2] * (J - 1) + hpars[3] * (J - 1)^2 )
   # Return IzNBar
-  iznbar <- H(J, hpars) * (1i + 1 / tan( 0.5 * pi * J) ) * dJdt * integral
+  iznbar <- kJ * (1i + 1 / tan( 0.5 * pi * J) ) * dJdt * integral
   return(iznbar)
 }
 
