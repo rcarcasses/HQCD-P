@@ -149,5 +149,5 @@ loadData.ppDSigma <- function(pp) {
   data <- rbind(data,new_data13)
   full_data <- data.frame(Q2 = rep(NA, length(data$dsigma)), W = data$sqrt_s, t = -data$minus_t,
              dsigma = data$dsigma, deltaDSigma = data$error)
-  data <- full_data[full_data$W == 23.00,]
+  full_data
 }

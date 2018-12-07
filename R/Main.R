@@ -105,6 +105,13 @@ tryStack <- function(expr, silent=FALSE) {
   out
 }
 
+# Function used in the 1508.00008
+#' @export
+UJSP <- function(J, invls = 1/0.178) {
+  # the deformation of the potential of the graviton
+  u2 + (J - 2) * 2 * e2As * invls^2
+}
+
 # Some test function (actually the one being used in the 1704.08280 paper)
 #' @export
 UJgTest <- function(J, invls = 1/0.153, a = -4.35, b = 1.41, c = 0.626, d = -0.117) {
