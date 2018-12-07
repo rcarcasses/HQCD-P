@@ -18,7 +18,7 @@ kernelUnit <- function(potential = UJgTest,
     fArgs <- getPotentialArgs(potential, list(...))
     start.time <- Sys.time()
     t <- function(J, fullAns = FALSE) {
-      u2j  <- do.call(UJgTest, as.list(c(J = J, fArgs)))
+      u2j  <- do.call(potential, as.list(c(J = J, fArgs)))
       s <- computeSpectrum(z, u2j, n)
       if(fullAns)
         list(t = s$energies[[n]], wf = s$wf[[n]], u2j = u2j, energies = s$energies)
