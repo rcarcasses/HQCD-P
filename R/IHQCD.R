@@ -82,7 +82,7 @@ iHQCD <- function(A0 = 5, zmax = 10, h = 0.002, lambda0 = 0.0337462) {
         A = A[st:len],
         Ader1 = Ader1[st:len],
         Ader2 = Ader2[st:len],
-        Ader3 = Ader2[st:len],
+        Ader3 = Ader3[st:len],
         Afun  = Aspline,
         Asder1 = Asder1[st:len],
         Asder2 = Asder2[st:len],

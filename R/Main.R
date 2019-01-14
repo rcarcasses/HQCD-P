@@ -1,6 +1,7 @@
 #' @import futile.logger
 #' @import lubridate
 #' @import schrodinger
+#' @import HVQCD
 #' @import bvpSolve
 #' @import nloptr
 #' @import parallel
@@ -15,14 +16,22 @@
 #' @import progress
 
 #' @export
-init <- function(useCache = TRUE, useRedis = TRUE) {
+init <- function(model ="HVQCD", useCache = TRUE, useRedis = TRUE) {
   #flog.trace("[HQCD-P] Initializing .")
   setCache(useCache, if(useRedis) 'redis' else 'internal')
 
   # pre-compute the solutions needed
   # they will be cached
-  solve(iHQCD(), A0 = 5, h = 0.001, zmax = 20)
-  solve(iHQCD())
+  if(model == "HVQCD")
+  {
+    solve(HVQCD(), x = 1.0, t0 = 1.0)
+    solve(HVQCD())
+  }
+  else
+  {
+    solve(iHQCD(), A0 = 5, h = 0.001, zmax = 20)
+    solve(iHQCD())
+  }
   # set the method we want to use to compute the eigenvalues
   chebPoints <- if(Sys.getenv('CHEB_POINTS') == '')
   	400
