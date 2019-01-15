@@ -16,7 +16,6 @@ HVQCD <- function(x = 1.0, t0 = 1.0) {
     # Store the values of z, A, lambda and tau
     z <- sol$z
     A <- sol$A
-    dz <- sol$dz
     lambda <- sol$lambda
     tau <- sol$tau
     mq <- sol$mq
@@ -24,9 +23,8 @@ HVQCD <- function(x = 1.0, t0 = 1.0) {
     Aspline      <- splinefun(z, A)
     lambdaspline <- splinefun(z, lambda)
     tauspline    <- splinefun(z, tau)
-    Phi          <- log(sol$lambda)
+    Phi          <- log(lambda)
     Phispline    <- splinefun(z, Phi)
-    tauspline    <- splinefun(z, tau)
     # derivatives are useful for different applications, so let's export them as well
     Ader1        <- Aspline(z, deriv = 1)
     Ader2        <- Aspline(z, deriv = 2)
@@ -35,6 +33,7 @@ HVQCD <- function(x = 1.0, t0 = 1.0) {
     lambdader2   <- lambdaspline(z, deriv = 2)
     Phider1      <- Phispline(z, deriv = 1)
     Phider2      <- Phispline(z, deriv = 2)
+    Phider3      <- Phispline(z, deriv = 3)
     tauder1      <- tauspline(z, deriv = 1)
     tauder2      <- tauspline(z, deriv = 2)
     # also sometimes the warp factor in the string frame is needed
@@ -43,7 +42,38 @@ HVQCD <- function(x = 1.0, t0 = 1.0) {
     Asder1       <- AsSpline(z, deriv = 1)
     Asder2       <- AsSpline(z, deriv = 2)
     Asder3       <- AsSpline(z, deriv = 3)
-    st  <- 10
+    # compute the scalar glueball potential
+    u0           <- (9/4) * Ader1^2 - (3/2) * Ader2 + 2 * (Ader2/Ader1)^2 +
+                    3 * Ader1 * Phider2 / Phider1 - 2 * Ader2 * Phider2 / (Ader1 * Phider1)
+                    - Ader3 / Ader1 + Phider3 / Phider1
+    # compute the tensor glueball potential
+    u2           <- (3/2) * Ader2 + (9/4) * Ader1^2
+    # Quantities that are useful to compute potentials of the vector mesons
+    V0 <- 12
+    V1 <- 11/(27*pi^2)
+    V2 <- 4619/(46656*pi^4)
+    lambda01 <- 8*pi^2
+    W0 <- 12/11
+    W1 <- (24 + (11-2*x)*W0)/(27*W0*pi^2)
+    W2 <- (24*(857-46*x)+(4619-1714*x+92*x^2)*W0)/(46656*pi^4*W0)
+    a0 <- (12-x*W0)/8
+    a1 <- (115-16*x)/(216*pi^2)
+    # Values of the potentials useful to later compute the Vector Meson Spectra
+    k  <- 1/(1 + 3 * a1 * lambda / 4)^(4/3)
+    Vf <- W0 * (1 + W1 * lambda + W2 * (lambda^2)) * exp(-a0 * tau^2)
+    # Function needed to compute the Vector Meson Spectra
+    G            <- sqrt(1 + exp(-2 * A) * k * tauder1^2)
+    Gspline      <- splinefun(z, G)
+    dG           <- Gspline(z, deriv = 1)
+    # some combinations that appear in the potential
+    aF           <- Phider2
+    bF           <- Asder2 - Asder1^2
+    cF           <- Phider1^2
+    l1_2         <- sqrt(lambda)
+    e2As         <- exp(2 * As)
+    e2A          <- exp(2 * A)
+    ChiV <- k * sqrt(Vf * exp(A))
+    st  <- 12
     len <- length(z)-st
     list(z = z[st:len],
          A = A[st:len],
@@ -57,6 +87,7 @@ HVQCD <- function(x = 1.0, t0 = 1.0) {
          Phi = Phi[st:len],
          Phider1 = Phider1[st:len],
          Phider2 = Phider2[st:len],
+         Phider3 = Phider3[st:len],
          Phifun  = Phispline,
          tau     = tau[st:len],
          tauder1 = tauder1[st:len],
@@ -67,6 +98,30 @@ HVQCD <- function(x = 1.0, t0 = 1.0) {
          Asder1 = Asder1[st:len],
          Asder2 = Asder2[st:len],
          Asder3 = Asder3[st:len],
+         u0     = u0[st:len],
+         u2     = u2[st:len],
+         aF     = aF[st:len],
+         bF     = bF[st:len],
+         cF     = cF[st:len],
+         l1_2   = l1_2[st:len],
+         e2As   = e2As[st:len],
+         e2A    = e2A[st:len],
+         e2As   = e2As[st:len],
+         V0     = V0,
+         V1     = V1,
+         V2     = V2,
+         lambda01 = lambda01,
+         W0     = W0,
+         W1     = W1,
+         W2     = W2,
+         a0     = a0,
+         a1     = a1,
+         k      = k[st:len],
+         Vf     = Vf[st:len],
+         G      = G[st:len],
+         dG     = dG[st:len],
+         Gfun   = Gspline,
+         ChiV   = ChiV[st:len],
          mq = mq)
   }
 

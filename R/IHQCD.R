@@ -55,6 +55,7 @@ iHQCD <- function(A0 = 5, zmax = 10, h = 0.002, lambda0 = 0.0337462) {
     lambdader2   <- lambdaspline(z, deriv = 2)
     Phider1      <- Phispline(z, deriv = 1)
     Phider2      <- Phispline(z, deriv = 2)
+    Phider3      <- Phispline(z, deriv = 3)
     # also sometimes the warp factor in the string frame is needed
     As           <- A + (2/3) * Phi
     AsSpline     <- splinefun(z, As)
@@ -62,6 +63,10 @@ iHQCD <- function(A0 = 5, zmax = 10, h = 0.002, lambda0 = 0.0337462) {
     Asder2       <- AsSpline(z, deriv = 2)
     Asder3       <- AsSpline(z, deriv = 3)
     dress        <- exp(2 * A)
+    # compute the scalar glueball potential
+    u0           <- (9/4) * Ader1^2 - (3/2) * Ader2 + 2 * (Ader2/Ader1)^2 +
+      3 * Ader1 * Phider2 / Phider1 - 2 * Ader2 * Phider2 / (Ader1 * Phider1)
+    - Ader3 / Ader1 + Phider3 / Phider1
     # compute the tensor glueball potential
     u2           <- (3/2) * Ader2 + (9/4) * Ader1^2
     LambdaQCD    <- exp(A0 - 1 / (b0 * lambda0)) / (b0 * lambda0)^(b1 / b0^2)
@@ -78,6 +83,7 @@ iHQCD <- function(A0 = 5, zmax = 10, h = 0.002, lambda0 = 0.0337462) {
     len <- length(z)
     st  <- 6
     list(z = z[st:len],
+        u0 = u0[st:len],
         u2 = u2[st:len],
         A = A[st:len],
         Ader1 = Ader1[st:len],
@@ -93,6 +99,7 @@ iHQCD <- function(A0 = 5, zmax = 10, h = 0.002, lambda0 = 0.0337462) {
         Phi = Phi[st:len],
         Phider1 = Phider1[st:len],
         Phider2 = Phider2[st:len],
+        Phider3 = Phider3[st:len],
         Phifun  = Phispline,
         As = As[st:len],
         AsSpline = AsSpline,
