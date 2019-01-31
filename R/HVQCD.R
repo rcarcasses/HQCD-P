@@ -5,14 +5,14 @@ hvqcdEnv <- new.env()
 
 #' Constructor
 #' @export
-HVQCD <- function(x = 1.0, t0 = 1.0) {
+HVQCD <- function(x = 1.0, t0 = 1.0, W0 = 12.0/11,  V0 = 12, lambda0 = 8 * pi^2) {
   # Solves the Kiritsis and Jarvinen Model arXiv:1112.1261
   # Finds z, dz, lambda, tau, dlambda and dtau as a function of A. mq is also returned
-  SolveHVQCD  <- function(x = 1.0, t0 = 1.0) {
+  SolveHVQCD  <- function(x = 1.0, t0 = 1.0, W0 = 12.0/11,  V0 = 12, lambda0 = 8 * pi^2) {
 
-    flog.debug(paste('[HVQCD] Solving HVQCD for x', x, ', t0', t0))
+    flog.debug(paste('[HVQCD] Solving HVQCD for x', x, ', t0', t0, ', W0', W0, ', V0', V0, ', lambda0', lambda0))
     # solve the problem and then store the relevant variables
-    sol <- solveHVQCD(x, t0)
+    sol <- solveHVQCD(x, t0, W0, V0, lambda0)
     # Store the values of z, A, lambda and tau
     z <- sol$z
     A <- sol$A
@@ -52,7 +52,7 @@ HVQCD <- function(x = 1.0, t0 = 1.0) {
     V0 <- 12
     V1 <- 11/(27*pi^2)
     V2 <- 4619/(46656*pi^4)
-    lambda01 <- 8*pi^2
+    lambda0 <- 8*pi^2
     W0 <- 12/11
     W1 <- (24 + (11-2*x)*W0)/(27*W0*pi^2)
     W2 <- (24*(857-46*x)+(4619-1714*x+92*x^2)*W0)/(46656*pi^4*W0)
@@ -110,7 +110,7 @@ HVQCD <- function(x = 1.0, t0 = 1.0) {
          V0     = V0,
          V1     = V1,
          V2     = V2,
-         lambda01 = lambda01,
+         lambda0 = lambda0,
          W0     = W0,
          W1     = W1,
          W2     = W2,
@@ -140,6 +140,6 @@ HVQCD <- function(x = 1.0, t0 = 1.0) {
 #' Implements the generic function solves for the HVQCD model
 #' allowing to cache the results.
 #' @export
-solve.HVQCD <- function(hvqcd, x = 1.0, t0 = 1.0) {
-  hvqcd$loadGlobally(hvqcd$solve(x = x, t0 = t0))
+solve.HVQCD <- function(hvqcd, x = 1.0, t0 = 1.0, V0 = 12, W0 = 12.0/11, lambda0 = 8 * pi^2) {
+  hvqcd$loadGlobally(hvqcd$solve(x = x, t0 = t0, V0 = V0, W0 = W0, lambda0 = lambda0))
 }
