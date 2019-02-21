@@ -16,7 +16,7 @@
 #' @import progress
 
 #' @export
-init <- function(model ="HVQCD", useCache = TRUE, useRedis = TRUE) {
+init <- function(model ="MDSW", useCache = TRUE, useRedis = TRUE) {
   #flog.trace("[HQCD-P] Initializing .")
   setCache(useCache, if(useRedis) 'redis' else 'internal')
 
@@ -26,6 +26,11 @@ init <- function(model ="HVQCD", useCache = TRUE, useRedis = TRUE) {
   {
     solve(HVQCD(), x = 1.0, t0 = 1.0, W0 = 12.0/11, V0 = 12, lambda0 = 8 * pi^2)
     solve(HVQCD())
+  }
+  else if (model == "MDSW")
+  {
+    solve(MDSW(), muG = 0.1157, mq = 0.0, sigma = 0.02349)
+    solve(MDSW())
   }
   else
   {
