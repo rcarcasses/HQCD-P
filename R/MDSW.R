@@ -5,7 +5,7 @@ modswEnv <- new.env()
 
 #' Constructor
 #' @export
-MDSW <- function(muG = 0.1157, mq = 0.0, sigma = 0.02349) {
+MDSW <- function(muG, mq, sigma) {
 
   # Solves the Modified Sof-Wall model of reference arXiv 1303.6929
   # Finds the warp factor in the string frame As
@@ -74,7 +74,10 @@ MDSW <- function(muG = 0.1157, mq = 0.0, sigma = 0.02349) {
          cF = cF[st:len],
          l1_2 = l1_2[st:len],
          e2As = e2As[st:len],
-         e2A = e2A[st:len])
+         e2A = e2A[st:len],
+         muG = muG,
+         mq  = mq,
+         sigma = sigma)
   }
 
   loadGlobally <- function(s) {
