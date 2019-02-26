@@ -1,5 +1,10 @@
 #' @export
-VMPSigma <- function() Sigma('VMP', tmin = -1.2, tmax = 0.0)
+VMPSigma <- function(vmName)
+{
+  obj <- Sigma('VMP', tmin = -1.2, tmax = 0.0)
+  obj$data <- obj$data[obj$data$vmName == vmName,]
+  obj
+}
 
 #' @export
 expVal.VMPSigma <- function(vmp) vmp$data$sigma

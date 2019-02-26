@@ -113,7 +113,8 @@ iHQCD <- function(A0 = 5, zmax = 10, h = 0.002, lambda0 = 0.0337462) {
         h = h,
         A0 = A0,
         zmax = zmax,
-        LambdaQCD = LambdaQCD)
+        LambdaQCD = LambdaQCD,
+        model = "iHQCD")
   }
 
   loadGlobally <- function(s) {

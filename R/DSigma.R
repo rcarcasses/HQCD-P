@@ -18,14 +18,12 @@ getAmplitude.DSigma <- function(dsigma, Izs, IzsBar, points, ...) {
   if(!is.null(dsigma$tt) && !is.null(dsigma$ll))
     return(list(tt = getAmplitude(dsigma$tt, Izs, IzsBar, points = points, ...),
                 ll = getAmplitude(dsigma$ll, Izs, IzsBar, points = points, ...)))
-
-  #print(Izs)
-  #print(IzsBar)
   rowSums(Izs * IzsBar, na.rm = TRUE)
 }
 
 getAmplitudeNMC1 <- function(x, ...) UseMethod('getAmplitudeNMC1')
-getAmplitudeNMC1.DSigma <- function(dsigma, Izs, IzsBar, points, ...){if(!is.null(dsigma$tt) && !is.null(dsigma$ll))
+getAmplitudeNMC1.DSigma <- function(dsigma, Izs, IzsBar, points, ...){
+  if(!is.null(dsigma$tt) && !is.null(dsigma$ll))
   return(list(tt = getAmplitudeNMC1(dsigma$tt, Izs, IzsBar, points = points, ...),
               ll = getAmplitudeNMC1(dsigma$ll, Izs, IzsBar, points = points, ...)))
   rowSums(Izs * IzsBar, na.rm = TRUE)
@@ -44,8 +42,8 @@ getAmplitudeNMC2.DSigma <- function(dsigma, Izs, IzsBar, points, ...){
 getIzs.DSigma <- function(dsigma, spectra, points) {
   # if it is a composed object then just call getIzs on each children
   if(!is.null(dsigma$tt) && !is.null(dsigma$ll))
-    return(list(tt = getIzs(dsigma$tt, spectra, points = points),
-                ll = getIzs(dsigma$ll, spectra, points = points)))
+    return(list(tt = getIzs(dsigma$tt, spectra = spectra, points = points),
+                ll = getIzs(dsigma$ll, spectra = spectra, points = points)))
   fnNames <- unlist(lapply(spectra[[1]]$spectra,
                            function(s)
                              unlist(lapply(s, function(spec) paste0('fn.', spec$name)))))
@@ -65,10 +63,8 @@ getIzs.DSigma <- function(dsigma, spectra, points) {
       lapply(s, function(spec) {
         # use the definition passed with the object to compute this integral
         # if any, the attribute has to be a function with the right arity
-        if('IzN' %in% names(attributes(dsigma)))
-          attr(dsigma, 'IzN')(dsigma, row, spec)
-        else
-          IzN(dsigma, row, spec)
+        if('IzN' %in% names(attributes(dsigma))) attr(dsigma, 'IzN')(dsigma, row, spec)
+        else IzN(dsigma, row, spec)
       })
     }), recursive = TRUE)
     names(r) <- fnNames
@@ -124,7 +120,7 @@ getIzsBar.DSigma <- function(dsigma, spectra, points, zstar, hpars) {
 }
 
 #' @export
-IzN.DSigma <- function(dsigma, kin, spec, zstar) {
+IzN.DSigma <- function(dsigma, kin, spec) {
   W  <- kin$W
   J  <- spec$js
   wf <- spec$wf

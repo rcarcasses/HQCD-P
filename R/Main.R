@@ -29,7 +29,7 @@ init <- function(model ="MDSW", useCache = TRUE, useRedis = TRUE) {
   }
   else if (model == "MDSW")
   {
-    solve(MDSW(), muG = 0.1157, mq = 0.0, sigma = 0.02349)
+    solve(MDSW(), muG = 0.6731, mq =  1.828e-07, sigma =  0.04565, h = 0.001)
     solve(MDSW())
   }
   else

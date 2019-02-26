@@ -5,15 +5,15 @@ modswEnv <- new.env()
 
 #' Constructor
 #' @export
-MDSW <- function(muG, mq, sigma) {
+MDSW <- function(muG, mq, sigma, h) {
 
   # Solves the Modified Sof-Wall model of reference arXiv 1303.6929
   # Finds the warp factor in the string frame As
-  SolveMDSW  <- function(muG = 0.1157, mq = 0.0, sigma = 0.02349) {
+  SolveMDSW  <- function(muG = 0.6731 , mq =  1.828e-07 , sigma =  0.04565, h = 0.001) {
 
-    flog.debug(paste('[MDSW] Solving HVQCD for muG', muG, ', mq', mq, ', sigma', simga^3))
+    flog.debug(paste('[MDSW] Solving HVQCD for muG', muG, ', mq', mq, ', sigma', sigma^3, ' h', h))
     # solve the problem and then store the relevant variables
-    sol          <- solveMDSW(muG, mq, sigma)
+    sol          <- solveMDSW(muG, mq, sigma, h)
     z            <- sol$z
     As           <- sol$As
     # compute some extras, derivatives are useful for later calculations
@@ -77,7 +77,8 @@ MDSW <- function(muG, mq, sigma) {
          e2A = e2A[st:len],
          muG = muG,
          mq  = mq,
-         sigma = sigma)
+         sigma = sigma,
+         model = "MDSW")
   }
 
   loadGlobally <- function(s) {
@@ -95,6 +96,6 @@ MDSW <- function(muG, mq, sigma) {
 #' Implements the generic function solves for the MDSW model
 #' allowing to cache the results.
 #' @export
-solve.MDSW <- function(modsw, muG = 0.1157, mq = 0.0, sigma = 0.02349) {
-  modsw$loadGlobally(modsw$solve(muG = muG, mq = mq, sigma = sigma))
+solve.MDSW <- function(modsw, muG = 0.6731 , mq =  1.828e-07 , sigma =  0.04565, h = 0.001) {
+  modsw$loadGlobally(modsw$solve(muG = muG, mq = mq, sigma = sigma, h = 0.001))
 }

@@ -8,7 +8,7 @@ massValues <- function(parameters)
   sigma <- parameters[3]
   print(paste('Parameters: muG =', muG, ', mq = ', mq, ', sigma = ', sigma))
   # Compute the background
-  sol <-solve(MDSW(),muG = muG, mq = mq, sigma = sigma)
+  sol <-solve(MDSW(),muG = muG, mq = mq, sigma = sigma, h = 0.001)
   # Compute the spectrum
   Meson  <- computeSpectrum(z, urho, nEigen = 2)
   Scalar <- computeSpectrum(z, u0, nEigen = 1)
@@ -38,7 +38,7 @@ J <- function(parameters)
   sigma <- parameters[3]
   flog.debug(paste('Parameters: muG =', muG, ', mq = ', mq, ', sigma = ', simga))
   # Compute the background
-  sol <-solve(MDSW(),muG = muG, mq = mq, sigma = sigma)
+  sol <-solve(MDSW(),muG = muG, mq = mq, sigma = sigma, h = 0.001)
   # Compute the spectrum
   Meson  <- computeSpectrum(z, urho, nEigen = 2)
   Scalar <- computeSpectrum(z, u0, nEigen = 1)

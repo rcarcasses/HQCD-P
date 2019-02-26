@@ -122,7 +122,8 @@ HVQCD <- function(x = 1.0, t0 = 1.0, W0 = 12.0/11,  V0 = 12, lambda0 = 8 * pi^2)
          dG     = dG[st:len],
          Gfun   = Gspline,
          ChiV   = ChiV[st:len],
-         mq = mq)
+         mq = mq,
+         model = "HVQCD")
   }
 
   loadGlobally <- function(s) {

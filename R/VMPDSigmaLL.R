@@ -5,11 +5,8 @@ VMPDSigmaLL <- function(vmName) {
 }
 
 getExternalStateFactor.VMPDSigmaLL <- function(vmpll, Q2 = Q2, alpha = 0) {
-  vmName <- attr(vmpll, 'vmName')
-  # get the mass of the correspondent vector meson
-  mass <- vmpll$data$m[vmpll$data$vmName == vmName][1]
   f1   <- getU1NNMode(Q2 = Q2, alpha = alpha)$dfQ(z)
-  f3   <- getU1NormalizableMode(mass = mass, alpha = alpha)$dfm(z)
+  f3   <- getU1NormalizableMode()$dfm(z)
   splinefun(z, f1 * f3 / (sqrt(Q2) * mass))
 }
 
